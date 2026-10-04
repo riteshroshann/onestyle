@@ -8,5 +8,10 @@
     "api/understand.js": {
       "maxDuration": 15
     }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "visual-picker": false
+    }
   }
 }

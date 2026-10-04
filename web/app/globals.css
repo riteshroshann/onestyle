@@ -108,6 +108,8 @@ a { color: inherit; }
 .next button:hover { background: var(--fill); }
 .next button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
 .next button.primary:hover { opacity: .88; background: var(--ink); }
+.next .back { color: var(--ink-2); }
+.next .back span { font-size: 1.25em; line-height: 0; margin-right: calc(2px * var(--s)); position: relative; top: calc(1px * var(--s)); }
 .finale { margin-top: calc(24px * var(--s)); }
 .finale .q { font-size: calc(16px * var(--s)); font-weight: 600; margin-bottom: calc(12px * var(--s)); }
 .finale .cards { grid-template-columns: repeat(auto-fill, minmax(calc(180px * var(--s)), 1fr)); gap: calc(10px * var(--s)); }

@@ -147,3 +147,20 @@ def test_sheet_shows_drawings_for_the_tailor(page):
     assert "sweetheart" in caps and "silk" in caps
     page.click("text=हिंदी में दिखाएँ")
     assert "चित्र" in page.inner_text(".sheet")
+
+
+def test_back_undoes_the_last_step(page):
+    open_home(page)
+    send(page, "a red kurti")
+    assert page.locator(".next .back").count() == 1
+    page.locator(".reply").last.locator(".ask").first.locator(".opt, .look").first.click()
+    page.wait_for_timeout(300)
+    before = page.locator(".reply").count()
+    rows_after_answer = order_rows(page)
+    page.click(".next .back")
+    page.wait_for_timeout(300)
+    assert page.locator(".reply").count() == before - 1
+    assert order_rows(page) != rows_after_answer
+    page.click(".next .back")                       # back past the first message: an empty design
+    page.wait_for_timeout(300)
+    assert page.locator(".reply").count() == 0 and page.locator(".hero h1").count() == 1

@@ -456,7 +456,7 @@ function ShopView({ spec, onWearer }: { spec: Spec; onWearer: (w: string) => voi
   );
 }
 
-function Finale({ spec, onSheet, onShop }: { spec: Spec; onSheet: () => void; onShop: () => void }) {
+function Finale({ spec, onSheet, onShop, backBtn }: { spec: Spec; onSheet: () => void; onShop: () => void; backBtn: React.ReactNode }) {
   const L = links(spec);
   return (
     <div className="finale">
@@ -474,6 +474,7 @@ function Finale({ spec, onSheet, onShop }: { spec: Spec; onSheet: () => void; on
         ))}
       </div>
       <div className="next">
+        {backBtn}
         <button className="primary" onClick={onSheet}>Open the tailor sheet</button>
         <button onClick={onShop}>All ideas and shopping</button>
       </div>
@@ -489,6 +490,18 @@ export default function App() {
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
   const [thinking, setThinking] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  // every step can be taken back: the design and the conversation as they were before it
+  const [past, setPast] = useState<{ spec: Spec; msgs: Msg[] }[]>(() => load("bespoke.past", []));
+  const now = useRef({ spec, msgs });
+  now.current = { spec, msgs };
+  const remember = useCallback(() => setPast((p) => [...p.slice(-29), now.current]), []);
+  const back = () => {
+    const prev = past[past.length - 1];
+    if (!prev) return;
+    setSpec(prev.spec); setMsgs(prev.msgs); setPast(past.slice(0, -1));
+    if (!prev.msgs.length) setView("talk");
+  };
+  useEffect(() => { save("bespoke.past", past); }, [past]);
 
   useEffect(() => { loadTagger(() => {}); }, []);
   useEffect(() => { save("bespoke.spec", spec); save("bespoke.msgs", msgs); save("bespoke.meas", m); }, [spec, msgs, m]);
@@ -503,6 +516,7 @@ export default function App() {
   }, []);
 
   const send = useCallback(async (text: string) => {
+    remember();
     setThinking(true);
     // the language model (when configured) and the on-device engine run together; the device answers alone if the model cannot
     const second = understand(text, spec);
@@ -515,11 +529,12 @@ export default function App() {
     setSpec(next);
     reply(next, all);
     setThinking(false);
-  }, [spec, reply]);
+  }, [spec, reply, remember]);
 
   const voice = useVoice(useCallback((t: string) => { void send(t); }, [send]));
 
   const pick = (q: Question, v: string) => {
+    remember();
     const ups = answer(q.slot, v);
     const next = apply(spec, ups);
     setSpec(next);
@@ -529,13 +544,16 @@ export default function App() {
   const edit = (slot: string, value: string, note?: string) => {
     const ups: Update[] = [{ op: LIST_SLOTS.includes(slot) ? "replace" : "set", slot, value: { value, p: 1, src: "edit", evidence: "edited" } }];
     if (note) ups.push({ op: "note", slot: "notes", value: { value: note, p: 1, src: "edit", evidence: "edited" } });
+    remember();
     setSpec(apply(spec, ups));
   };
   const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
-  const fromBoard = (ups: Update[], note: string) => { const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
-  const reset = () => { setSpec(emptySpec()); setMsgs([]); setView("talk"); };
+  const fromBoard = (ups: Update[], note: string) => { remember(); const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
+  const reset = () => { if (msgs.length) remember(); setSpec(emptySpec()); setMsgs([]); setView("talk"); };
 
   const started = msgs.length > 0;
+  const backBtn = past.length > 0 && !thinking
+    ? <button className="back" onClick={back} aria-label="Go back one step"><span aria-hidden>‹</span> Back</button> : null;
   const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
   const NAV: [View, string][] = [["home", "Home"], ["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
   const [scrolled, setScrolled] = useState(false);
@@ -599,12 +617,13 @@ export default function App() {
                       : <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? nice(o)}</button>)}</div>}
                   </div>
                 ))}
-                {i === msgs.length - 1 && spec.slots.garment && (questions(spec).length === 0
-                  ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} />
+                {i === msgs.length - 1 && (spec.slots.garment && questions(spec).length === 0
+                  ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} backBtn={backBtn} />
                   : (
                     <div className="next">
-                      <button onClick={() => setView("board")}>Add pictures</button>
-                      <button onClick={() => setView("shop")}>Ideas and shopping</button>
+                      {backBtn}
+                      {spec.slots.garment && <button onClick={() => setView("board")}>Add pictures</button>}
+                      {spec.slots.garment && <button onClick={() => setView("shop")}>Ideas and shopping</button>}
                     </div>
                   ))}
               </div>
