@@ -4,7 +4,7 @@ import type { Span } from "./lexicon.ts";
 
 export type Source = "words" | "note" | "image" | "profile" | "answer" | "edit" | "model";
 export interface Value { value: string; p: number; src: Source; evidence: string; inches?: number; intensity?: string }
-export interface Update { op: "set" | "exclude" | "add" | "compare" | "note"; slot: string; value: Value; ref?: string; cmp?: string }
+export interface Update { op: "set" | "exclude" | "add" | "replace" | "compare" | "note"; slot: string; value: Value; ref?: string; cmp?: string }
 export interface Spec {
   version: number;
   slots: Record<string, Value>;
@@ -222,6 +222,10 @@ export function apply(spec: Spec, ups: Update[]): Spec {
         { slot: u.slot, value: u.value.value, evidence: u.value.evidence }];
       if (cur?.value === u.value.value) delete next.slots[u.slot];
       if (next.lists[u.slot]) next.lists[u.slot] = next.lists[u.slot].filter((v) => v.value !== u.value.value);
+    } else if (u.op === "replace") {
+      // an edit that chooses one value for a list slot, such as picking a colour from the palette
+      next.lists[u.slot] = [u.value];
+      next.excluded = next.excluded.filter((e) => !(e.slot === u.slot && e.value === u.value.value));
     } else if (u.op === "compare") {
       next.comparisons = [...next.comparisons, { slot: u.slot, cmp: u.cmp!, ref: u.ref!, evidence: u.value.evidence }];
     } else if (u.op === "note") {
@@ -304,3 +308,25 @@ export function answer(slot: string, value: string): Update[] {
 }
 
 export const words = (s: string) => tokenize(s);
+
+// ------------------------------------------------------------------ who it is for
+// Read from the words ("for my brother", "ladies", "men's") or, failing that, from the garment itself.
+const MEN = /\b(men'?s|mens|male|gents?|for (?:my )?(?:husband|brother|father|dad|papa|son|boyfriend|fianc[eé]|him|groom)|groom|dulha|ladka|ladke|bhai|bhaiya|boys?)\b/i;
+const WOMEN = /\b(women'?s|womens|ladies|female|for (?:my )?(?:wife|sister|mother|mom|mummy|daughter|girlfriend|fianc[eé]e|her|bride)|bride|dulhan|ladki|didi|girls?)\b/i;
+const MEN_GARMENTS = new Set(["sherwani", "nehru jacket"]);
+const WOMEN_GARMENTS = new Set(["kurti", "anarkali", "salwar suit", "lehenga", "saree blouse", "saree", "dress", "gown", "skirt", "crop top", "corset", "bodysuit", "sharara", "palazzo", "churidar", "dupatta", "leggings"]);
+
+export function wearerUpdates(text: string): Update[] {
+  const m = MEN.test(text), w = WOMEN.test(text);
+  if (m === w) return [];
+  return [{ op: "set", slot: "wearer", value: { value: m ? "men" : "women", p: 0.95, src: "words", evidence: (text.match(m ? MEN : WOMEN) ?? [""])[0] } }];
+}
+export function wearerOf(spec: Spec): "men" | "women" | "anyone" {
+  const w = spec.slots.wearer?.value;
+  if (w === "men" || w === "women" || w === "anyone") return w;
+  const g = spec.slots.garment?.value ?? "";
+  if (MEN_GARMENTS.has(g)) return "men";
+  if (WOMEN_GARMENTS.has(g)) return "women";
+  return "anyone";
+}
+export const isGendered = (g?: string) => !!g && (MEN_GARMENTS.has(g) || WOMEN_GARMENTS.has(g));

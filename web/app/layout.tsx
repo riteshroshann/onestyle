@@ -1,10 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Bodoni_Moda, Jost } from "next/font/google";
+import { Bodoni_Moda, Inter } from "next/font/google";
 
 // Self-hosted at build time: no request to a font service when the page loads.
 const display = Bodoni_Moda({ subsets: ["latin"], style: ["normal", "italic"], axes: ["opsz"], variable: "--font-display", display: "swap" });
-const ui = Jost({ subsets: ["latin"], weight: ["300", "400", "500"], variable: "--font-ui", display: "swap" });
+const ui = Inter({ subsets: ["latin"], variable: "--font-ui", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Bespoke",

@@ -1,6 +1,6 @@
 // Human-facing text: the assistant's reply, the tailor sheet lines, and search links.
 import { ONTO, hindi } from "./lexicon.ts";
-import { depthInches, easeInches, familyOf, seasonOf } from "./spec.ts";
+import { depthInches, easeInches, familyOf, isGendered, seasonOf, wearerOf } from "./spec.ts";
 import type { Spec, Value } from "./spec.ts";
 
 const TAG_OF: Record<string, string> = {
@@ -34,7 +34,10 @@ export function phrase(spec: Spec): string {
   if (s["lower.silhouette"] && !sil) parts.push(`${nice(s["lower.silhouette"].value)} ${comps.length || fam === "set" ? "bottoms" : "cut"}`);
   if (s["neckline.shape"] || s["neckline.depth"]) {
     const d = s["neckline.depth"] ? depthInches(s["neckline.depth"]) : undefined;
-    parts.push(`${s["neckline.shape"] ? `${an(nice(s["neckline.shape"].value))} ${nice(s["neckline.shape"].value)} neckline` : "a neckline"}${d ? ` about ${d} in deep` : ""}`);
+    const NOUN: Record<string, string> = { mandarin: "mandarin collar", collar: "collar", hooded: "hood", turtle: "turtle neck", crew: "crew neck", high: "high neck", cowl: "cowl neck" };
+    const shape = s["neckline.shape"]?.value;
+    const noun = shape ? NOUN[shape] ?? `${nice(shape)} neckline` : "a neckline";
+    parts.push(`${shape ? `${an(noun)} ${noun}` : noun}${d ? ` about ${d} in deep` : ""}`);
   }
   if (s["sleeve.style"] || s["sleeve.length"]) parts.push([s["sleeve.length"]?.value, s["sleeve.style"]?.value, "sleeves"].filter(Boolean).join(" "));
   if (s["garment.length"]) parts.push(s["garment.length"].inches ? `${s["garment.length"].value} long` : `${s["garment.length"].value} length`);
@@ -107,7 +110,9 @@ export function finished(spec: Spec, m: Measurements) {
 // ----------------------------------------------------------------- search links (deep links only: no scraping, nothing stored)
 export function query(spec: Spec, opts: { withParts?: boolean } = {}): string {
   const s = spec.slots, l = spec.lists;
+  const who = wearerOf(spec);
   const words = [
+    who !== "anyone" && !isGendered(s.garment?.value) ? (who === "men" ? "men's" : "women's") : "",
     ...(l.shade ?? []).slice(0, 1).map((v) => v.value), ...(l.colour ?? []).slice(0, 1).map((v) => v.value),
     s["lower.silhouette"] && s["lower.silhouette"].value !== "anarkali" ? nice(s["lower.silhouette"].value) : "",
     s.fabric?.value, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value), ...(l.components ?? []).map((c) => nice(c.value)), s.garment ? nice(s.garment.value) : "outfit", seasonOf(spec) === "winter" ? "winter" : "",
@@ -127,13 +132,14 @@ export function links(spec: Spec) {
     spec.slots["sleeve.style"] ? `${spec.slots["sleeve.style"].value} sleeves ${spec.slots.garment?.value ?? ""}` : "",
     spec.lists.embellishment?.[0] ? `${spec.lists.embellishment[0].value} work ideas` : ""].filter(Boolean);
   return {
+    query: q,
     pinterest: [...new Set(ideas)].slice(0, 6).map((t) => ({ label: t, url: `https://www.pinterest.com/search/pins/?q=${e(t)}` })),
     shops: [
-      { label: "Myntra", url: `https://www.myntra.com/${e(q.replace(/\s+/g, "-"))}?rawQuery=${e(q)}` },
-      { label: "Ajio", url: `https://www.ajio.com/search/?text=${e(q)}` },
-      { label: "Amazon", url: `https://www.amazon.in/s?k=${e(q)}` },
-      { label: "Flipkart", url: `https://www.flipkart.com/search?q=${e(q)}` },
-      { label: "Nykaa Fashion", url: `https://www.nykaafashion.com/catalogsearch/result/?q=${e(q)}` },
+      { label: "Myntra", domain: "myntra.com", url: `https://www.myntra.com/${e(q.replace(/\s+/g, "-"))}?rawQuery=${e(q)}` },
+      { label: "Ajio", domain: "ajio.com", url: `https://www.ajio.com/search/?text=${e(q)}` },
+      { label: "Amazon", domain: "amazon.in", url: `https://www.amazon.in/s?k=${e(q)}` },
+      { label: "Flipkart", domain: "flipkart.com", url: `https://www.flipkart.com/search?q=${e(q)}` },
+      { label: "Nykaa Fashion", domain: "nykaafashion.com", url: `https://www.nykaafashion.com/catalogsearch/result/?q=${e(q)}` },
     ],
     fabric: spec.slots.fabric ? [
       { label: `${spec.lists.colour?.[0]?.value ?? ""} ${spec.slots.fabric.value} fabric`.trim(), url: `https://www.amazon.in/s?k=${e(`${spec.lists.colour?.[0]?.value ?? ""} ${spec.slots.fabric.value} fabric by the metre`)}` },
@@ -143,3 +149,23 @@ export function links(spec: Spec) {
 }
 
 export const slotsMeta = ONTO.slots;
+
+// ------------------------------------------------------------------ palette
+export const SWATCH: Record<string, string> = {
+  black: "#000000", white: "#ffffff", ivory: "#f3eee2", beige: "#d8c6a6", brown: "#7a5232", grey: "#9b9b9b", silver: "#c4c4c8", gold: "#c9a227",
+  red: "#c8102e", maroon: "#6e1c2a", pink: "#e98aa8", peach: "#f5b69a", orange: "#e5762c", mustard: "#d1a013", yellow: "#f2cc45",
+  mint: "#a9e3c8", green: "#2f7d4f", olive: "#6f7f35", teal: "#1a8a8e", "powder blue": "#b6d3ef", blue: "#2c6bd2", navy: "#1e2a46",
+  lavender: "#c7b5e3", purple: "#6a3d9e",
+};
+const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+/** The named colour nearest to a picked shade (weighted RGB distance). */
+export function nearestColour(hex: string): string {
+  const [r, g, b] = rgb(hex);
+  let best = "black", d = Infinity;
+  for (const [name, h] of Object.entries(SWATCH)) {
+    const [R, G, B] = rgb(h);
+    const dist = 2 * (r - R) ** 2 + 4 * (g - G) ** 2 + 3 * (b - B) ** 2;
+    if (dist < d) { d = dist; best = name; }
+  }
+  return best;
+}

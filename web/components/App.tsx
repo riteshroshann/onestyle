@@ -1,9 +1,10 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
-import { Measurements, advice, finished, links, phrase, sheetLines } from "../lib/engine/describe";
-import { Question, Spec, Update, answer, apply, bind, depthInches, emptySpec, questions } from "../lib/engine/spec";
+import { Measurements, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines } from "../lib/engine/describe";
+import { Question, Spec, Update, answer, apply, bind, depthInches, emptySpec, questions, wearerOf, wearerUpdates } from "../lib/engine/spec";
 import { isCommonWord, loadTagger, tag } from "../lib/models";
 import { understand } from "../lib/understand";
 
@@ -12,29 +13,33 @@ const Board = dynamic(() => import("./Board"), { ssr: false });
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
   | { role: "bot"; text: string; questions: Question[]; note?: string };
-type View = "fitting" | "board" | "sheet" | "shop";
+type View = "talk" | "board" | "sheet" | "shop";
 
+const PLACEHOLDER = "A pastel blue kurti for my farewell";
 const SUGGESTIONS = [
-  "A pastel blue kurti for my farewell, fitted at the waist, flowy below",
+  "An ivory sherwani for my brother's wedding, mandarin collar, no heavy work",
   "Lehenga chahiye shaadi ke liye, maroon, gota patti, ghera bahut zyada",
-  "A saree blouse with a deep back, puff sleeves and no sequins",
+  "A navy sweatshirt and joggers set for the cold",
 ];
 const SLOT_TAG: Record<string, string> = {
-  garment: "GARMENT", "neckline.shape": "NECKLINE", "neckline.depth": "DIM", "back.depth": "DIM", "sleeve.style": "SLEEVE",
-  "sleeve.length": "LENGTH", "sleeve.fit": "FIT", "bodice.fit": "FIT", "lower.fit": "FIT", "lower.silhouette": "SILHOUETTE",
-  "garment.length": "LENGTH", fabric: "FABRIC", colour: "COLOUR", shade: "SHADE", pattern: "PATTERN", embellishment: "EMBELL",
-  occasion: "OCCASION", style: "STYLE", components: "GARMENT",
+  garment: "GARMENT", "neckline.shape": "NECKLINE", "sleeve.style": "SLEEVE", "sleeve.length": "LENGTH", "sleeve.fit": "FIT",
+  "bodice.fit": "FIT", "lower.fit": "FIT", "lower.silhouette": "SILHOUETTE", "garment.length": "LENGTH", fabric: "FABRIC",
+  colour: "COLOUR", shade: "SHADE", pattern: "PATTERN", embellishment: "EMBELL", occasion: "OCCASION", style: "STYLE", components: "GARMENT",
 };
 const ROWS: [string, string][] = [
   ["garment", "Garment"], ["components", "Pieces"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["back.depth", "Back"],
-  ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"], ["bodice.fit", "Bodice"], ["lower.fit", "Below the waist"],
+  ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"], ["bodice.fit", "Fit"], ["lower.fit", "Below the waist"],
   ["lower.silhouette", "Silhouette"], ["garment.length", "Length"], ["fabric", "Fabric"], ["colour", "Colour"], ["shade", "Shade"],
   ["pattern", "Print"], ["embellishment", "Finish"], ["occasion", "Occasion"], ["style", "Mood"],
 ];
 const SOURCE: Record<string, string> = { model: "your words", words: "your words", note: "a note on your board", image: "your pictures", answer: "your answer", edit: "your edit", profile: "your profile" };
 const LIST_SLOTS = ["colour", "embellishment", "style", "pattern", "occasion", "shade", "components"];
-const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", trousers: "pants", crew: "crew neck", hooded: "hooded", turtle: "turtle neck" };
+const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", trousers: "pants", crew: "crew neck", hooded: "hooded", turtle: "turtle neck", "t-shirt": "t-shirt" };
 const nice = (v: string) => NICE[v] ?? v;
+const FAMILY_TITLE: Record<string, string> = {
+  top_long: "Kurtas, dresses and gowns", top_short: "Tops, shirts and blouses", knit_top: "Sweatshirts and knits", outer: "Jackets and coats",
+  bottom: "Pants, skirts and bottoms", set: "Sets", drape: "Sarees and dupattas",
+};
 
 function load<T>(k: string, d: T): T {
   try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; }
@@ -156,8 +161,7 @@ function useVoice(onFinal: (t: string) => void) {
   return { supported, live, status, interim, level, lang, setLang, start, stop };
 }
 
-const Mic = () => (<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
-const Send = () => (<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
+const Mic = () => (<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
 
 function Line({ onSend, voice, autoFocus, label }: { onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; autoFocus?: boolean; label?: string }) {
   const [text, setText] = useState("");
@@ -168,7 +172,7 @@ function Line({ onSend, voice, autoFocus, label }: { onSend: (t: string) => void
       <div className="field">
         <input id={label ? "brief" : undefined} value={voice.live ? voice.interim : text} onChange={(e) => setText(e.target.value)} autoFocus={autoFocus}
           onKeyDown={(e) => e.key === "Enter" && send()} readOnly={voice.live}
-          placeholder={voice.live ? "" : "A pastel blue kurti for my farewell"} aria-label="Describe the garment" />
+          placeholder={voice.live ? "" : PLACEHOLDER} aria-label="Describe the garment" />
         {voice.supported && (
           <button className="lang" onClick={() => voice.setLang(voice.lang === "en-IN" ? "hi-IN" : "en-IN")}
             aria-label={voice.lang === "en-IN" ? "Speaking English. Switch to Hindi" : "Speaking Hindi. Switch to English"}>
@@ -197,43 +201,104 @@ function Said({ m }: { m: Extract<Msg, { role: "me" }> }) {
   return <div className="said"><span className="who">You</span>{m.spans.length ? parts : m.text}</div>;
 }
 
-function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: string) => void }) {
-  const [editing, setEditing] = useState<string | null>(null);
-  const rows = ROWS.filter(([slot]) => spec.slots[slot] || spec.lists[slot]?.length || spec.excluded.some((e) => e.slot === slot));
-  return (
-    <aside className="order" aria-label="Your order">
-      <h2>{spec.slots.garment ? spec.slots.garment.value[0].toUpperCase() + spec.slots.garment.value.slice(1) : "Your order"}</h2>
-      <div className="meta">{rows.length ? `Draft ${spec.version}. Select any detail to change it.` : ""}</div>
-      {!rows.length && <div className="empty">Each detail you mention settles here, part by part, with where it came from.</div>}
-      <dl>
-        {rows.map(([slot, label]) => {
-          const v = spec.slots[slot];
-          const list = spec.lists[slot] ?? [];
-          const ex = spec.excluded.filter((e) => e.slot === slot);
-          const options = Object.keys(ONTO.lexicon[SLOT_TAG[slot]] ?? {});
+// ------------------------------------------------------------------ picker sheet
+function Picker({ slot, label, current, onPick, onClose }: {
+  slot: string; label: string; current: string[]; onPick: (value: string, note?: string) => void; onClose: () => void;
+}) {
+  const [q, setQ] = useState("");
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  const tagName = SLOT_TAG[slot];
+  let body: React.ReactNode;
+  if (slot === "colour") {
+    body = (
+      <>
+        <div className="palette">
+          {Object.entries(SWATCH).map(([name, hex]) => (
+            <button key={name} className="swatch" aria-pressed={current.includes(name)} onClick={() => onPick(name)} title={name}>
+              <span style={{ background: hex }} />{name}
+            </button>
+          ))}
+        </div>
+        <label className="custom">
+          <input type="color" defaultValue="#1e2a46" onChange={(e) => onPick(nearestColour(e.target.value), `exact colour ${e.target.value}`)} />
+          Pick an exact shade; the nearest named colour is used and the exact shade goes to your tailor.
+        </label>
+      </>
+    );
+  } else if (tagName === "GARMENT") {
+    const term = q.trim().toLowerCase();
+    body = (
+      <>
+        <input className="search" placeholder="Search garments" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+        {Object.entries<string[]>(ONTO.garment_family).map(([fam, list]) => {
+          const shown = list.filter((g) => !term || nice(g).includes(term) || (ONTO.lexicon.GARMENT[g]?.forms ?? []).some((f: string) => f.includes(term)));
+          if (!shown.length) return null;
           return (
-            <div key={slot} style={{ display: "contents" }}>
-              <dt>{label}</dt>
-              <dd>
-                {editing === slot ? (
-                  <select autoFocus defaultValue={v?.value ?? ""} onBlur={() => setEditing(null)} onChange={(e) => { onEdit(slot, e.target.value); setEditing(null); }}>
-                    <option value="" disabled>Choose</option>
-                    {options.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                ) : (
-                  <>
-                    {v && <button onClick={() => setEditing(slot)}>{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}<small>from {SOURCE[v.src] ?? v.src}</small></button>}
-                    {list.length > 0 && <button onClick={() => setEditing(slot)}>{list.map((x) => nice(x.value)).join(", ")}<small>from {[...new Set(list.map((x) => SOURCE[x.src] ?? x.src))].join(" and ")}</small></button>}
-                    {ex.map((x) => <span key={x.value} className="no" title={x.evidence}>{x.value}</span>)}
-                  </>
-                )}
-              </dd>
+            <div key={fam}>
+              <h4>{FAMILY_TITLE[fam] ?? fam}</h4>
+              <div className="choices">{shown.map((g) => <button key={g} className="choice" aria-pressed={current.includes(g)} onClick={() => onPick(g)}>{nice(g)}</button>)}</div>
             </div>
           );
         })}
-        {(spec.notes?.length ?? 0) > 0 && (<><dt>Notes</dt><dd>{spec.notes!.join("; ")}<small>for your tailor</small></dd></>)}
-        {spec.comparisons.length > 0 && (<><dt>Compared</dt><dd>{spec.comparisons.map((c) => `${c.slot.split(".")[0]} ${c.cmp === "more" ? "beyond" : c.cmp === "less" ? "within" : "like"} ${c.ref}`).join("; ")}<small>set it on the moodboard</small></dd></>)}
-      </dl>
+      </>
+    );
+  } else {
+    const values: string[] = slot === "neckline.depth" || slot === "back.depth" ? ONTO.depth_order
+      : slot === "sleeve.length" ? ONTO.sleeve_length_order : slot === "garment.length" ? ONTO.length_order : Object.keys(ONTO.lexicon[tagName] ?? {});
+    body = <div className="choices">{values.map((v) => <button key={v} className="choice" aria-pressed={current.includes(v)} onClick={() => onPick(v)}>{nice(v)}</button>)}</div>;
+  }
+  return createPortal(
+    <div className="scrim" onClick={onClose}>
+      <div className="sheetpop" role="dialog" aria-label={label} onClick={(e) => e.stopPropagation()}>
+        <header><h3>{label}</h3><button className="done" onClick={onClose}>Done</button></header>
+        {body}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: string, note?: string) => void }) {
+  const [editing, setEditing] = useState<[string, string] | null>(null);
+  const rows = ROWS.filter(([slot]) => spec.slots[slot] || spec.lists[slot]?.length || spec.excluded.some((e) => e.slot === slot));
+  return (
+    <aside className="order" aria-label="Your design">
+      <h2>{spec.slots.garment ? nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1) : "Your design"}</h2>
+      <div className="meta">{rows.length ? `Draft ${spec.version}. Select any detail to change it.` : ""}</div>
+      {!rows.length && <div className="empty">Each detail you mention settles here, part by part, with where it came from.</div>}
+      {rows.length > 0 && (
+        <dl>
+          {rows.map(([slot, label]) => {
+            const v = spec.slots[slot];
+            const list = spec.lists[slot] ?? [];
+            const ex = spec.excluded.filter((e) => e.slot === slot);
+            const editable = !!SLOT_TAG[slot] || slot.endsWith(".depth");
+            const open = () => editable && setEditing([slot, label]);
+            return (
+              <div className="item" key={slot}>
+                <dt>{label}</dt>
+                <dd>
+                  {v && <button onClick={open}>{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}{editable && <span className="chev">›</span>}</button>}
+                  {list.length > 0 && <button onClick={open}>{slot === "colour" && list.map((x) => <span key={x.value} className="dot" style={{ background: SWATCH[x.value] ?? "#ccc" }} />)}{list.map((x) => nice(x.value)).join(", ")}{editable && <span className="chev">›</span>}</button>}
+                  {ex.map((x) => <span key={x.value} className="no" title={x.evidence}>{nice(x.value)}</span>)}
+                  {(v || list.length > 0) && <small>from {[...new Set([v, ...list].filter(Boolean).map((x) => SOURCE[x!.src] ?? x!.src))].join(" and ")}</small>}
+                </dd>
+              </div>
+            );
+          })}
+          {(spec.notes?.length ?? 0) > 0 && <div className="item"><dt>Notes</dt><dd>{spec.notes!.join("; ")}<small>for your tailor</small></dd></div>}
+          {spec.comparisons.length > 0 && <div className="item"><dt>Compared</dt><dd>{spec.comparisons.map((c) => `${c.slot.split(".")[0]} ${c.cmp === "more" ? "beyond" : c.cmp === "less" ? "within" : "like"} ${c.ref}`).join("; ")}<small>set it on the moodboard</small></dd></div>}
+        </dl>
+      )}
+      {editing && (
+        <Picker slot={editing[0]} label={editing[1]} onClose={() => setEditing(null)}
+          current={[spec.slots[editing[0]]?.value, ...(spec.lists[editing[0]] ?? []).map((x) => x.value)].filter(Boolean) as string[]}
+          onPick={(value, note) => { onEdit(editing[0], value, note); if (!note) setEditing(null); }} />
+      )}
     </aside>
   );
 }
@@ -254,11 +319,11 @@ function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: M
         <button className="btn" onClick={() => window.print()}>Print or save as PDF</button>
       </div>
       <div className="sheet">
-        <h3>{spec.slots.garment ? spec.slots.garment.value[0].toUpperCase() + spec.slots.garment.value.slice(1) : "Garment"}</h3>
+        <h3>{spec.slots.garment ? nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1) : "Garment"}</h3>
         <div className="meta">Draft {spec.version}, {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. {phrase(spec)}.</div>
         {lines.length ? (
           <table><tbody>{lines.map((l) => <tr key={l.part}><td>{l.part}</td><td className={hi ? "hi" : ""}>{hi ? l.hi : l.en}</td><td className="from">{l.from}</td></tr>)}</tbody></table>
-        ) : <p style={{ color: "#76736e" }}>Describe the garment first; its instructions appear here.</p>}
+        ) : <p style={{ color: "var(--ink-3)" }}>Describe the garment first; its instructions appear here.</p>}
         <h4>Measurements in inches</h4>
         <div className="meas">{field("bust", "Bust")}{field("waist", "Waist")}{field("hip", "Hip")}{field("shoulder", "Shoulder")}{field("length", "Length")}{field("sleeve", "Sleeve")}</div>
         {(f.bust || f.waist || f.hip) && <div className="finished">Finished garment: {[f.bust && `bust ${f.bust} in`, f.waist && `waist ${f.waist} in`, f.hip && `hip ${f.hip} in`].filter(Boolean).join(", ")}.</div>}
@@ -267,24 +332,76 @@ function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: M
   );
 }
 
-function ShopView({ spec }: { spec: Spec }) {
+const icon = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+
+function ShopView({ spec, onWearer }: { spec: Spec; onWearer: (w: string) => void }) {
   const L = links(spec);
-  const q = (url: string) => decodeURIComponent(url.split(/[?&](?:q|k|text|rawQuery)=/)[1]?.split("&")[0] ?? "");
+  const who = wearerOf(spec);
   return (
     <main className="page">
       <h2>Ideas and shopping</h2>
-      <p className="lede">Searches written from your design. Look for ideas, buy something close ready-made, or find the fabric and a tailor to have it made. Each opens on the shop's own site.</p>
-      <section className="index"><h3>Ideas on Pinterest</h3><ul>{L.pinterest.map((p) => <li key={p.url}><a href={p.url} target="_blank" rel="noreferrer">{p.label}<span>Pinterest</span></a></li>)}</ul></section>
-      <section className="index"><h3>Buy ready-made</h3><ul>{L.shops.map((p) => <li key={p.label}><a href={p.url} target="_blank" rel="noreferrer">{q(p.url) || "Search"}<span>{p.label}</span></a></li>)}</ul></section>
-      {L.fabric.length > 0 && <section className="index"><h3>The fabric</h3><ul>{L.fabric.map((p) => <li key={p.url}><a href={p.url} target="_blank" rel="noreferrer">{p.label}<span>by the metre</span></a></li>)}</ul></section>}
-      <section className="index"><h3>Have it made</h3><ul><li><a href={L.tailors.url} target="_blank" rel="noreferrer">Tailors and boutiques near you<span>Maps</span></a></li></ul></section>
+      <p className="lede">Searches written from your design. Look for ideas, buy something close ready-made, or find the fabric and a tailor to have it made.</p>
+      <div className="searchline">
+        <div className="q"><small>Searching for</small>{L.query || "Describe a garment first"}</div>
+        <div className="seg" role="group" aria-label="Shopping for">
+          {(["women", "men", "anyone"] as const).map((w) => <button key={w} aria-pressed={who === w} onClick={() => onWearer(w)}>{w[0].toUpperCase() + w.slice(1)}</button>)}
+        </div>
+      </div>
+      <h3>Buy ready-made</h3>
+      <div className="cards">
+        {L.shops.map((p) => (
+          <a className="card" key={p.label} href={p.url} target="_blank" rel="noreferrer">
+            <img src={icon(p.domain)} alt="" loading="lazy" /><div><b>{p.label}</b><span>Open search</span></div>
+          </a>
+        ))}
+      </div>
+      <h3>Ideas on Pinterest</h3>
+      <div className="cards ideas">
+        {L.pinterest.map((p) => (
+          <a className="card" key={p.url} href={p.url} target="_blank" rel="noreferrer">
+            <img src={icon("pinterest.com")} alt="" loading="lazy" /><div><b>{p.label}</b><span>Pinterest</span></div>
+          </a>
+        ))}
+      </div>
+      {L.fabric.length > 0 && (<><h3>The fabric</h3><div className="cards">{L.fabric.map((p) => (
+        <a className="card" key={p.url} href={p.url} target="_blank" rel="noreferrer"><img src={icon("amazon.in")} alt="" loading="lazy" /><div><b>{p.label}</b><span>By the metre</span></div></a>
+      ))}</div></>)}
+      <h3>Have it made</h3>
+      <div className="cards">
+        <a className="card" href={L.tailors.url} target="_blank" rel="noreferrer"><img src={icon("maps.google.com")} alt="" loading="lazy" /><div><b>Tailors near you</b><span>Take your tailor sheet along</span></div></a>
+      </div>
     </main>
+  );
+}
+
+function Finale({ spec, onSheet, onShop }: { spec: Spec; onSheet: () => void; onShop: () => void }) {
+  const L = links(spec);
+  return (
+    <div className="finale">
+      <div className="q">Your design is ready. Find something close, or take it to a tailor.</div>
+      <div className="cards">
+        {L.shops.slice(0, 4).map((p) => (
+          <a className="card" key={p.label} href={p.url} target="_blank" rel="noreferrer">
+            <img src={icon(p.domain)} alt="" loading="lazy" /><div><b>{p.label}</b><span>Shop similar</span></div>
+          </a>
+        ))}
+        {L.pinterest.slice(0, 2).map((p) => (
+          <a className="card" key={p.url} href={p.url} target="_blank" rel="noreferrer">
+            <img src={icon("pinterest.com")} alt="" loading="lazy" /><div><b>{p.label}</b><span>Ideas on Pinterest</span></div>
+          </a>
+        ))}
+      </div>
+      <div className="next">
+        <button className="primary" onClick={onSheet}>Open the tailor sheet</button>
+        <button onClick={onShop}>All ideas and shopping</button>
+      </div>
+    </div>
   );
 }
 
 // ------------------------------------------------------------------ app
 export default function App() {
-  const [view, setView] = useState<View>("fitting");
+  const [view, setView] = useState<View>("talk");
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
@@ -299,7 +416,7 @@ export default function App() {
   const reply = useCallback((next: Spec, ups: Update[], note?: string) => {
     const got = ups.filter((u) => u.op !== "compare").length;
     const text = !next.slots.garment && !got ? "Tell me a little more. What should we make, and for which occasion?"
-      : got ? `${phrase(next)[0].toUpperCase()}${phrase(next).slice(1)}.` : "Noted.";
+      : next.slots.garment ? `${phrase(next)[0].toUpperCase()}${phrase(next).slice(1)}.` : "Noted. What should we make?";
     setMsgs((x) => [...x, { role: "bot", text, questions: questions(next), note: note ?? (advice(next) || undefined) }]);
   }, []);
 
@@ -308,7 +425,7 @@ export default function App() {
     // the language model (when configured) and the on-device engine run together; the device answers alone if the model cannot
     const second = understand(text, spec);
     const { tokens, spans } = await tag(text);
-    const ups = bind(tokens, spans, "words");
+    const ups = [...bind(tokens, spans, "words"), ...wearerUpdates(text)];
     setMsgs((x) => [...x, { role: "me", text, tokens, spans }]);
     const model = await second;
     const all = model?.length ? [...ups, ...model] : ups;
@@ -324,29 +441,33 @@ export default function App() {
     const ups = answer(q.slot, v);
     const next = apply(spec, ups);
     setSpec(next);
-    setMsgs((x) => [...x, { role: "me", text: v, tokens: [v], spans: [] }]);
+    setMsgs((x) => [...x, { role: "me", text: q.labels?.[v] ?? v, tokens: [q.labels?.[v] ?? v], spans: [] }]);
     reply(next, ups);
   };
-  const edit = (slot: string, value: string) =>
-    setSpec(apply(spec, [{ op: LIST_SLOTS.includes(slot) ? "add" : "set", slot, value: { value, p: 1, src: "edit", evidence: "edited" } }]));
-  const fromBoard = (ups: Update[], note: string) => { const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("fitting"); };
-  const reset = () => { setSpec(emptySpec()); setMsgs([]); setView("fitting"); };
+  const edit = (slot: string, value: string, note?: string) => {
+    const ups: Update[] = [{ op: LIST_SLOTS.includes(slot) ? "replace" : "set", slot, value: { value, p: 1, src: "edit", evidence: "edited" } }];
+    if (note) ups.push({ op: "note", slot: "notes", value: { value: note, p: 1, src: "edit", evidence: "edited" } });
+    setSpec(apply(spec, ups));
+  };
+  const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
+  const fromBoard = (ups: Update[], note: string) => { const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
+  const reset = () => { setSpec(emptySpec()); setMsgs([]); setView("talk"); };
 
   const started = msgs.length > 0;
   const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
-  const NAV: [View, string][] = [["fitting", "Conversation"], ["board", "Moodboard"], ["sheet", "Tailor sheet"], ["shop", "Shop"]];
-  const header = (
+  const NAV: [View, string][] = [["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
+  const header = useMemo(() => (
     <header className="top"><div className="inner">
-      <button className="mark" onClick={reset} aria-label="Bespoke, start again">Bespoke</button>
-      {(started || view !== "fitting") && (
-        <nav className="nav">{NAV.map(([v, l]) => <button key={v} aria-current={view === v ? "page" : undefined} onClick={() => setView(v)}>{l}</button>)}</nav>
-      )}
+      <button className="mark" onClick={() => setView("talk")} aria-label="Bespoke home">Bespoke</button>
+      <nav className="seg" aria-label="Sections">{NAV.map(([v, l]) => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{l}</button>)}</nav>
+      <div className="right">{started && <button className="ghost" onClick={reset}>New design</button>}</div>
     </div></header>
-  );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [view, started]);
 
   if (view === "board") return (<>{header}<Board onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} /></>);
-  if (view === "shop") return (<>{header}<ShopView spec={spec} /></>);
+  if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} /></>);
 
   if (!started) return (
     <>
@@ -362,7 +483,7 @@ export default function App() {
         <div className="brief">
           <Line onSend={send} voice={voice} autoFocus label="Your brief" />
           <div className="tries">
-            {SUGGESTIONS.slice(1).map((x) => <button key={x} onClick={() => send(x)}>{x}</button>)}
+            {SUGGESTIONS.map((x) => <button key={x} onClick={() => send(x)}>{x}</button>)}
             <button className="alt" onClick={() => setView("board")}>Start from pictures instead</button>
           </div>
         </div>
@@ -384,16 +505,17 @@ export default function App() {
                 {x.questions.slice(0, 2).map((q) => (
                   <div className="ask" key={q.slot}>
                     <div className="q">{q.text}</div>
-                    <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? o}</button>)}</div>
+                    <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? nice(o)}</button>)}</div>
                   </div>
                 ))}
-                {i === msgs.length - 1 && spec.slots.garment && (
-                  <div className="next">
-                    <button onClick={() => setView("board")}>Add pictures</button>
-                    <button onClick={() => setView("sheet")}>See the tailor sheet</button>
-                    <button onClick={() => setView("shop")}>Ideas and shopping</button>
-                  </div>
-                )}
+                {i === msgs.length - 1 && spec.slots.garment && (questions(spec).length === 0
+                  ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} />
+                  : (
+                    <div className="next">
+                      <button onClick={() => setView("board")}>Add pictures</button>
+                      <button onClick={() => setView("shop")}>Ideas and shopping</button>
+                    </div>
+                  ))}
               </div>
             </div>
           ))}

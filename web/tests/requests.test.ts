@@ -3,13 +3,13 @@
 // every case; the tagger and the language-model layer only add on top of this floor.
 import assert from "node:assert/strict";
 import { tagRules, tokenize } from "../lib/engine/lexicon.ts";
-import { apply, bind, emptySpec, questions } from "../lib/engine/spec.ts";
+import { apply, bind, emptySpec, questions, wearerOf, wearerUpdates } from "../lib/engine/spec.ts";
 import type { Spec } from "../lib/engine/spec.ts";
-import { phrase } from "../lib/engine/describe.ts";
+import { links, nearestColour, phrase } from "../lib/engine/describe.ts";
 
 function run(...msgs: string[]): Spec {
   let s = emptySpec();
-  for (const m of msgs) { const t = tokenize(m); s = apply(s, bind(t, tagRules(t), "words")); }
+  for (const m of msgs) { const t = tokenize(m); s = apply(s, [...bind(t, tagRules(t), "words"), ...wearerUpdates(m)]); }
   return s;
 }
 const slot = (s: Spec, k: string) => s.slots[k]?.value;
@@ -148,5 +148,27 @@ check("revision across turns", () => {
   assert.equal(slot(s, "sleeve.length"), "full");
   assert.deepEqual(list(s, "colour"), ["mint"]);
   assert.ok(excluded(s).includes("yellow"));
+});
+check("sherwani for a brother's wedding", () => {
+  const s = run("An ivory sherwani for my brother's wedding, mandarin collar, no heavy work");
+  assert.equal(slot(s, "garment"), "sherwani");
+  assert.deepEqual(list(s, "colour"), ["ivory"]);
+  assert.equal(slot(s, "neckline.shape"), "mandarin");
+  assert.ok(list(s, "occasion").includes("wedding"));
+  assert.ok(excluded(s).includes("embroidery"));
+  assert.equal(wearerOf(s), "men");
+});
+check("who it is for shapes the searches", () => {
+  const s = run("a navy hoodie for my husband");
+  assert.equal(wearerOf(s), "men");
+  assert.match(links(s).query, /^men's navy hoodie/);
+  assert.equal(wearerOf(run("a black kurti")), "women");
+  assert.equal(wearerOf(run("a grey sweatshirt")), "anyone");
+  assert.doesNotMatch(links(run("a black kurti")).query, /women's/);
+});
+check("custom colours map to the nearest named colour", () => {
+  assert.equal(nearestColour("#1b2747"), "navy");
+  assert.equal(nearestColour("#7b1f2f"), "maroon");
+  assert.equal(nearestColour("#f6f1e6"), "ivory");
 });
 console.log(`ok: ${n} realistic requests`);
