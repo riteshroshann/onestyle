@@ -1,0 +1,54 @@
+\begin{tikzpicture}[
+  n/.style={text width=3.55cm,font=\small,inner ysep=6pt,anchor=north},
+  w/.style={text width=8.6cm,font=\small,inner ysep=6pt,anchor=north},
+  d/.style={text width=2.25cm,font=\footnotesize,inner xsep=5pt,inner ysep=5pt},
+  s/.style={font=\scriptsize,text=soft},
+  x=1cm,y=1cm]
+\coordinate (lane) at (-2.45,0);
+% row 1: inputs
+\node[blue,n] (txt) at (0,0) {Customer words\\{\footnotesize\color{soft}chat, notes, WhatsApp export, in English or Hinglish}};
+\node[peach,n] (mb) at (5,0) {Moodboard\\{\footnotesize\color{soft}Excalidraw canvas with uploads, Pinterest pins, notes, arrows and circled regions}};
+\node[grey,n] (prof) at (10,0) {Profile\\{\footnotesize\color{soft}measurements, past orders, fit history}};
+% row 2: engines
+\node[lav,n] (le) at (0,-3.0) {Language engine\\{\footnotesize\color{soft}normalise, tag spans, bind them to garment parts, ground in the ontology}};
+\node[lav,n] (me) at (5,-3.0) {Moodboard engine\\{\footnotesize\color{soft}board graph, part crops, attribute distributions, pooling}};
+% row 3: resolver
+\node[green,w] (res) at (5,-5.75) {Spec resolver\\{\footnotesize\color{soft}merges text, board and profile evidence; finds conflicts; calibrates confidence; decides which questions are worth asking}};
+% row 4: spec
+\node[sand,w] (spec) at (5,-7.85) {DesignSpec $v_k$\\{\footnotesize\color{soft}garment, parts, values, ease, finished measurements, and where each value came from}};
+% row 5: outputs
+\node[blue,n] (studio) at (0,-10.25) {Studio\\{\footnotesize\color{soft}the customer edits and approves}};
+\node[sand,n] (sheet) at (5,-10.25) {Tailor sheet\\{\footnotesize\color{soft}English and Hindi, PDF or link}};
+\node[grey,n] (order) at (10,-10.25) {Order\\{\footnotesize\color{soft}fittings, revisions, rating}};
+% flows
+\draw[flow] (txt) -- (le);
+\draw[flow] (mb) -- (me);
+\draw[flow] (le.south) -- (le.south|-res.north);
+\draw[flow] (me) -- (res);
+\draw[flow] (prof.south) |- (res.east);
+\draw[flow] (res) -- (spec);
+\draw[flow] (spec.south) -- ++(0,-0.4) -| ([xshift=6mm]studio.north);
+\draw[flow] (spec.south) -- (sheet.north);
+\draw[flow] ([yshift=-5mm]sheet.north east) -- ([yshift=-5mm]sheet.north east-|order.west);
+\draw[dflow] (res.west) -- (lane|-res.west) |- (txt.west);
+\node[s,anchor=south west] at ($(lane|-res.west)+(0.08,0.02)$) {clarifying questions};
+\draw[dflow] ([xshift=-8mm]studio.north) |- node[pos=0.72,above,s]{edits} (spec.west);
+% data platform, flowing right to left
+\node[grey,d] (log) at (10.35,-13.55) {event log\\{\scriptsize\color{soft}sessions, specs, orders}};
+\node[grey,d] (pub) at (10.35,-15.25) {public data\\{\scriptsize\color{soft}H\&M, Amazon, RentTheRunway}};
+\node[grey,d] (lake) at (6.85,-14.4) {lake\\{\scriptsize\color{soft}Parquet files, partitioned by day}};
+\node[lav,d] (spark) at (3.45,-14.4) {Spark jobs\\{\scriptsize\color{soft}clean, count, MLlib pipelines}};
+\node[green,d] (rec) at (0,-14.4) {models\\{\scriptsize\color{soft}trends, recommenders, tailor match}};
+\draw[flow] (log.west) -- ++(-0.35,0) |- ([yshift=2mm]lake.east);
+\draw[flow] (pub.west) -- ++(-0.35,0) |- ([yshift=-2mm]lake.east);
+\draw[flow] (lake) -- (spark);
+\draw[flow] (spark) -- (rec);
+\draw[flow] (order.south) -- (log.north-|order.south);
+\draw[dflow] (rec.north) -- node[right,s]{suggestions: fabrics, colours, tailors} (rec.north|-studio.south);
+\begin{scope}[on background layer]
+\node[group,draw=lavD,fill=lavF!22,fit=(le)(me)(res),inner sep=7pt] (ai) {};
+\node[group,draw=greyD,fill=greyF!40,fit=(log)(pub)(rec),inner sep=7pt] (dp) {};
+\end{scope}
+\node[gtitle,text=lavT,anchor=north east] at ([xshift=-5pt,yshift=-4pt]ai.north east) {understanding};
+\node[gtitle,text=greyT,anchor=south east] at ([xshift=-5pt,yshift=-6pt]dp.south east) {data platform};
+\end{tikzpicture}

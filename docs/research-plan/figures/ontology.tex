@@ -1,0 +1,20 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  part/.style={lav,text width=2.2cm,font=\small},
+  att/.style={font=\scriptsize,align=left,text width=8.7cm,anchor=west,inner sep=2pt},
+  ty/.style={font=\scriptsize\scshape,text=lavT}]
+\newcommand{\T}[1]{{\color{lavT}\textsc{#1}}}
+\node[sand,text width=1.5cm] (root) at (0,0) {kurti\\{\scriptsize\color{soft}garment}};
+\node[part] (neck) at (3.1,3.6) {neckline};
+\node[part] (slv) at (3.1,2.0) {sleeve};
+\node[part] (bod) at (3.1,0.4) {bodice and waist};
+\node[part] (low) at (3.1,-1.2) {lower body};
+\node[part] (hem) at (3.1,-2.8) {hem and slits};
+\node[green,text width=2.2cm,font=\small] (glob) at (3.1,-4.45) {whole garment};
+\foreach \p in {neck,slv,bod,low,hem,glob}{\draw[flow] (root.east) -- ++(0.35,0) |- (\p.west);}
+\node[att] at (4.55,3.6) {shape \T{cat}: V, round, boat, square, sweetheart, keyhole, mandarin\\depth \T{ord}$\to$\T{in}: shallow $<$ moderate $<$ deep $<$ plunging \quad back depth \T{in}};
+\node[att] at (4.55,2.0) {style \T{cat}: cap, puff, bell, bishop, straight, kimono\\length \T{ord}: sleeveless $<$ cap $<$ short $<$ elbow $<$ three-quarter $<$ full};
+\node[att] at (4.55,0.4) {fit \T{ord}$\to$ease: fitted $<$ semi-fitted $<$ relaxed $<$ loose\\shaping \T{cat}: darts, princess seams \quad waist \T{ord}: empire $<$ natural $<$ low};
+\node[att] at (4.55,-1.2) {silhouette \T{cat}: straight, A-line, flared, anarkali\\fullness \T{ord} \quad panel (kali) count \T{int} \quad fit at hip \T{ord}$\to$ease};
+\node[att] at (4.55,-2.8) {length \T{ord}$\to$\T{in}: hip $<$ thigh $<$ knee $<$ calf $<$ ankle\\slit \T{cat}: side, front, none \quad hem \T{cat}: straight, high-low, asymmetric};
+\node[att] at (4.55,-4.45) {colour and shade, fabric, print, embellishment (zari, gota patti, mirror,\\chikankari, pearl), lining, closure, occasion, style: all \T{cat}, several take lists};
+\end{tikzpicture}

@@ -1,0 +1,16 @@
+% \garment{x}{y}{scale}{fill}{neck: v | deepv | round | boat}{sleeve: short | puff | long}
+\newcommand{\garment}[6]{%
+\begin{scope}[shift={(#1,#2)},scale=#3]
+  \def\neckv{(-0.2,1.0) -- (0,0.62) -- (0.2,1.0)}
+  \def\neckdeepv{(-0.2,1.0) -- (0,0.38) -- (0.2,1.0)}
+  \def\neckround{(-0.2,1.0) .. controls (-0.16,0.8) and (0.16,0.8) .. (0.2,1.0)}
+  \def\neckboat{(-0.33,1.0) .. controls (-0.2,0.93) and (0.2,0.93) .. (0.33,1.0)}
+  \def\slvshort{-- (0.47,0.95) -- (0.72,0.62) -- (0.55,0.5) -- (0.42,0.66)}
+  \def\slvpuff{-- (0.47,0.95) .. controls (0.95,1.05) and (0.95,0.55) .. (0.62,0.5) -- (0.42,0.66)}
+  \def\slvlong{-- (0.47,0.95) -- (0.95,0.0) -- (0.8,-0.08) -- (0.42,0.66)}
+  \def\lslvshort{-- (-0.42,0.66) -- (-0.55,0.5) -- (-0.72,0.62) -- (-0.47,0.95)}
+  \def\lslvpuff{-- (-0.42,0.66) -- (-0.62,0.5) .. controls (-0.95,0.55) and (-0.95,1.05) .. (-0.47,0.95)}
+  \def\lslvlong{-- (-0.42,0.66) -- (-0.8,-0.08) -- (-0.95,0.0) -- (-0.47,0.95)}
+  \filldraw[fill=#4,draw=#4!70!black,line width=0.4pt,line join=round]
+    \csname neck#5\endcsname \csname slv#6\endcsname -- (0.34,0.1) -- (0.8,-1.0) -- (-0.8,-1.0) -- (-0.34,0.1) \csname lslv#6\endcsname -- cycle;
+\end{scope}}

@@ -1,0 +1,86 @@
+# BESPOKE seed gold set. Hand-written requests in bracket markup: [text|TAG].
+# Written by the developers, independently of the synthetic templates. Lines 1-30 are dev, the rest test.
+# Conventions: the word "sleeves" or "neck" is PART unless it is part of a named neckline (v neck, boat neck).
+# LOC includes a following "se". INT covers softeners and intensifiers. This set will be replaced by BESPOKE-Spec.
+i want a [pastel|SHADE] [blue|COLOUR] [kurti|GARMENT] for my [farewell|OCCASION], [elegant|STYLE] not too flashy
+[kurti|GARMENT] chahiye, [waist|PART] pe [fitted|FIT], [neeche se|LOC] [thoda|INT] [loose|FIT]
+[v neck|NECKLINE] [thoda|INT] [deep|DIM] rakhna
+make the [sleeves|PART] [puff|SLEEVE] and [elbow length|LENGTH]
+[no|NEG] [embroidery|EMBELL] please, [simple|STYLE] [cotton|FABRIC] for [office|OCCASION]
+looking for a [maroon|COLOUR] [lehenga|GARMENT] with [gota patti|EMBELL] for my cousin's [wedding|OCCASION]
+[anarkali|GARMENT] in [georgette|FABRIC], [floor length|LENGTH], [kalidar|SILHOUETTE] with [zari|EMBELL] on the [hem|PART]
+[blouse|GARMENT] ka [gala|PART] [aage se|LOC] [gol|NECKLINE] aur [peeche se|LOC] [deep|DIM]
+[mustard|COLOUR] [nahi|NEG] chahiye, [peach|COLOUR] or [mint|COLOUR] chalega
+a [short|LENGTH] [black|COLOUR] [dress|GARMENT] with [puff|SLEEVE] [sleeves|PART] and a [square neck|NECKLINE]
+[neckline|PART] [deeper than|CMP] [#1|REF] but [less than|CMP] [#2|REF]
+[sleeves|PART] like [pic 2|REF], colour like [the first one|REF]
+[length|PART] [42 inch|NUM], [side slits|PART] [8 inches|NUM]
+[straight cut|SILHOUETTE] [kurta|GARMENT] in [linen|FABRIC], [relaxed|FIT] fit, [mandarin collar|NECKLINE]
+[sangeet|OCCASION] ke liye kuch [indo western|STYLE] chahiye, [bright|SHADE] [pink|COLOUR] with [mirror work|EMBELL]
+[sharara|GARMENT] set in [rani pink|COLOUR] with [sequins|EMBELL]
+[full|LENGTH] [sleeves|PART] but [loose|FIT] at the [wrist|O]
+[co-ord set|GARMENT] in [printed|PATTERN] [rayon|FABRIC] for [daily wear|OCCASION]
+[chikankari|EMBELL] [kurta|GARMENT] in [white|COLOUR], [straight|SILHOUETTE] and [knee length|LENGTH]
+something [minimal|STYLE] and [feminine|STYLE] for a [date|OCCASION], [lavender|COLOUR] maybe
+[bodice|PART] [fitted|FIT] and [skirt part|PART] [flared|SILHOUETTE] [fit and flare|SILHOUETTE] type
+[saree blouse|GARMENT] with [sweetheart|NECKLINE] neckline and [cap|LENGTH] [sleeves|PART]
+[back|PART] [bahut|INT] [deep|DIM] [mat|NEG] karna
+[palazzo|GARMENT] [white|COLOUR] [cotton|FABRIC], [kurti|GARMENT] [yellow|COLOUR] [floral|PATTERN]
+[high neck|NECKLINE] [velvet|FABRIC] [gown|GARMENT] for [reception|OCCASION]
+[thoda|INT] [shimmer|EMBELL] chahiye but [not|NEG] [heavy|STYLE]
+[neck|PART] [7 inch|NUM] [deep|DIM] in front
+[nehru jacket|GARMENT] in [silk|FABRIC] for [diwali|OCCASION], [bandhani|PATTERN] lining
+[ombre|PATTERN] [chiffon|FABRIC] [dress|GARMENT], [midi|LENGTH], [bell|SLEEVE] [sleeves|PART]
+[kurti|GARMENT] [ankle length|LENGTH] [mat|NEG] banana, [knee|LENGTH] tak theek hai
+mujhe [haldi|OCCASION] ke liye [peela|COLOUR] [sharara|GARMENT] chahiye with [gota|EMBELL] work
+[a-line|SILHOUETTE] [kurtee|GARMENT] in [pastel|SHADE] [green|COLOUR], [three quarter|LENGTH] [sleeves|PART]
+[boat neck|NECKLINE] [crop top|GARMENT] and [flared|SILHOUETTE] [skirt|GARMENT] for [navratri|OCCASION]
+[sleeveless|LENGTH] [anarkalli|GARMENT] with [deep v|NECKLINE] and [net|FABRIC] [dupatta|O]
+i [dont|NEG] want [prints|PATTERN], [plain|PATTERN] [navy|COLOUR] [silk|FABRIC] only
+[waist|PART] par [tight|FIT] [nahi|NEG], [thoda|INT] [comfortable|FIT] rakho
+[georget|FABRIC] [salwar suit|GARMENT] with [chikenkari|EMBELL] on the [yoke|PART]
+[organza|FABRIC] [dupatta|O] with [pearl work|EMBELL] border, [ivory|COLOUR] [kurta|GARMENT]
+[lehenga|GARMENT] [ghera|PART] [bahut|INT] [zyada|INT] chahiye, [heavy|STYLE] [zardozi|EMBELL]
+[shirt|GARMENT] in [linen|FABRIC], [half|LENGTH] [sleeves|PART], [regular fit|FIT] for [office|OCCASION]
+[sherwani|GARMENT] [ivory|COLOUR] with [gold|COLOUR] [thread work|EMBELL] for my [wedding|OCCASION]
+[kaftan|O] style [kurti|GARMENT] [loose|FIT] and [airy|FIT] for [summer|O]
+[dhoti|O] [pants|GARMENT] with a [short|LENGTH] [kurta|GARMENT] in [khadi|FABRIC]
+[neckline|PART] [same as|CMP] [#3|REF] but [shallower than|CMP] [#3|REF]
+[sleeves|PART] [pic 1|REF] [jaisi|CMP], colour [photo 2|REF] [jaisa|CMP]
+[skirt|GARMENT] [floor length|LENGTH] with [tassels|EMBELL] at the [hem|PART]
+[jumpsuit|GARMENT] in [olive|COLOUR] [crepe|FABRIC], [wide|DIM] [legs|O], [belted|O] at the [waist|PART]
+a [classy|STYLE] [black|COLOUR] [gown|GARMENT] with [off shoulder|NECKLINE] neckline and [mermaid|SILHOUETTE] cut
+[maroon|COLOUR] [velvet|FABRIC] [blouse|GARMENT] [elbow|LENGTH] [sleeves|PART], [back|PART] [deep|DIM] with [potli|NECKLINE] buttons
+[kurti|GARMENT] [hip length|LENGTH] for [college|OCCASION], [checks|PATTERN] in [blue|COLOUR] and [white|COLOUR]
+[lehnga|GARMENT] [choli|O] for [mehndi|OCCASION] in [parrot green|COLOUR] with [mirror|EMBELL] and [tassels|EMBELL]
+[angrakha|SILHOUETTE] style [kurta|GARMENT] [cotton|FABRIC] [block print|PATTERN]
+[v neck|NECKLINE] [nahi|NEG], [round neck|NECKLINE] chahiye
+[sleeves|PART] [bahut|INT] [loose|FIT] [nahi|NEG], [semi fitted|FIT] theek hai
+[pastel|SHADE] [lavender|COLOUR] [dress|GARMENT] [flowyy|FIT] and [dreamy|STYLE] for my [birthday|OCCASION]
+[keyhole|NECKLINE] neck at the [back|PART] with a [tassel|EMBELL]
+[straight|SILHOUETTE] [pants|GARMENT] in [beige|COLOUR] [linen|FABRIC], [relaxed|FIT]
+[deep|DIM] [u neck|NECKLINE] [chaahiye|O] [blouse|GARMENT] mein
+[gown|GARMENT] [champagne|COLOUR] [satin|FABRIC] [floor length|LENGTH], [minimal|STYLE]
+[organzaa|FABRIC] [saree blouse|GARMENT] with [puffy|SLEEVE] [sleeves|PART]
+[peplum|SILHOUETTE] [top|GARMENT] [pista|COLOUR] [colour|O] for [eid|OCCASION]
+[kurta|GARMENT] [neeche se|LOC] [gherdar|SILHOUETTE], [upar se|LOC] [fitted|FIT]
+[bridal|OCCASION] [lehenga|GARMENT] [red|COLOUR] [banarasi|FABRIC] with [zardosi|EMBELL]
+[no|NEG] [sequins|EMBELL], [no|NEG] [net|FABRIC], [only|O] [cotton|FABRIC] [mulmul|FABRIC]
+[cold shoulder|SLEEVE] [top|GARMENT] in [teal|COLOUR] for a [party|OCCASION]
+[neck|PART] [thoda|INT] [chauda|DIM] aur [kam gehra|DIM]
+[kurti|GARMENT] [shoulder|PART] pe [ruffle|SLEEVE] and [three-quarter|LENGTH] [sleeves|PART]
+[length|PART] [44 inches|NUM] and [sleeve|PART] [17 inch|NUM]
+[chanderi|FABRIC] [anarkali|GARMENT] [onion pink|COLOUR] for [puja|OCCASION]
+[dark|SHADE] [green|COLOUR] [silk|FABRIC] [kurta|GARMENT] for my [engagement|OCCASION], [royal|STYLE] look
+[ikat|PATTERN] [cotton|FABRIC] [dress|GARMENT] [knee length|LENGTH] [sleeveless|LENGTH]
+[tie dye|PATTERN] [co-ord|GARMENT] [oversized|FIT] for [daily|OCCASION]
+[stripes|PATTERN] [nahi|NEG] chahiye, [solid|PATTERN] [rakho|O]
+[sweatheart|NECKLINE] neckline [corset|O] style [blouse|GARMENT]
+[very|INT] [fitted|FIT] [bodycon|SILHOUETTE] [dress|GARMENT] [black|COLOUR] [lycra|FABRIC]
+[kurti|GARMENT] like [#2|REF] but [longer than|CMP] [#2|REF]
+[sleeves|PART] [shorter than|CMP] [pic 3|REF]
+[plazzo|GARMENT] [wide|DIM] [legs|O] [white|COLOUR]
+[gala|PART] [chinese collar|NECKLINE] [wala|O], [full|LENGTH] [baazu|PART]
+[light|SHADE] [pink|COLOUR] [chikan|EMBELL] [kurti|GARMENT] [lucknowi|EMBELL] style
+[empire|SILHOUETTE] [waist|PART] [maxi|LENGTH] [dress|GARMENT] in [floral|PATTERN] [georgette|FABRIC]
+[wrap|SILHOUETTE] [dress|GARMENT] in [emerald|COLOUR] [satin|FABRIC] for a [cocktail|OCCASION]

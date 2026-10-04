@@ -1,0 +1,18 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  r/.style={box,text width=6.4cm,font=\small,align=left,inner ysep=5pt,anchor=west,minimum height=1.25cm},
+  lv/.style={font=\small\scshape,text=lavT,anchor=east},
+  nt/.style={font=\footnotesize,text=soft,align=left,anchor=west,text width=5.0cm}]
+\foreach \y/\l/\f/\d/\w/\n in {
+ 0/l0/greyF/greyD/{\textbf{Rules and gazetteer}\\ontology forms, Hinglish variants, collocations}/{morphology, collocations; the floor},
+ -1.8/l1/blueF/blueD/{\textbf{Bag of words, TF-IDF, n-grams}\\logistic regression for occasion and style}/{one-hot, BoW, TF-IDF, n-gram LM},
+ -3.6/l2/blueF/blueD/{\textbf{HMM, then CRF}\\BIO tags with shape, suffix, gazetteer features}/{HMM, CRF, POS tags as features},
+ -5.4/l3/lavF/lavD/{\textbf{Encoder with CRF head}\\MuRIL, HingRoBERTa, mmBERT; GLiNER2}/{BERT, NER; the main extractor},
+ -7.2/l4/lavF/lavD/{\textbf{Binder and grounding}\\spans to (part, attribute, value) triples}/{syntax, dependency parsing, graph NLP},
+ -9.0/l5/sandF/sandD/{\textbf{Small LLM with schema decoding}\\Qwen3.5-4B with QLoRA; valid JSON by construction}/{GPT, seq2seq; comparison and teacher},
+ -10.8/l6/greenF/greenD/{\textbf{State tracker and clarifier}\\turn-by-turn updates; confidence decides what to ask}/{summarisation, QA, calibration, metrics}}{
+  \node[lv] at (-0.25,\y) {\l};
+  \node[r,fill=\f,draw=\d] (n\l) at (0,\y) {\w};
+  \node[nt] at (7.3,\y) {\n};
+}
+\foreach \a/\b in {l0/l1,l1/l2,l2/l3,l3/l4,l4/l5,l5/l6}{\draw[flow] (n\a.south) -- (n\b.north);}
+\end{tikzpicture}

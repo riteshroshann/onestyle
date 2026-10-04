@@ -1,0 +1,188 @@
+\chapter{Introduction}
+
+\section{The problem}
+
+Most custom clothing in India is still specified the way it was thirty years ago: a customer describes what they want, shows a few photos on their phone, and the tailor writes a handful of numbers on a slip of paper. The description is usually a paragraph in mixed Hindi and English (``kurti chahiye, waist pe fitted, neeche se thoda loose, V neck thoda deep''), and the photos disagree with each other. What reaches the cutting table is the tailor's memory of that conversation. When memory and intent differ, the garment is altered or remade.
+
+This is a large market with almost no software. An analysis of the Periodic Labour Force Survey 2023--24 counts about 12 million custom tailors in India in 2024, roughly one in six manufacturing workers, and 72\% of them are women \cite{dataforindia}. The platforms that exist (made-to-measure shirt companies, doorstep blouse stitching, home-measurement services) offer fixed option menus and a measurement form. None of them reads free text or a moodboard and turns it into instructions a tailor can cut from.
+
+\sys{} is that missing layer. It takes two inputs: the customer's words, in English or Hinglish, across one or more messages; and a moodboard, built on an embedded Excalidraw canvas, holding reference images, notes, arrows and circled regions. It produces one output: a \emph{DesignSpec}, a versioned, typed description of the garment by part (neckline, sleeve, bodice, lower body, hem), with values, ease allowances, finished measurements and the source of every value. From the DesignSpec it renders a tailor sheet in English and Hindi. Around it sits a Spark data platform that learns, from completed orders, which defaults and suggestions work.
+
+\section{What an earlier prototype taught us}
+
+Before this project, we built a retrieval prototype for a narrower problem: finding catalogue products for a free-text request. It parsed requests over a 15-slot, 190-value ontology, fused lexical, text and image channels, and ran its corpus side on Spark over 856,667 records. Three of its findings shape \sys{}.
+
+First, the photo is the strongest signal. On Fashion200K, the FashionSigLIP image channel alone reached MRR 0.219, ahead of every text-only model, so \sys{} treats images as first-class evidence instead of decoration. Second, explicit structure paid off exactly where language is hard for vector models: exclusions. Appending ``but not $c$'' made every neural retriever return colour $c$; the structured parser cut those results by more than half. Customers' requests to tailors are full of such constraints (``no embroidery'', ``not this colour'', ``deeper than this one''), so \sys{} keeps structure at its core. Third, a rule parser scored F1 0.981 on 80 hand-written requests, but 80 examples by the same authors say little about real customers. \sys{} therefore starts with data: real requests, real boards, and practising tailors in the evaluation.
+
+\section{From retrieval to specification}
+
+Retrieval asks ``which existing product is closest''. A tailor needs something different: a complete, unambiguous instruction for a garment that does not exist yet. That changes four things.
+
+The output becomes part-aware. ``Fitted at the waist, loose below'' is two values on two parts, not one fit value for the garment. The ontology (Chapter~\ref{ch:design}) is a graph of garment, parts and typed attributes, some categorical, some ordinal, some numeric in inches.
+
+The input becomes a set. A moodboard holds several images with different roles: one is liked for its sleeve, one is rejected for its colour, and two bound a neckline depth from above and below. Chapter~\ref{ch:board} reads the whole board at once.
+
+Uncertainty becomes visible. A spec that silently guesses neckline depth is worse than one that asks, because a neckline cut too deep cannot be raised. The resolver calibrates every value and asks a short question when a construction-critical value is uncertain.
+
+The data platform has a purpose. Every completed order is a labelled example of what was asked, what was made and how it fitted. Chapter~\ref{ch:data} turns that stream, together with public retail data, into trends, defaults and suggestions.
+
+\section{Contributions}
+
+The work is planned to deliver five things, each with a measurable exit test in Chapter~\ref{ch:phases}.
+
+\begin{enumerate}
+\item \textsc{bespoke-spec}, a benchmark of English and Hinglish garment requests, moodboards and multi-turn revisions, annotated with part-level specifications, released under an open licence.
+\item A language engine that converts code-mixed requests into calibrated, part-level specifications and decides when to ask, with every model from TF-IDF to a small LLM evaluated on the same test set.
+\item A moodboard interpreter that reads an Excalidraw scene as a graph and pools evidence across images, circled regions, notes and negative references, including interval constraints between references.
+\item A tailor sheet and studio, evaluated with practising tailors against the current practice of chat messages and photos.
+\item A Spark data platform over public fashion data and the order log, with the MapReduce, DataFrame, DAG and MLlib work the Big Data syllabus asks for.
+\end{enumerate}
+
+\section{How to read this plan}
+
+Chapters~\ref{ch:lit} and~\ref{ch:gap} review the literature and derive the objectives. Chapter~\ref{ch:sota} selects models and datasets. Chapters~\ref{ch:design} to~\ref{ch:sheet} describe the system, with the language engine and BERT in full detail in Chapter~\ref{ch:lang}. Chapter~\ref{ch:data} is the big-data platform and Chapter~\ref{ch:eng} the engineering workflow, written like developer documentation. Chapter~\ref{ch:eval} is the evaluation plan, Chapter~\ref{ch:phases} the phased timeline starting with the first two hours, Chapter~\ref{ch:pub} the publication plan, and Chapter~\ref{ch:syllabus} maps every syllabus topic to the component that covers it.
+
+% ======================================================================
+\chapter{Literature Review}\label{ch:lit}
+
+\section{Search protocol}
+
+Primary sources were restricted to five publishers, following the course guidance: IEEE Xplore (which includes the CVPR, ICCV and WACV proceedings), SpringerLink (including ECCV and LNCS), ScienceDirect, Taylor \& Francis and Wiley. The window was 2021 to 2026, with 2025 and 2026 preferred. Every paper below was confirmed against its publisher record or DOI. Queries combined three groups of terms: the task (attribute value extraction, slot filling, sewing pattern generation, garment specification, conversational recommendation), the domain (fashion, apparel, garment, kurta, Indian ethnic wear) and the method (large language model, BERT, CRF, vision-language model, Spark). Work from ACM, ACL and ICLR that no review of this field can skip is discussed separately in Section~\ref{sec:beyond}.
+
+Fifteen papers form the core review (Table~\ref{tab:core}). For each, we state the technical contribution and the concrete limitation that matters for \sys{}, in three to four lines, following the format the course asks for.
+
+\begin{table}[t]
+\centering\small
+\caption{The core review set, ordered by topic.}\label{tab:core}
+\begin{tabularx}{\textwidth}{@{}rLP{3.4cm}r@{}}
+\thd{} & \thd{paper} & \thd{venue, publisher} & \thd{year}\\
+1 & Brinkmann et al., LLMs for extraction and normalisation of attribute values \cite{brinkmann2024adbis} & ADBIS, Springer LNCS & 2024\\
+2 & Brinkmann et al., ExtractGPT \cite{brinkmann2024extractgpt} & iiWAS, Springer LNCS & 2024\\
+3 & Zhao et al., fashion attribute extraction with visual prompting \cite{zhao2025ave} & NLPCC, Springer LNCS & 2025\\
+4 & Jia et al., MuJo-SF multimodal slot filling \cite{jia2024mujo} & IEEE Trans.\ Multimedia & 2024\\
+5 & Cheng et al., ChatPreference \cite{cheng2026chatpref} & J.\ Engineering Design, T\&F & 2026\\
+6 & Park et al., FEA needs model for conversational recommendation \cite{park2025fea} & Fashion and Textiles, Springer & 2025\\
+7 & Chia et al., FashionCLIP \cite{chia2022fashionclip} & Scientific Reports, Springer Nature & 2022\\
+8 & Kishore Kumar et al., fine-grained Indian ethnic wear \cite{kumar2024ethnic} & Springer Nature & 2024\\
+9 & Suman et al., Kouture kurta dataset \cite{suman2025kouture} & LNNS, Springer & 2025\\
+10 & Bian et al., ChatGarment \cite{bian2025chatgarment} & CVPR, IEEE & 2025\\
+11 & Zhou et al., Design2GarmentCode \cite{zhou2025d2gc} & CVPR, IEEE & 2025\\
+12 & Nakayama et al., AIpparel \cite{nakayama2025aipparel} & CVPR, IEEE & 2025\\
+13 & Gui et al., GenPattern \cite{gui2025genpattern} & J.\ Manufacturing Systems, Elsevier & 2025\\
+14 & Goyal et al., hybrid recommendation on Spark and Hadoop \cite{goyal2026hybrid} & Discover Computing, Springer & 2026\\
+15 & Shirke et al., Hinglish NER with HingBERT ensembles \cite{shirke2025hinglish} & ICCUBEA, IEEE & 2025\\
+\end{tabularx}
+\end{table}
+
+\section{Attribute extraction from product text and images}
+
+\paragraph{Brinkmann et al.\ 2024 \cite{brinkmann2024adbis}} \emph{Contribution:} prompts GPT-3.5 and GPT-4 to extract attribute values from product offers and to normalise them (name expansion, generalisation, unit conversion), and introduces the WDC-PAVE benchmark of offers from 59 websites in five categories; GPT-4 reaches F1 91\%. \emph{Limitation:} the output is a flat set of attribute--value pairs from seller-written English. Nothing scopes a value to a garment part, and relative customer phrases such as ``thoda loose'' are outside its normalisation.
+
+\paragraph{Brinkmann et al., ExtractGPT \cite{brinkmann2024extractgpt}} \emph{Contribution:} compares textual and JSON schema descriptions in zero- and few-shot prompts; GPT-4 reaches 85\% average F1, five points above the best fine-tuned encoder baseline, and a fine-tuned GPT-3.5 matches GPT-4 but loses the ability to produce values it never saw. \emph{Limitation:} text only and a flat schema. The unseen-value finding is a warning for the long tail of Indian garment vocabulary, and argues for decoding constrained to an ontology rather than plain fine-tuning.
+
+\paragraph{Zhao et al.\ 2025 \cite{zhao2025ave}} \emph{Contribution:} builds a multimodal fashion dataset of implicit values (values visible in the image but absent from the text) and a two-step LLM pipeline that first names attributes, then fills values, with visual prompts pointing at key regions. \emph{Limitation:} one image and one text per item. There is no rule for text--image conflict and no record of which source supplied a value, both of which a moodboard needs.
+
+\paragraph{Jia et al., MuJo-SF \cite{jia2024mujo}} \emph{Contribution:} defines multimodal slot filling over a predefined attribute set, releases MAVP (79k description--image pairs), and decides per attribute type whether text or image is the reliable source. \emph{Limitation:} the source decision is fixed per attribute type, not per instance, and slots are always filled. A system that talks to customers needs per-instance routing and the option to leave a slot empty and ask.
+
+\section{Customer language and fashion text}
+
+\paragraph{Cheng et al., ChatPreference \cite{cheng2026chatpref}} \emph{Contribution:} a domain LLM for understanding customer preferences in apparel concept design, trained in three stages (domain pretraining, supervised fine-tuning on varied preference wordings, and a noise-tolerant DPO variant), demonstrated on men's dress shirts. \emph{Limitation:} one garment category, and the output is a preference reading and a recommendation, not an executable specification with measurements. Code-mixed input is not addressed.
+
+\paragraph{Park et al.\ 2025 \cite{park2025fea}} \emph{Contribution:} a functional--expressive--aesthetic needs taxonomy tagged in reviews by an LLM and fed to a conversational recommender; on trousers, adding need attributes raises success rate and shortens dialogues. \emph{Limitation:} needs are used to rank existing products and never mapped to construction parameters (``leg contouring'' never becomes knee ease). Its questions narrow a search; they do not complete a specification.
+
+\paragraph{Shirke et al.\ 2025 \cite{shirke2025hinglish}} \emph{Contribution:} an ensemble of HingBERT, HingRoBERTa and HingMBERT for named entity recognition in romanised Hinglish, presented as a cheaper alternative to LLMs. \emph{Limitation:} generic person, place and organisation labels on social-media text; no fashion entity types, no mixed Devanagari--Roman input, and three encoders triple the inference cost. A single code-mixed encoder fine-tuned on a fashion label set is the natural next step, and it is ours.
+
+\section{Fashion vision and Indian garments}
+
+\paragraph{Chia et al., FashionCLIP \cite{chia2022fashionclip}} \emph{Contribution:} contrastive image--text fine-tuning of CLIP on a fashion catalogue, giving transferable product representations for retrieval and zero-shot classification, with released weights. \emph{Limitation:} one global embedding per image. It does not say which part carries an attribute, and it was trained on one Western luxury catalogue. We use its successor family as the image encoder and add part-level heads.
+
+\paragraph{Kishore Kumar et al.\ 2024 \cite{kumar2024ethnic}} \emph{Contribution:} classifies Indian ethnic wear (92\% category accuracy) and, for kurtas, segments parts, detects body keypoints and classifies hem type, sleeve length, hem length and colour (attribute AP50 83\%). \emph{Limitation:} the closest prior work to part-level attributes for Indian garments, but for one category and four attributes, with geometric rules that need a garment worn on a posed body. Moodboards contain flat-lays, sketches and crops.
+
+\paragraph{Suman et al., Kouture \cite{suman2025kouture}} \emph{Contribution:} about 20,000 kurta images annotated part-wise for kurta type, sleeve, neckline and hemline, with colour and fabric. \emph{Limitation:} a dataset without a model, labels from listings, and no customer language or measurements. It is our seed for Indian part attributes and a test set for the image branch.
+
+\section{From design intent to garment patterns}
+
+\paragraph{Bian et al., ChatGarment \cite{bian2025chatgarment}} \emph{Contribution:} fine-tunes a vision-language model to emit a JSON garment description (type, style text and continuous parameters) that a refined GarmentCode program turns into sewing patterns; it handles image, sketch or text input and edits garments over several dialogue turns. \emph{Limitation:} English only, one image per query, an edit to one part leaks into others, no customer measurements, and under-specified requests are filled silently.
+
+\paragraph{Zhou et al., Design2GarmentCode \cite{zhou2025d2gc}} \emph{Contribution:} a multimodal model synthesises GarmentCode programs from text, images and sketches, checks the simulated result against the design and corrects itself; 30 professional pattern-makers rated its output. \emph{Limitation:} one standard body, no straps or halter necks, and the input is assumed complete. Nothing asks a question when a dimension is missing.
+
+\paragraph{Nakayama et al., AIpparel \cite{nakayama2025aipparel}} \emph{Contribution:} a multimodal foundation model trained on GCD-MM, over 120,000 garments with text, images, sewing patterns and instruction-edit pairs; a compact pattern tokenisation lets one model generate and edit patterns (stitch accuracy 77.2\% against 2.8\% for the previous image-to-pattern model). \emph{Limitation:} one image, a fixed set of single-step edit types, a mean body, and a Western garment set.
+
+\paragraph{Gui et al., GenPattern \cite{gui2025genpattern}} \emph{Contribution:} SVG-style tokenisation of sewing patterns, a dual-graph module that injects geometric and semantic structure into a multimodal LLM, and a link to a human--robot cutting cell for made-to-order garments; stitch accuracy 86.7\%. \emph{Limitation:} a mean panel-vertex error of 2.9\,cm is large next to the tolerance at a neckline or armhole, and intent arrives as one text or image with no dialogue.
+
+\section{Big data for fashion}
+
+\paragraph{Goyal et al.\ 2026 \cite{goyal2026hybrid}} \emph{Contribution:} a containerised Spark, Hadoop and Hive pipeline that combines ALS collaborative filtering with TF-IDF content filtering on 4.6 to over 40 million Amazon review records, showing sub-linear training-time growth and tolerance to a node failure. \emph{Limitation:} not fashion-specific, content features are bag-of-words text, and rating-based filtering cannot recommend for one-off custom garments. Similarity should be computed over extracted attribute vectors.
+
+\section{Work beyond the five publishers}\label{sec:beyond}
+
+Five further works are too close to ignore. TailorCoPilot \cite{sun2026tailorcopilot} (UIST 2026) stores sewing patterns as version-controlled states and is the only system that treats revision history as first-class; it serves pattern-makers, not customers. MAI with the FashionMT dataset \cite{chen2025mai} (ICLR 2025) formalises multi-turn retrieval where a request combines attributes from earlier references, the nearest formal analogue of ``sleeve from \#2, colour from \#1''. SIMMC~2.0 \cite{kottur2021simmc} (EMNLP 2021) defines dialogue state tracking and reference resolution for fashion shopping. GarmentCode \cite{korosteleva2023garmentcode} and GarmentCodeData \cite{korosteleva2024gcd} provide the parametric pattern language and 115,000 made-to-measure garments that the pattern-generation papers build on. EasyFashion \cite{qu2026easyfashion}, a September 2026 preprint, combines reference images, text and body photos into designs and patterns with a persistent design state; it is the closest system overall and is not yet peer-reviewed.
+
+\section{What the literature leaves open}
+
+Read together, these papers repeat the same eight limitations.
+
+\begin{enumerate}
+\item \emph{No part-level binding.} Extractors return one value per attribute per item, so ``fitted bodice, flared kalis'' collapses to one fit.
+\item \emph{One input at a time.} No system combines several references, records which source supplied each value, or resolves text--image conflict.
+\item \emph{Closed, Western vocabularies.} Kalidar panels, katori blouses and side slits cannot be expressed in GarmentCode or the extraction schemas.
+\item \emph{Under-specification is never detected.} Values are filled silently, without confidence or questions.
+\item \emph{Relative terms are not grounded.} ``Thoda loose'' and ``deeper than this one'' are never mapped to ease or inches on the customer's body.
+\item \emph{Code-mixed NLP stays generic.} Hinglish models use person, place and organisation labels and never feed structured extraction.
+\item \emph{Executability is not measured.} Papers report geometric error or user satisfaction, never whether a tailor can cut without calling the customer.
+\item \emph{Big-data layers ignore structure.} Spark recommenders use ratings and bag-of-words; nothing aggregates attribute-level demand from orders.
+\end{enumerate}
+
+% ======================================================================
+\chapter{Research Gap and Objectives}\label{ch:gap}
+
+\section{The five closest systems}
+
+Table~\ref{tab:matrix} scores the five reviewed systems closest to \sys{} on the ten capabilities the problem needs. ``Part'' means the capability is present in a limited form, described in the review above; ``n.r.'' means the paper does not report it.
+
+\begin{table}[h]
+\centering\small
+\caption{Capabilities of the five closest systems. The last column is what \sys{} must deliver.}\label{tab:matrix}
+\begin{tabularx}{\textwidth}{@{}Lccccc>{\itshape}c@{}}
+\thd{capability} & \thd{ChatGarment} & \thd{Design2GC} & \thd{AIpparel} & \thd{GenPattern} & \thd{MuJo-SF} & \thd{\sys{}}\\
+free-text input & yes & yes & yes & yes & part & yes\\
+code-mixed Hinglish & no & no & no & no & no & yes\\
+several reference images at once & no & part & no & no & no & yes\\
+region and part references & part & part & no & no & no & yes\\
+comparisons between references & no & no & no & no & no & yes\\
+multi-turn revision state & part & part & part & no & no & yes\\
+clarifying questions & no & no & no & no & no & yes\\
+Indian garments & no & no & no & n.r. & n.r. & yes\\
+output a tailor can execute & part & part & part & part & no & yes\\
+learning from orders and ratings & no & no & no & no & no & yes\\
+\end{tabularx}
+\end{table}
+
+\section{The gap}
+
+The pattern-generation systems are strong at geometry and weak at intent. They assume one clean English description or one image, fill every parameter silently, and stop at a pattern on a mean body. The extraction systems are strong at turning text into attributes but flatten the garment into one bag of values and never ask. None of them reads a set of references with their relationships, none speaks the language most Indian customers use with their tailor, and none is judged by the people who cut the cloth.
+
+Stated as one sentence: \emph{there is no method that turns a customer's code-mixed language and a multi-reference moodboard into a part-level, calibrated garment specification, asks only the questions that matter for construction, and is validated by practising tailors.}
+
+\section{Objectives}
+
+\begin{enumerate}
+\item[O1.] \emph{To build} a part-aware language engine that converts English and Hinglish garment requests, including multi-turn revisions, into a calibrated DesignSpec, and asks a clarifying question whenever a construction-critical value is uncertain.
+\item[O2.] \emph{To develop} a moodboard interpreter that reads an entire Excalidraw board (several references, circled regions, notes, rejected references and comparisons between references) into the same DesignSpec, with the source of every value recorded.
+\item[O3.] \emph{To evaluate} the full system with practising tailors against current chat-and-photo practice, and to build a Spark data platform that learns defaults and suggestions from order outcomes and public fashion data.
+\end{enumerate}
+
+\section{Research questions}
+
+\begin{enumerate}
+\item[RQ1.] How far does a code-mixed encoder with a CRF head get on part-level extraction from Hinglish requests, compared with classic taggers, zero-shot extractors and a small LLM with schema-constrained decoding?
+\item[RQ2.] Does reading the board as a graph of images, regions and notes beat sending the whole board to a vision-language model as one picture? It is the question our retrieval prototype asked, whether explicit structure still helps a strong neural model, asked of a new input.
+\item[RQ3.] Does calibrated, cost-aware questioning reduce wrong construction-critical values at a fixed question budget?
+\item[RQ4.] Do tailors working from the sheet need fewer clarifications and make fewer interpretation errors than tailors working from the chat and photos?
+\end{enumerate}
+
+\section{Scope}
+
+In scope: women's and men's Indian and Western garments that a single tailor makes from cut cloth (kurta, kurti, anarkali, salwar, churidar, palazzo, saree blouse, lehenga skirt, sherwani, dresses, tops, shirts, skirts, trousers); English, Hinglish and Devanagari Hindi input; tailor sheets in English and Hindi.
+
+Out of scope for the semester: draped garments that are not cut (the saree itself, the dupatta drape), automatic body measurement from photos, automatic sewing-pattern generation for Indian garments (a stretch goal through GarmentCode for Western garments only), and payments or logistics.

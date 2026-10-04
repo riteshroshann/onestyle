@@ -1,0 +1,29 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  w/.style={font=\small,anchor=base,inner sep=1.5pt},
+  sp/.style={font=\scriptsize\scshape,anchor=base},
+  arc/.style={->,draw=arrow,line width=0.5pt},
+  lab/.style={font=\scriptsize\itshape,text=soft,fill=white,inner sep=1pt}]
+\foreach \i/\t/\x in {k/kurti/0, f/fitted/1.25, a/at the/2.45, wa/waist/3.6, c1/{,}/4.35, n/neeche se/5.35, th/thoda/6.6, l/loose/7.6, c2/{,}/8.3, v/V neck/9.2, th2/thoda/10.35, d/deep/11.35}{
+  \node[w] (\i) at (\x,0) {\t};
+}
+\foreach \i/\c/\t in {k/sandT/garment, f/lavT/fit, wa/lavT/part, n/lavT/loc, th/greyT/int, l/lavT/fit, v/lavT/neckline, th2/greyT/int, d/lavT/dim}{
+  \node[sp,text=\c] at ([yshift=-5mm]\i.base) {\t};
+}
+\coordinate (top) at (0,0.42);
+\draw[arc] ([xshift=2pt]f.north) .. controls +(0,0.55) and +(0,0.55) .. ([xshift=-2pt]wa.north) node[lab,pos=0.5,above=0pt]{applies to};
+\draw[arc] ([xshift=-3pt]wa.north) .. controls +(0,1.35) and +(0,1.35) .. ([xshift=3pt]k.north) node[lab,pos=0.5,above=0pt]{part of};
+\draw[arc] ([xshift=-2pt]l.north) .. controls +(0,0.95) and +(0,0.95) .. ([xshift=2pt]n.north) node[lab,pos=0.5,above=0pt]{applies to};
+\draw[arc] ([xshift=2pt]th.north) .. controls +(0,0.35) and +(0,0.35) .. ([xshift=-4pt]l.north);
+\draw[arc] ([xshift=-2pt]d.north) .. controls +(0,0.95) and +(0,0.95) .. ([xshift=2pt]v.north) node[lab,pos=0.5,above=0pt]{applies to};
+\draw[arc] ([xshift=2pt]th2.north) .. controls +(0,0.35) and +(0,0.35) .. ([xshift=-4pt]d.north);
+\node[tiny] at (7.1,0.62) {softens};
+\node[tiny] at (10.85,0.62) {softens};
+% tuples
+\node[font=\small,anchor=north west,align=left] at (-0.3,-1.25) {
+\begin{tabular}{@{}lll@{}}
+\thd{part} & \thd{attribute} & \thd{value}\\
+bodice, waist & fit & fitted \\
+lower body (``neeche'' = below the waist) & fit at hip & relaxed, softened by ``thoda'' (slightly) \\
+neckline & shape, depth & V; deep, softened to moderate-deep \\
+\end{tabular}};
+\end{tikzpicture}

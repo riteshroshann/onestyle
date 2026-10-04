@@ -1,0 +1,238 @@
+{
+ "L0 rules (gazetteer)": {
+  "system": "L0 rules (gazetteer)",
+  "precision": 0.9571,
+  "recall": 0.9331,
+  "f1": 0.9449,
+  "per_type": {
+   "CMP": 1.0,
+   "COLOUR": 1.0,
+   "DIM": 1.0,
+   "EMBELL": 0.833,
+   "FABRIC": 0.952,
+   "FIT": 0.957,
+   "GARMENT": 0.925,
+   "INT": 1.0,
+   "LENGTH": 0.96,
+   "LOC": 0.8,
+   "NECKLINE": 0.947,
+   "NEG": 0.857,
+   "NUM": 1.0,
+   "OCCASION": 1.0,
+   "PART": 0.875,
+   "PATTERN": 1.0,
+   "REF": 1.0,
+   "SHADE": 1.0,
+   "SILHOUETTE": 0.9,
+   "SLEEVE": 1.0,
+   "STYLE": 1.0
+  },
+  "f1_ci95": [
+   0.9068,
+   0.9742
+  ]
+ },
+ "L2a HMM": {
+  "system": "L2a HMM",
+  "precision": 0.8009,
+  "recall": 0.7406,
+  "f1": 0.7696,
+  "per_type": {
+   "CMP": 1.0,
+   "COLOUR": 0.957,
+   "DIM": 0.833,
+   "EMBELL": 0.8,
+   "FABRIC": 0.85,
+   "FIT": 0.571,
+   "GARMENT": 0.62,
+   "INT": 0.833,
+   "LENGTH": 0.692,
+   "LOC": 0.4,
+   "NECKLINE": 0.571,
+   "NEG": 0.333,
+   "NUM": 1.0,
+   "OCCASION": 0.963,
+   "PART": 0.783,
+   "PATTERN": 0.778,
+   "REF": 1.0,
+   "SHADE": 0.889,
+   "SILHOUETTE": 0.667,
+   "SLEEVE": 0.857,
+   "STYLE": 0.909
+  },
+  "f1_ci95": [
+   0.7109,
+   0.8256
+  ]
+ },
+ "L2b CRF": {
+  "system": "L2b CRF",
+  "precision": 0.8938,
+  "recall": 0.8452,
+  "f1": 0.8688,
+  "per_type": {
+   "CMP": 1.0,
+   "COLOUR": 0.96,
+   "DIM": 0.727,
+   "EMBELL": 0.769,
+   "FABRIC": 0.978,
+   "FIT": 0.87,
+   "GARMENT": 0.779,
+   "INT": 0.909,
+   "LENGTH": 0.846,
+   "LOC": 0.667,
+   "NECKLINE": 0.8,
+   "NEG": 0.923,
+   "NUM": 1.0,
+   "OCCASION": 0.667,
+   "PART": 0.894,
+   "PATTERN": 1.0,
+   "REF": 1.0,
+   "SHADE": 1.0,
+   "SILHOUETTE": 0.8,
+   "SLEEVE": 0.667,
+   "STYLE": 1.0
+  },
+  "train_seconds": 87.7,
+  "f1_ci95": [
+   0.8103,
+   0.916
+  ]
+ },
+ "L2b CRF + gazetteer feature": {
+  "system": "L2b CRF + gazetteer feature",
+  "precision": 0.9328,
+  "recall": 0.9289,
+  "f1": 0.9308,
+  "per_type": {
+   "CMP": 1.0,
+   "COLOUR": 1.0,
+   "DIM": 0.909,
+   "EMBELL": 0.923,
+   "FABRIC": 0.978,
+   "FIT": 0.917,
+   "GARMENT": 0.854,
+   "INT": 1.0,
+   "LENGTH": 0.96,
+   "LOC": 0.8,
+   "NECKLINE": 0.9,
+   "NEG": 1.0,
+   "NUM": 1.0,
+   "OCCASION": 1.0,
+   "PART": 0.87,
+   "PATTERN": 1.0,
+   "REF": 1.0,
+   "SHADE": 1.0,
+   "SILHOUETTE": 0.8,
+   "SLEEVE": 0.8,
+   "STYLE": 1.0
+  },
+  "train_seconds": 88.2,
+  "f1_ci95": [
+   0.8893,
+   0.9672
+  ]
+ },
+ "L3 minilm": {
+  "system": "L3 minilm",
+  "precision": 0.8898,
+  "recall": 0.8787,
+  "f1": 0.8842,
+  "per_type": {
+   "CMP": 1.0,
+   "COLOUR": 0.898,
+   "DIM": 0.769,
+   "EMBELL": 0.815,
+   "FABRIC": 1.0,
+   "FIT": 1.0,
+   "GARMENT": 0.9,
+   "INT": 0.8,
+   "LENGTH": 0.846,
+   "LOC": 1.0,
+   "NECKLINE": 0.545,
+   "NEG": 1.0,
+   "NUM": 1.0,
+   "OCCASION": 0.923,
+   "PART": 0.889,
+   "PATTERN": 1.0,
+   "REF": 1.0,
+   "SHADE": 0.571,
+   "SILHOUETTE": 0.762,
+   "SLEEVE": 0.4,
+   "STYLE": 1.0
+  },
+  "model": "microsoft/MiniLM-L12-H384-uncased",
+  "params_M": 33.2,
+  "best_dev_f1": 0.8448,
+  "train_seconds": 165.8,
+  "epochs": [
+   {
+    "epoch": 1,
+    "train_loss": 391.87,
+    "dev_f1": 0.8218
+   },
+   {
+    "epoch": 2,
+    "train_loss": 30.18,
+    "dev_f1": 0.8352
+   },
+   {
+    "epoch": 3,
+    "train_loss": 13.2,
+    "dev_f1": 0.8273
+   },
+   {
+    "epoch": 4,
+    "train_loss": 7.6,
+    "dev_f1": 0.8352
+   },
+   {
+    "epoch": 5,
+    "train_loss": 4.85,
+    "dev_f1": 0.8448
+   }
+  ],
+  "f1_ci95": [
+   0.8372,
+   0.926
+  ]
+ },
+ "L3 minilm + gazetteer": {
+  "system": "L3 minilm + gazetteer",
+  "precision": 0.9429,
+  "recall": 0.9665,
+  "f1": 0.9545,
+  "per_type": {
+   "CMP": 1.0,
+   "COLOUR": 1.0,
+   "DIM": 1.0,
+   "EMBELL": 0.889,
+   "FABRIC": 1.0,
+   "FIT": 1.0,
+   "GARMENT": 0.94,
+   "INT": 1.0,
+   "LENGTH": 0.923,
+   "LOC": 0.8,
+   "NECKLINE": 0.952,
+   "NEG": 0.857,
+   "NUM": 1.0,
+   "OCCASION": 1.0,
+   "PART": 0.875,
+   "PATTERN": 1.0,
+   "REF": 1.0,
+   "SHADE": 1.0,
+   "SILHOUETTE": 0.9,
+   "SLEEVE": 1.0,
+   "STYLE": 1.0
+  },
+  "f1_ci95": [
+   0.9187,
+   0.9812
+  ]
+ },
+ "L3 minilm int8 ONNX (browser)": {
+  "system": "L3 minilm int8 ONNX (browser)",
+  "f1": 0.8785,
+  "size_MB": 33.8
+ }
+}

@@ -1,0 +1,27 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  ttl/.style={font=\normalsize,anchor=base,text width=3.0cm,align=center},
+  ph/.style={font=\small\scshape,anchor=base},
+  pill/.style={rounded corners=4pt,inner xsep=5pt,inner ysep=2pt,font=\scriptsize\scshape,text=white},
+  st/.style={box,text width=2.75cm,font=\small,inner ysep=5pt,minimum height=1.25cm},
+  ex/.style={font=\footnotesize,text width=2.95cm,align=left,text=soft,anchor=north}]
+\def\dx{3.32}
+\draw[draw=greyD,line width=0.9pt] (-0.6,0) -- (6*\dx+0.6,0);
+\foreach \i/\c/\t/\p/\s/\fl/\dr/\a/\b/\cc/\e in {
+ 0/ph0/{The first\\two hours}/Phase 0/today/sandF/sandD/{repo, ontology v0, rule tagger}/{Excalidraw board posts its scene JSON}/{FashionSigLIP scores the board's images}/{one sentence and one board give a spec on screen.},
+ 1/ph1/{Groundwork}/Phase 1/weeks 1--2/blueF/blueD/{literature review and gap matrix}/{full ontology with Indian garments}/{300 annotated requests; tailor interviews}/{agreement $\kappa\ge0.75$ on core slots; ease table from tailors.},
+ 2/ph2/{Language\\engine}/Phase 2/weeks 2--5/lavF/lavD/{TF-IDF, HMM and CRF baselines}/{encoder with CRF; binder; grounding}/{Qwen3.5-4B with schema decoding; calibration}/{triple F1 $\ge0.85$ English, $\ge0.80$ Hinglish; ECE $\le0.05$.},
+ 3/ph3/{Moodboard\\engine}/Phase 3/weeks 3--6/peachF/peachD/{board graph from scene JSON}/{attribute heads on FashionSigLIP}/{pooling, comparisons, whole-board baseline}/{beats the whole-board VLM on comparison constraints.},
+ 4/ph4/{Studio and\\tailor sheet}/Phase 4/weeks 5--7/roseF/roseD/{resolver and clarifying questions}/{sheet in English and Hindi}/{deployed; Pinterest behind a flag}/{tailors work from the sheet without calling the customer.},
+ 5/ph5/{Data\\platform}/Phase 5/weeks 2--7/greenF/greenD/{lake, Scala model, MapReduce job}/{DataFrame jobs, DAG, scaling runs}/{MLlib: TF-IDF, Word2Vec, LDA, FP-Growth, ALS}/{every job runs on full H\&M and Amazon data; plans saved.},
+ 6/ph6/{Evaluation\\and paper}/Phase 6/weeks 7--9/greyF/greyD/{test runs and ablations}/{study with practising tailors}/{paper and course report}/{manuscript submitted; every number traces to a file.}}{
+  \node[ttl] at (\i*\dx,2.15) {\t};
+  \node[ph,text=\c] at (\i*\dx,0.55) {\p};
+  \path[fill=\c] (\i*\dx,0) circle (3.4pt);
+  \node[pill,fill=\c] at (\i*\dx,-0.62) {\s};
+  \node[st,fill=\fl,draw=\dr] (a\i) at (\i*\dx,-1.95) {\a};
+  \node[st,fill=\fl,draw=\dr] (b\i) at (\i*\dx,-3.6) {\b};
+  \node[st,fill=\fl,draw=\dr] (c\i) at (\i*\dx,-5.25) {\cc};
+  \draw[flow] (a\i) -- (b\i); \draw[flow] (b\i) -- (c\i);
+  \node[ex] at (\i*\dx,-6.12) {\textit{Exit:} \e};
+}
+\end{tikzpicture}

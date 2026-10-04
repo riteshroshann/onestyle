@@ -1,0 +1,189 @@
+\chapter{Evaluation Plan}\label{ch:eval}
+
+\section{The benchmark: BESPOKE-Spec}
+
+\textsc{bespoke-spec} has three parts, all with part-level gold specifications.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}P{2.6cm}P{2.2cm}L@{}}
+\thd{part} & \thd{target size} & \thd{source}\\
+requests & 1,200 & real messages shared with consent by partner boutiques and tailors (target 300); requests written by students for target garments shown as images from Kouture, IndoFashion and DeepFashion-MultiModal (900). At least 40\% Hinglish.\\
+boards & 150 & three to six references each, with notes, circles, a rejected reference and at least one comparison in half of them; gold spec written before the board is analysed\\
+conversations & 100 & multi-turn threads with revisions, real with consent or role-played from real cases\\
+\end{tabularx}
+\end{table}
+
+Two annotators label every test item independently; disagreements are adjudicated, and Cohen's $\kappa$ is reported per slot, with $\kappa \ge 0.75$ on core slots as the bar for using a slot in evaluation. LLM paraphrases may enlarge the \emph{training} split; the test split contains only human-written text, by people not involved in modelling. Text and specs are released under CC BY 4.0. Board images are referenced by their source dataset ids, not redistributed.
+
+\section{Metrics}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}P{3.6cm}L@{}}
+\thd{what} & \thd{metric}\\
+span tagging & strict span F1 (seqeval), per type and micro-averaged\\
+specification & triple F1 over (part, attribute, value); exact match of the whole spec; schema-valid rate\\
+numbers & mean absolute error in inches for depths and lengths\\
+hallucination & share of predicted triples not supported by the input\\
+calibration & expected calibration error; risk--coverage curve and its area\\
+questions & precision (asked and needed) and recall (needed and asked) at a budget of three\\
+conversations & joint goal accuracy and slot F1\\
+boards & slot accuracy; comparison satisfaction rate; violations of rejected references\\
+data platform & MAP@12 for ALS; accuracy and macro-F1 for classifiers; job time against cores and data size\\
+\end{tabularx}
+\end{table}
+
+All comparisons report 95\% paired bootstrap intervals over test items (2,000 resamples).
+
+\section{Baselines and ablations}
+
+Every rung of the ladder in Figure~\ref{fig:ladder} is a baseline for the rung above it. Beyond that: GLiNER2 zero-shot and LoRA-adapted; Qwen3.5-4B zero-shot and fine-tuned, with and without schema constraints; translate-then-extract (IndicXlit and IndicTrans2 into English, then the English model) against direct code-mixed extraction; the whole-board VLM against the structured board engine; pooling with and without polarity, with and without salience weights; the resolver with a fixed confidence threshold against cost-aware questioning.
+
+\section{The tailor study}
+
+RQ4 is answered with practising tailors, because they are the users the literature never asks. Four to six tailors each receive twenty orders. Each order exists in two forms: the original chat and photos, and the \sys{} sheet. Each tailor sees each order in one form only, assigned in a counterbalanced design. For each order the tailor writes down what they would cut and lists the questions they would ask the customer. We measure interpretation errors against the gold specification, the number of questions, time to a cutting decision, and a short effort rating, and test the paired differences with the Wilcoxon signed-rank test. A small live pilot of real orders reports alterations and remakes descriptively; it is too small for significance and will be presented that way.
+
+\section{Targets}
+
+These are the exit tests for the phases, set before any result exists.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}LP{5.6cm}@{}}
+\thd{claim} & \thd{target}\\
+language engine, English requests & triple F1 $\ge 0.85$\\
+language engine, Hinglish requests & triple F1 $\ge 0.80$\\
+calibration & ECE $\le 0.05$ on development data\\
+board engine against the whole-board VLM & higher comparison satisfaction, interval excludes zero\\
+questions & fewer wrong critical values than a fixed threshold at the same budget\\
+tailor study & at least 30\% fewer clarifying questions with the sheet\\
+\end{tabularx}
+\end{table}
+
+\section{Threats to validity}
+
+Students writing requests for images is not the same as customers describing a dream garment; the real-message subset is reported separately so the gap is visible. Partner tailors who agree to a study may be more digital than average. Fashionpedia and DeepFashion images are mostly Western and studio-lit, which flatters the image heads; Kouture and IndoFashion tests are reported on their own. And a number from one city's tailors does not generalise to India; the paper will say where the tailors work.
+
+% ======================================================================
+\chapter{Phases and Timeline}\label{ch:phases}
+
+\section{The first two hours}
+
+Phase~0 is a working slice, not a plan: by the end of two hours, one sentence and one board produce a spec on screen. Three people work in parallel (Figure~\ref{fig:2h}).
+
+\begin{figure}[h]
+\centering\input{figures/twohour}
+\caption{The first two hours, in ten-minute units.}\label{fig:2h}
+\end{figure}
+
+The back end starts from an empty FastAPI app, writes \texttt{ontology/bespoke.yaml} with garment, neckline, sleeve, length, fit and colour, and writes a gazetteer tagger behind a \texttt{/parse} endpoint. It then loads FashionSigLIP with \texttt{open\_clip.create\_model\_and\_transforms('hf-hub:Marqo/marqo-fashionSigLIP')} and scores each board image against prompts for every ontology value. The front end creates the Next.js app, installs \texttt{@excalidraw/excalidraw}, wraps it in a client component, and adds an ``Analyse board'' button that posts \texttt{getSceneElements()} and \texttt{getFiles()}. The data person installs PySpark with Java 17, loads H\&M \texttt{articles.csv}, trains a TF-IDF and logistic regression pipeline on \texttt{detail\_desc}, and writes the attribute-pair counts as an RDD map and reduce. At the two-hour mark the three pieces meet: the board and a sentence go in, a JSON spec and a printable sheet come out, and the first Spark numbers exist.
+
+\section{Phases}
+
+The semester plan runs for nine weeks from Monday 5 October 2026 (Figure~\ref{fig:roadmap}). Phases overlap on purpose: the data platform runs alongside the engines, and the benchmark grows while the models are built.
+
+\begin{table}[h]
+\centering\small
+\caption{Calendar.}\label{tab:cal}
+\begin{tabularx}{\textwidth}{@{}P{2.0cm}P{3.0cm}L@{}}
+\thd{phase} & \thd{dates} & \thd{deliverable}\\
+0 & 4 October & the two-hour slice\\
+1 & 5--18 October & literature review written; full ontology; 300 annotated requests; interviews with 3--5 tailors on ease, vocabulary and the cost of each error\\
+2 & 12 October--8 November & the language engine ladder, calibration and state tracking\\
+3 & 19 October--15 November & board graph, attribute heads, pooling, comparisons, whole-board baseline\\
+4 & 2--22 November & resolver, studio, tailor sheet in two languages, deployment\\
+5 & 12 October--22 November & lake, Scala model, MapReduce, DataFrame jobs, MLlib, scaling\\
+6 & 16 November--6 December & full evaluation, tailor study, paper and course report\\
+\end{tabularx}
+\end{table}
+
+\begin{figure}[h]
+\centering\input{figures/growth}
+\caption{How the system grows across the phases. Dashed blocks do not exist yet.}\label{fig:growth}
+\end{figure}
+
+\section{Who does what}
+
+With four people: one owns the language engine and the benchmark's text side; one owns the moodboard engine and the image heads; one owns the data platform and the Scala and Spark work; one owns the product (web app, sheet, tailor study). With three, the product role is shared. Everyone annotates: reading two hundred real requests is the fastest way to understand the problem, and nobody should train a model on data they have not read.
+
+\section{Working rules}
+
+Start every component with the dumbest baseline that runs end to end, and keep it in the results. Overfit a tiny batch before training on everything. Never look at the test split until the final run. Log every experiment's configuration and output file. When a fancy model loses to a simple one, report it; our retrieval prototype reported that its learned ranker and its cross-encoder lost to tuned linear fusion, and that honesty was the most credible part of the paper.
+
+\begin{landscape}
+\begin{figure}[p]
+\centering\input{figures/roadmap}
+\caption{All seven phases, with what each delivers and the test it must pass.}\label{fig:roadmap}
+\end{figure}
+\end{landscape}
+
+% ======================================================================
+\chapter{Publication Plan}\label{ch:pub}
+
+\section{What is publishable}
+
+The publishable unit is the benchmark, the method and the tailor study together. A system description alone is a demo paper; a benchmark with strong baselines and a human study with practising tailors is a journal paper. The paper's claims map to the research questions: the first released part-level benchmark of code-mixed garment requests and moodboards (RQ1, RQ2); evidence on whether explicit board structure beats a strong VLM (RQ2); a cost-aware questioning method with measured effect (RQ3); and the first evaluation of AI-written garment specifications by the people who cut the cloth (RQ4).
+
+\section{Where}
+
+Three journals fit the work's centre of gravity. \emph{Fashion and Textiles} (Springer, open access) has published both of the 2025--2026 conversational and attribute-based fashion papers reviewed here \cite{park2025fea,khleborodova2026}. The \emph{International Journal of Fashion Design, Technology and Education} (Taylor \& Francis) suits the tailor study and the design process. \emph{Expert Systems with Applications} or \emph{Engineering Applications of Artificial Intelligence} (Elsevier) suit the method and benchmark. \emph{IEEE Access} is the fast, broad option. The benchmark alone also fits the resources track of an ACL-family venue. Submit to one journal at a time, and choose after the results are in, because the strongest result decides the framing.
+
+\section{Outline}
+
+Introduction with the 12 million tailors and the chat-and-photo practice; related work along the eight limitations of Chapter~\ref{ch:lit}; the ontology and DesignSpec; the language engine; the board engine; the resolver and questioning; the benchmark; experiments for RQ1--RQ3; the tailor study for RQ4; limitations; data and code availability.
+
+\section{Ethics and licences}
+
+Participants consent in writing to the use of their messages, boards and measurements; personal data stays in India-hosted storage and follows the DPDP Act. Faces are blurred in any released image. DeepFashion-MultiModal and SIMMC are non-commercial and are used for research only. Pinterest content is never stored or used for training without Pinterest's written consent. The paper states which tailors were paid and how much.
+
+% ======================================================================
+\chapter{Syllabus Map}\label{ch:syllabus}
+
+\begin{table}[h]
+\centering\small
+\caption{Text Analytics.}
+\begin{tabularx}{\textwidth}{@{}P{1.2cm}P{4.6cm}L@{}}
+\thd{unit} & \thd{topic} & \thd{where in \sys{}}\\
+1 & morphology & lemmas, Hindi inflection, spelling variants (Ch.~\ref{ch:lang})\\
+1 & syntax and semantics & binding spans to parts; grounding to ontology values\\
+1 & collocations & PMI over 7.2M titles; multiword gazetteer\\
+2 & one-hot, bag of words, TF-IDF & occasion and style classifiers, in Python and in MLlib\\
+2 & n-gram language model & autocomplete; perplexity for unusual requests\\
+2 & neural word embeddings & word2vec in Spark; Qwen3-Embedding for grounding\\
+3 & ML and deep learning for NLP & CRF, encoder fine-tuning, LoRA\\
+3 & seq2seq, BERT, GPT & encoder with CRF head; Qwen3.5-4B with schema decoding\\
+3 & graph NLP & span graph checked against the ontology graph; board graph\\
+3 & HMM, CRF & generative and discriminative taggers, Viterbi\\
+3 & topic modelling & LDA in Spark; BERTopic on requests and reviews\\
+4 & POS tagging, NER & HMM POS tagger; fashion NER as span tagging\\
+4 & dependency parsing & Stanza attachment for English requests\\
+4 & sentiment analysis & aspect sentiment on reviews and trial feedback\\
+4 & machine translation & Hindi tailor sheet: glossary and IndicTrans2\\
+4 & question answering & tailor asks the order; questions to the customer\\
+4 & summarisation & chat thread to final spec and changelog\\
+4 & evaluation and visualisation & seqeval, triple F1, ECE, bootstrap; attention maps, confusion matrices\\
+\end{tabularx}
+\end{table}
+
+\begin{table}[h]
+\centering\small
+\caption{Big Data Analytics.}
+\begin{tabularx}{\textwidth}{@{}P{1.2cm}P{4.6cm}L@{}}
+\thd{unit} & \thd{topic} & \thd{where in \sys{}}\\
+1 & big data characteristics, tools & 100M+ records across four public sources and the event log (Ch.~\ref{ch:data})\\
+1 & Hadoop ecosystem, mapper, reducer & attribute co-occurrence with Hadoop Streaming\\
+2 & functional programming in Scala & immutable spec, pure update function, fold over a conversation\\
+2 & collections, type hierarchy & sealed traits for ontology types; Map, List, Option\\
+2 & higher-order functions, closures & filters and scorers built from functions\\
+2 & cons list, tail recursion & ontology ancestors with \texttt{@tailrec}\\
+2 & object orientation, concurrency & case classes; Futures for concurrent fetches\\
+3 & Spark architecture, cluster & driver, executors, local and serverless runs\\
+3 & RDDs, transformations, actions & the Scala co-occurrence job\\
+3 & DataFrames and Datasets & lake layers; typed \texttt{Dataset[Order]}\\
+3 & lazy evaluation, optimisation, DAG & weekly trends job, \texttt{explain()}, Spark UI, scaling runs\\
+4 & MLlib and its algorithms & logistic regression, Word2Vec, LDA, FP-Growth, ALS, fit classifier\\
+4 & ML pipeline in Spark & Tokenizer to IDF to classifier with cross-validation\\
+4 & case study & fashion retail (H\&M) and the custom-tailoring platform\\
+\end{tabularx}
+\end{table}

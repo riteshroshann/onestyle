@@ -1,0 +1,15 @@
+engine/.venv/
+engine/models/
+data/processed/
+data/raw/
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+web/*.tsbuildinfo
+docs/research-plan/fonts/*.ttc
+docs/research-plan/main.pdf
+**/__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

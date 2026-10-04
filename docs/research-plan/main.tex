@@ -1,0 +1,56 @@
+\documentclass[11pt,oneside,openany]{book}
+\usepackage{bespoke}
+\usepackage{pdflscape}
+\input{figures/garment}
+\hypersetup{pdftitle={BESPOKE: research and engineering plan},pdfauthor={BESPOKE team}}
+
+\begin{document}
+\frontmatter
+\pagestyle{empty}
+
+% ---------------- title page ----------------
+\begin{titlepage}
+\centering
+\vspace*{38mm}
+{\fontsize{40}{44}\selectfont\scshape bespoke\par}
+\vspace{12mm}
+{\Large From customer words and moodboards\\[3pt] to garment specifications a tailor can cut from\par}
+\vspace{16mm}
+{\large\itshape Research and engineering plan\par}
+\vspace{4mm}
+{\normalsize\color{soft} Text Analytics and Big Data Analytics\par}
+\vfill
+{\normalsize [Student Name 1] \quad [Student Name 2] \quad [Student Name 3] \quad [Student Name 4]\par}
+\vspace{4mm}
+{\normalsize\color{soft} Guide: [Guide Name]\par}
+\vspace{12mm}
+{\normalsize Amrita School of Artificial Intelligence, Faridabad\par}
+\vspace{3mm}
+{\normalsize\color{soft} October 2026\par}
+\vspace*{14mm}
+\end{titlepage}
+
+% ---------------- summary ----------------
+\chapter*{Summary}
+\pagestyle{body}
+Custom clothing in India is specified in chat messages and phone photos, and the tailor's memory of that conversation is what reaches the cutting table. About 12 million people work as custom tailors in India, yet no software turns a customer's description and inspiration images into instructions a tailor can execute.
+
+\sys{} does that. A customer writes in English or Hinglish and builds a moodboard on an embedded Excalidraw canvas. A language engine turns the words into part-level, calibrated values; a moodboard engine reads the whole board as a graph of images, circled regions and notes, including rejected references and comparisons such as ``deeper than \#1 but less than \#2''. A resolver merges the evidence into a versioned DesignSpec, asks only the questions whose wrong answer would be expensive, and renders a tailor sheet in English and Hindi. A Spark platform over more than 100 million public retail records and the order log learns trends, defaults and suggestions.
+
+A review of fifteen papers from IEEE, Springer, Elsevier and Taylor \& Francis (2022--2026) finds that the closest systems (ChatGarment, Design2GarmentCode, AIpparel, GenPattern, MuJo-SF) accept one clean input, flatten or silently complete the garment, ignore code-mixed language and Indian garments, never ask, and are never judged by tailors. The plan sets three objectives against that gap, four research questions, a benchmark (\textsc{bespoke-spec}), measurable targets, and a nine-week timeline that starts with a working slice built in the first two hours.
+
+\cleardoublepage
+\tableofcontents
+
+\mainmatter
+\pagestyle{body}
+\input{chapters/part1}
+\input{chapters/part2}
+\input{chapters/part3}
+\input{chapters/part4}
+\input{chapters/appendix}
+
+\backmatter
+\renewcommand{\bibname}{References}
+\input{chapters/back}
+\end{document}

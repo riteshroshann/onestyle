@@ -1,0 +1,26 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  b/.style={box,font=\footnotesize,minimum height=1.25cm,text width=1.45cm,inner xsep=3pt},
+  pl/.style={dashed}]
+\node[blue,b] (t) at (0,0.8) {words};
+\node[peach,b] (m) at (0,-0.8) {board};
+\node[lav,b] (le) at (2.15,0.8) {language engine};
+\node[lav,b,pl] (me) at (2.15,-0.8) {moodboard engine};
+\node[green,b,minimum height=2.85cm] (r) at (4.3,0) {resolver};
+\node[sand,b,minimum height=2.85cm] (s) at (6.25,0) {Design\-Spec};
+\node[rose,b,pl] (sh) at (8.2,0.8) {tailor sheet};
+\node[blue,b,pl] (st) at (8.2,-0.8) {studio};
+\node[grey,b,pl] (sp) at (10.35,0) {Spark jobs};
+\node[green,b,pl] (rc) at (12.5,0) {suggest\-ions};
+\draw[flow] (t) -- (le); \draw[flow] (m) -- (me);
+\draw[flow] (le) -- (le-|r.west); \draw[flow] (me) -- (me-|r.west);
+\draw[flow] (r) -- (s);
+\draw[flow] (s.east|-sh) -- (sh); \draw[flow] (s.east|-st) -- (st);
+\draw[flow] (sh.east) -- ++(0.2,0) |- ([yshift=2mm]sp.west);
+\draw[flow] (st.east) -- ++(0.2,0) |- ([yshift=-2mm]sp.west);
+\draw[flow] (sp) -- (rc);
+\draw[dflow] (rc.north) -- ++(0,0.8) -| (r.north);
+\draw[decorate,decoration={brace,mirror,amplitude=4pt},draw=ph0] (-0.75,-1.65) -- (2.9,-1.65) node[midway,below=4pt,font=\scriptsize\scshape,text=ph0]{phases 0 and 2};
+\draw[decorate,decoration={brace,mirror,amplitude=4pt},draw=ph3] (3.05,-1.65) -- (4.95,-1.65) node[midway,below=4pt,font=\scriptsize\scshape,text=ph3]{phase 3};
+\draw[decorate,decoration={brace,mirror,amplitude=4pt},draw=ph4] (5.4,-1.65) -- (9.0,-1.65) node[midway,below=4pt,font=\scriptsize\scshape,text=ph4]{phase 4};
+\draw[decorate,decoration={brace,mirror,amplitude=4pt},draw=ph5] (9.5,-1.65) -- (13.3,-1.65) node[midway,below=4pt,font=\scriptsize\scshape,text=ph5]{phase 5};
+\end{tikzpicture}

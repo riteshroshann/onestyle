@@ -1,0 +1,21 @@
+\begin{tikzpicture}[x=1.45cm,y=1cm]
+% axis: front neck depth in inches, measured down from the high shoulder point
+\draw[draw=greyD] (3.5,0) -- (11.5,0);
+\foreach \v in {4,5,...,11}{\draw[draw=greyD] (\v,0) -- (\v,-0.12); \node[tiny,below] at (\v,-0.12) {\v};}
+\node[tiny,anchor=north] at (7.5,-0.6) {front neck depth, inches from the high shoulder point};
+% reference 1
+\fill[lavF] (4.9,0.18) rectangle (6.1,0.52);
+\draw[lavD,line width=1.1pt] (5.5,0.12) -- (5.5,0.58);
+\node[font=\scriptsize,text=lavT,anchor=south] at (5.5,0.62) {\#1: 5.5};
+% reference 2
+\fill[blueF] (7.4,0.18) rectangle (8.6,0.52);
+\draw[blueD,line width=1.1pt] (8.0,0.12) -- (8.0,0.58);
+\node[font=\scriptsize,text=blueT,anchor=south] at (8.0,0.62) {\#2: 8.0};
+% feasible interval
+\fill[greenF] (6.1,1.25) rectangle (7.4,1.55);
+\draw[greenD] (6.1,1.25) -- (6.1,1.55); \draw[greenD] (7.4,1.25) -- (7.4,1.55);
+\node[font=\scriptsize,text=greenT,anchor=south] at (6.75,1.6) {feasible: above \#1's band, below \#2's};
+\draw[sandT,line width=1.1pt] (6.5,1.2) -- (6.5,1.6);
+\node[font=\scriptsize,text=sandT,anchor=west] at (7.55,1.4) {proposal 6.5, toward the shallow end};
+\node[note,anchor=north west,text width=11.4cm] at (3.5,-1.05) {Each reference gives an estimate with an uncertainty band (shaded). ``Deeper than \#1'' means above \#1's upper band; ``less than \#2'' means below \#2's lower band. The proposal sits toward the shallow end because a neckline can be deepened at the trial but not raised. If the interval is empty, the request contradicts itself and the system asks instead of guessing.};
+\end{tikzpicture}

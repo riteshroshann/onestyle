@@ -1,0 +1,45 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  img/.style={draw=greyD,fill=white,rounded corners=2pt,minimum width=2.15cm,minimum height=2.55cm},
+  lbl/.style={font=\scriptsize\scshape,text=soft,anchor=north west,inner sep=2pt},
+  hand/.style={font=\footnotesize\itshape,text=peachT,align=left,inner sep=1pt},
+  ink/.style={draw=peachT,line width=0.6pt,->},
+  gn/.style={circle,draw,minimum size=7.5mm,inner sep=0pt,font=\scriptsize},
+  el/.style={font=\scriptsize\itshape,text=soft,fill=white,inner sep=1pt}]
+% ---------------- canvas ----------------
+\fill[greyF!55,rounded corners=6pt] (-0.4,-3.55) rectangle (8.1,3.15);
+\node[font=\scriptsize\scshape,text=soft,anchor=south west] at (-0.4,3.2) {the customer's board};
+\node[img] (i1) at (1.0,1.25) {}; \garment{1.0}{1.15}{0.85}{lavF!80!lavD}{v}{short}
+\node[img] (i2) at (3.75,1.25) {}; \garment{3.75}{1.15}{0.85}{blueF!60!blueD}{deepv}{puff}
+\node[img] (i3) at (6.5,1.25) {}; \garment{6.5}{1.15}{0.85}{sandD}{round}{long}
+\node[lbl] at (i1.north west) {\#1}; \node[lbl] at (i2.north west) {\#2}; \node[lbl] at (i3.north west) {\#3};
+% region mark on the sleeve of #2
+\draw[draw=peachT,dashed,line width=0.6pt] (4.42,1.62) ellipse (0.36cm and 0.3cm);
+\coordinate (r1) at (4.42,1.32);
+% notes
+\node[hand,anchor=north west] (n1) at (4.6,-0.55) {this sleeve!};
+\draw[ink] (n1.north) .. controls (4.75,0.2) and (4.75,0.8) .. (4.55,1.29);
+\node[hand,anchor=north west] (n2) at (-0.2,-0.6) {neck deeper than \#1\\but less than \#2};
+\node[hand,anchor=north west] (n3) at (6.35,-0.55) {not this\\colour};
+\draw[ink] (n3.north) -- (6.6,-0.08);
+\node[hand,anchor=north west,text=blueT] (n4) at (-0.2,-2.15) {for my farewell, pastel blue,\\fitted waist, flowy below};
+% ---------------- graph ----------------
+\begin{scope}[shift={(10.25,0)}]
+\node[gn,draw=peachD,fill=peachF] (g1) at (0,1.9) {I1};
+\node[gn,draw=peachD,fill=peachF] (g2) at (1.75,1.9) {I2};
+\node[gn,draw=peachD,fill=peachF] (g3) at (3.5,1.9) {I3};
+\node[gn,draw=roseD,fill=roseF] (gr) at (1.75,3.55) {R1};
+\node[gn,draw=blueD,fill=blueF] (gn1) at (3.6,3.55) {N1};
+\node[gn,draw=blueD,fill=blueF] (gn2) at (0.85,0.1) {N2};
+\node[gn,draw=blueD,fill=blueF] (gn3) at (3.5,0.1) {N3};
+\node[gn,draw=blueD,fill=blueF] (gn4) at (0.3,-1.6) {N4};
+\node[gn,draw=greyD,fill=greyF] (root) at (3.2,-1.6) {B};
+\draw[flow] (gr) -- node[el,left]{inside} (g2);
+\draw[flow] (gn1) -- node[el,above]{arrow} (gr);
+\draw[flow] (gn2) -- node[el,left,pos=0.45]{mentions} (g1);
+\draw[flow] (gn2) -- node[el,right,pos=0.45]{mentions} (g2);
+\draw[flow] (gn3) -- node[el,right]{arrow, $-$} (g3);
+\draw[flow] (gn4) -- node[el,above]{whole board} (root);
+\node[note,anchor=north west,text width=4.6cm] at (-0.45,-2.35) {I: image, R: circled region, N: note, B: the board. The edge from N3 carries negative polarity.};
+\end{scope}
+\node[font=\scriptsize\scshape,text=soft,anchor=south west] at (9.8,3.2) {its graph};
+\end{tikzpicture}

@@ -1,0 +1,30 @@
+\appendix
+\chapter{A DesignSpec}\label{app:spec}
+
+The spec behind the tailor sheet of Figure~\ref{fig:sheet}, shortened. Every value carries its probability, status and sources; numbers carry an interval.
+
+\begin{lstlisting}
+{
+  "spec_id": "sp_1024", "version": 3, "garment": {"value": "kurti", "p": 0.99,
+    "status": "confirmed", "sources": ["msg:1[0:5]"]},
+  "parts": {
+    "neckline": {
+      "shape": {"value": "V", "p": 0.96, "status": "confirmed",
+                "sources": ["msg:1[44:50]", "img:e7c2"]},
+      "front_depth_in": {"value": 6.5, "interval": [6.1, 7.4], "p": 0.88,
+                "status": "confirmed", "sources": ["note:n2", "img:a91f", "img:e7c2", "answer:q1"]}},
+    "sleeve": {
+      "style": {"value": "puff", "p": 0.84, "status": "inferred", "sources": ["region:r1"]},
+      "length": {"value": "three-quarter", "p": 0.79, "status": "inferred", "sources": ["img:e7c2"]}},
+    "bodice": {"fit": {"value": "fitted", "ease_in": 1.5, "p": 0.93, "sources": ["msg:1[14:26]"]}},
+    "lower":  {"silhouette": {"value": "A-line", "p": 0.82, "sources": ["msg:1", "note:n4"]},
+               "fit_hip": {"value": "relaxed", "ease_in": 4.0, "p": 0.81, "sources": ["msg:1[28:43]"]}}
+  },
+  "global": {"colour": {"value": "powder blue", "p": 0.9, "sources": ["note:n4"]},
+             "occasion": {"value": "farewell", "p": 0.97, "sources": ["note:n4"]}},
+  "excluded": [{"slot": "colour", "value": "mustard", "sources": ["note:n3", "img:5b10"]},
+               {"slot": "embellishment", "value": "embroidery", "sources": ["msg:2"]}],
+  "measurements_ref": "m_77a0",
+  "questions": []
+}
+\end{lstlisting}

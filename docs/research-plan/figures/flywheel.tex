@@ -1,0 +1,17 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  f/.style={box,text width=3.0cm,font=\small,inner ysep=5pt}]
+\def\R{3.2}
+\node[blue,f] (a) at (90:\R) {request\\{\scriptsize\color{soft}words and a board}};
+\node[green,f] (b) at (30:\R) {specification\\{\scriptsize\color{soft}with questions answered}};
+\node[sand,f] (c) at (-30:\R) {tailor executes\\{\scriptsize\color{soft}cut, trial, alterations}};
+\node[rose,f] (d) at (-90:\R) {outcome\\{\scriptsize\color{soft}fit, remakes, rating}};
+\node[grey,f] (e) at (-150:\R) {data platform\\{\scriptsize\color{soft}requested vs. delivered}};
+\node[lav,f] (g) at (150:\R) {better defaults\\{\scriptsize\color{soft}ease, priors, suggestions}};
+\draw[flow] (a) to[bend left=18] (b);
+\draw[flow] (b) to[bend left=18] (c);
+\draw[flow] (c) to[bend left=18] (d);
+\draw[flow] (d) to[bend left=18] (e);
+\draw[flow] (e) to[bend left=18] (g);
+\draw[flow] (g) to[bend left=18] (a);
+\node[note,align=center,text width=3.4cm] at (0,0) {Every order adds one labelled example: what was asked, what was made, and how it fitted.};
+\end{tikzpicture}

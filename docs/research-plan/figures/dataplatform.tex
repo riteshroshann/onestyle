@@ -1,0 +1,26 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  s/.style={grey,text width=2.9cm,font=\footnotesize,inner ysep=3pt,minimum height=1.05cm},
+  l/.style={box,text width=2.6cm,font=\footnotesize,inner ysep=5pt,minimum height=1.6cm},
+  j/.style={box,text width=3.2cm,font=\footnotesize,inner ysep=3pt,minimum height=1.05cm}]
+\node[s] (s1) at (0,2.9) {H\&M transactions\\{\scriptsize\color{soft}about 31.8M rows}};
+\node[s] (s2) at (0,1.45) {Amazon clothing reviews\\{\scriptsize\color{soft}66.0M ratings}};
+\node[s] (s3) at (0,0) {RentTheRunway, ModCloth\\{\scriptsize\color{soft}275K fit records}};
+\node[s] (s4) at (0,-1.45) {Myntra, Atlas\\{\scriptsize\color{soft}catalogue titles}};
+\node[s] (s5) at (0,-2.9) {\sys{} event log\\{\scriptsize\color{soft}sessions, specs, orders}};
+\node[l,fill=peachF,draw=peachD] (br) at (3.75,1.2) {bronze\\{\scriptsize\color{soft}raw, as Parquet by source and day}};
+\node[l,fill=greyF,draw=greyD] (si) at (3.75,-1.2) {silver\\{\scriptsize\color{soft}typed, de-duplicated, parsed}};
+\node[l,fill=sandF,draw=sandD] (go) at (7.0,0) {gold\\{\scriptsize\color{soft}weekly counts, PPMI graph, user--item, fit table}};
+\foreach \i in {1,...,5}{\draw[flow] (s\i.east) -- (br.west);}
+\draw[flow] (br) -- (si);
+\draw[flow] (si.east) -- ++(0.3,0) |- (go.west);
+\node[j,lav] (j1) at (11.0,2.9) {TF-IDF + logistic regression};
+\node[j,lav] (j2) at (11.0,1.45) {Word2Vec and LDA};
+\node[j,lav] (j3) at (11.0,0) {FP-Growth rules};
+\node[j,lav] (j4) at (11.0,-1.45) {ALS, implicit feedback};
+\node[j,lav] (j5) at (11.0,-2.9) {fit classifier};
+\foreach \i in {1,...,5}{\draw[flow] (go.east) -- ++(0.35,0) |- (j\i.west);}
+\begin{scope}[on background layer]
+\node[group,draw=lavD,fit=(j1)(j5),inner sep=6pt] (ml) {};
+\end{scope}
+\node[gtitle,text=lavT] at ([yshift=1pt]ml.north west) {MLlib pipelines};
+\end{tikzpicture}

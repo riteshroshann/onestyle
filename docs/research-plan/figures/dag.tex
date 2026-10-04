@@ -1,0 +1,35 @@
+\begin{tikzpicture}[
+  op/.style={box,font=\scriptsize,text width=2.3cm,inner ysep=4pt},
+  node distance=4.5mm]
+% stage 0
+\node[grey,op] (scan) {scan orders\\{\color{soft}Parquet, only needed columns}};
+\node[grey,op,below=of scan] (filt) {filter\\{\color{soft}status = delivered}};
+\node[grey,op,below=of filt] (expl) {explode\\{\color{soft}one row per spec value}};
+\node[grey,op,below=of expl] (pagg) {partial count\\{\color{soft}per (week, value)}};
+\draw[flow] (scan)--(filt); \draw[flow] (filt)--(expl); \draw[flow] (expl)--(pagg);
+% stage 1
+\node[lav,op,right=26mm of scan] (fagg) {final count\\{\color{soft}sum the partials}};
+\node[blue,op,below=of fagg] (join) {broadcast join\\{\color{soft}value to ontology slot}};
+\node[grey,op,below=of join] (dim) {ontology table\\{\color{soft}small, sent to every executor}};
+\draw[flow] (fagg)--(join); \draw[flow] (dim)--(join);
+% stage 2
+\node[lav,op,right=26mm of fagg] (win) {window\\{\color{soft}rank by count within each week}};
+\node[green,op,below=of win] (top) {keep top 20\\{\color{soft}per week and slot}};
+\node[sand,op,below=of top] (write) {write\\{\color{soft}trends table, Parquet}};
+\draw[flow] (win)--(top); \draw[flow] (top)--(write);
+% shuffles
+\coordinate (m01) at ($(pagg.east)!0.5!(fagg.west|-pagg.east)$);
+\draw[dflow] (pagg.east) -- (m01) |- (fagg.west);
+\node[tiny,align=center,fill=white,inner sep=1pt] at ($(m01|-expl)$) {shuffle by\\(week, value)};
+\coordinate (m12) at ($(join.east)!0.5!(win.west|-join.east)$);
+\draw[dflow] (join.east) -- (m12) |- (win.west);
+\node[tiny,align=center,fill=white,inner sep=1pt] at ($(m12|-dim)$) {shuffle\\by week};
+\begin{scope}[on background layer]
+\node[group,draw=greyD,fit=(scan)(pagg)] (s0) {};
+\node[group,draw=lavD,fit=(fagg)(dim)] (s1) {};
+\node[group,draw=greenD,fit=(win)(write)] (s2) {};
+\end{scope}
+\node[gtitle,text=greyT] at ([yshift=1pt]s0.north west) {stage 0};
+\node[gtitle,text=lavT] at ([yshift=1pt]s1.north west) {stage 1};
+\node[gtitle,text=greenT] at ([yshift=1pt]s2.north west) {stage 2};
+\end{tikzpicture}

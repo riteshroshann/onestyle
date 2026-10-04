@@ -1,0 +1,29 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  n/.style={text width=3.0cm,font=\small,inner ysep=5pt},
+  s/.style={font=\scriptsize,text=soft}]
+% column 1: scene
+\node[peach,n] (scene) at (0,0.6) {scene JSON\\{\scriptsize\color{soft}elements, files and appState from \texttt{excalidrawAPI}}};
+\node[grey,n] (graph) at (0,-1.9) {board graph\\{\scriptsize\color{soft}edges: inside, arrow, mentions, frame, near}};
+\draw[flow] (scene) -- (graph);
+% column 2: per element
+\node[lav,n] (imgs) at (4.6,1.6) {images\\{\scriptsize\color{soft}trained attribute heads on FashionSigLIP; a VLM for open questions}};
+\node[lav,n] (regs) at (4.6,-0.75) {circled regions\\{\scriptsize\color{soft}crop, then the same part-level heads}};
+\node[blue,n] (notes) at (4.6,-3.0) {notes\\{\scriptsize\color{soft}language engine; resolve ``this'' and ``\#2''; polarity}};
+\draw[flow] (graph.east) -- ++(0.4,0) |- (imgs.west);
+\draw[flow] (graph.east) -- ++(0.4,0) |- (regs.west);
+\draw[flow] (graph.east) -- ++(0.4,0) |- (notes.west);
+% column 3: pooling and constraints
+\node[green,n] (pool) at (9.3,1.3) {pooling\\{\scriptsize\color{soft}signed, weighted log-linear pooling per slot}};
+\node[green,n] (cons) at (9.3,-1.3) {comparisons\\{\scriptsize\color{soft}``deeper than \#1, less than \#2'' becomes an interval}};
+\node[sand,n] (ev) at (9.3,-3.9) {board evidence\\{\scriptsize\color{soft}per slot: a distribution or an interval, with sources}};
+\draw[flow] (imgs.east) -- ++(0.35,0) |- ([yshift=2mm]pool.west);
+\draw[flow] (regs.east) -- ++(0.35,0) |- ([yshift=-2mm]pool.west);
+\draw[flow] (notes.east) -- ++(0.6,0) |- (cons.west);
+\draw[flow] (pool) -- (cons);
+\draw[flow] (cons) -- (ev);
+\draw[flow] (ev.east) -- ++(0.6,0) node[s,anchor=west,align=left]{to the\\resolver};
+\begin{scope}[on background layer]
+\node[group,draw=lavD,fill=lavF!22,fit=(imgs)(notes),inner sep=7pt] (pe) {};
+\end{scope}
+\node[gtitle,text=lavT] at ([yshift=1pt]pe.north west) {per element};
+\end{tikzpicture}

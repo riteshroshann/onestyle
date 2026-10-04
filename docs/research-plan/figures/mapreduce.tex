@@ -1,0 +1,26 @@
+\begin{tikzpicture}[
+  doc/.style={grey,text width=2.55cm,font=\scriptsize,align=left,inner xsep=5pt},
+  kv/.style={font=\scriptsize\ttfamily,align=left,inner xsep=5pt},
+  st/.style={font=\small\scshape,text=soft}]
+\def\ya{2.2}\def\yb{0}\def\yc{-2.2}
+\node[st] at (0,3.45) {input splits};
+\node[st] at (3.85,3.45) {map};
+\node[st] at (7.85,3.45) {shuffle and sort};
+\node[st] at (11.75,3.45) {reduce};
+\node[doc] (d1) at (0,\ya) {``pastel blue anarkali, georgette, A-line''};
+\node[doc] (d2) at (0,\yb) {``A-line kurti in pastel pink georgette''};
+\node[doc] (d3) at (0,\yc) {``navy cotton straight kurti''};
+\node[lav,kv] (m1) at (3.85,\ya) {(a-line, georgette) 1\\(a-line, pastel)\phantom{ee} 1\\(georgette, pastel) 1\\\dots};
+\node[lav,kv] (m2) at (3.85,\yb) {(a-line, georgette) 1\\(a-line, pastel)\phantom{ee} 1\\(georgette, pastel) 1\\\dots};
+\node[lav,kv] (m3) at (3.85,\yc) {(cotton, navy)\phantom{eee} 1\\(cotton, straight) 1\\(navy, straight)\phantom{e} 1};
+\node[grey,kv] (s1) at (7.85,\ya) {(a-line, georgette) [1, 1]};
+\node[grey,kv] (s2) at (7.85,\yb) {(a-line, pastel) [1, 1]};
+\node[grey,kv] (s3) at (7.85,\yc) {(cotton, navy) [1] \dots};
+\node[green,kv] (r1) at (11.75,\ya) {(a-line, georgette) 2};
+\node[green,kv] (r2) at (11.75,\yb) {(a-line, pastel) 2};
+\node[green,kv] (r3) at (11.75,\yc) {(cotton, navy) 1};
+\foreach \i in {1,2,3}{\draw[flow] (d\i) -- (m\i); \draw[flow] (s\i) -- (r\i);}
+\draw[flow] (m1.east) -- (s1.west); \draw[flow] (m2.east) -- (s1.west);
+\draw[flow] (m1.east) -- (s2.west); \draw[flow] (m2.east) -- (s2.west);
+\draw[flow] (m3.east) -- (s3.west);
+\end{tikzpicture}

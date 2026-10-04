@@ -1,0 +1,25 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  lf/.style={box,text width=2.4cm,font=\small},
+  m/.style={->,draw=arrow},
+  ml/.style={font=\scriptsize,fill=white,inner sep=1.5pt,align=center}]
+\def\xa{0}\def\xb{3.9}\def\xc{7.8}\def\xd{11.7}
+\node[blue,lf] (A) at (\xa,0) {customer's browser};
+\node[sand,lf] (B) at (\xb,0) {\sys{} web};
+\node[lav,lf] (C) at (\xc,0) {\sys{} API};
+\node[rose,lf] (D) at (\xd,0) {Pinterest};
+\foreach \x in {\xa,\xb,\xc,\xd}{\draw[draw=greyD,dashed] (\x,-0.45) -- (\x,-10.1);}
+\def\msg#1#2#3#4{\draw[m] (#1,#3) -- node[ml,above=1pt]{#4} (#2,#3);}
+\msg{\xa}{\xb}{-1.0}{1. ``Import from Pinterest''}
+\msg{\xb}{\xc}{-1.75}{2. start OAuth, new \texttt{state}}
+\msg{\xc}{\xa}{-2.5}{3. redirect to \texttt{pinterest.com/oauth/} with scopes \texttt{boards:read}, \texttt{pins:read}}
+\msg{\xa}{\xd}{-3.25}{4. customer signs in and consents}
+\msg{\xd}{\xc}{-4.0}{5. redirect back with \texttt{code} and \texttt{state}}
+\msg{\xc}{\xd}{-4.75}{6. \texttt{POST /v5/oauth/token} (Basic auth, server side)}
+\msg{\xd}{\xc}{-5.5}{7. access token (30 days), refresh token}
+\msg{\xc}{\xd}{-6.25}{8. \texttt{GET /v5/boards}, then \texttt{/boards/\{id\}/pins}}
+\msg{\xc}{\xb}{-7.0}{9. pin ids, titles, 600 px image URLs, links}
+\msg{\xb}{\xa}{-7.75}{10. picker; chosen pins placed on the board, linked to Pinterest}
+\msg{\xb}{\xc}{-8.5}{11. ``Analyse board'': scene JSON, pins by reference only}
+\msg{\xc}{\xd}{-9.25}{12. fetch each image again at analysis time; nothing stored}
+\node[note,anchor=north west,text width=15cm] at (-1.2,-10.3) {Steps 11 and 12 follow Pinterest's rule to call the API instead of storing its content. Analysing pins at all, and any use for training, needs Pinterest's written consent; until then the import is a picker and the analysed images are the customer's own uploads. Apps registered after 14 September 2026 also need Pinterest's approval before reading non-business users' boards.};
+\end{tikzpicture}

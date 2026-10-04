@@ -1,0 +1,31 @@
+\begin{tikzpicture}[x=1.2cm,y=1cm,
+  tok/.style={grey,font=\footnotesize\ttfamily,minimum width=1.0cm,inner xsep=1pt,minimum height=5.5mm},
+  band/.style={box,minimum height=7.5mm,font=\footnotesize},
+  tag/.style={font=\scriptsize\scshape,anchor=base}]
+\foreach \i/\w in {0/[CLS],1/fitted,2/at,3/the,4/waist,5/{,},6/nee,7/\#\#che,8/se,9/thoda,10/loose,11/[SEP]}{
+  \node[tok] (t\i) at (\i,0) {\w};
+}
+\node[band,blue,fit={(-0.45,1.05) (11.45,1.05)},inner sep=0pt] (emb) {};
+\node[font=\footnotesize] at (emb) {token embeddings; positions enter as rotary phases inside attention};
+\node[band,lav,fit={(-0.45,2.3) (11.45,2.8)},inner sep=0pt] (enc) {};
+\node[font=\footnotesize,align=center] at (enc) {$L$ encoder layers: multi-head self-attention $\operatorname{softmax}(QK^{\top}/\sqrt{d})\,V$, gated feed-forward, residual, norm\\[-1pt]{\scriptsize\color{soft}every token sees every other token, so ``loose'' can attend to ``nee''}};
+\foreach \i in {0,...,11}{
+  \draw[flow] (t\i.north) -- (\i,0.82);
+  \draw[flow] (\i,1.28) -- (\i,1.98);
+  \node[circle,draw=lavD,fill=white,inner sep=1.6pt] (h\i) at (\i,3.55) {};
+  \draw[flow] (\i,3.12) -- (h\i.south);
+  \draw[flow] (h\i.north) -- (\i,4.22);
+  \draw[flow] (\i,4.68) -- (\i,5.32);
+  \draw[flow] (\i,5.78) -- (\i,6.25);
+}
+\node[tiny,anchor=west] at (11.12,3.55) {$h_i$};
+\node[band,green,fit={(-0.45,4.45) (11.45,4.45)},inner sep=0pt] (lin) {};
+\node[font=\footnotesize] at (lin) {linear layer: one score per tag, $s_i = W h_i + b$};
+\node[band,sand,fit={(-0.45,5.55) (11.45,5.55)},inner sep=0pt] (crf) {};
+\node[font=\footnotesize] at (crf) {CRF: adds tag-to-tag transition scores, decoded with Viterbi};
+\foreach \i/\g in {0/--,1/b-fit,2/o,3/o,4/b-part,5/o,6/b-loc,7/--,8/o,9/b-int,10/b-fit,11/--}{
+  \node[tag] at (\i,6.45) {\g};
+}
+\node[note,anchor=north west,text width=6.9cm] at (-0.45,-0.6) {``neeche'' is split into two sub-words. Only the first carries a label; the second is ignored by the loss (label $-100$). [CLS] and [SEP] are not tagged.};
+\node[note,anchor=north west,text width=6.3cm] at (6.0,-0.6) {Tags: \textsc{fit}, \textsc{part}, \textsc{loc} (relative place, here ``below''), \textsc{int} (intensity, here ``slightly''). \textsc{b} begins a span, \textsc{i} continues it, \textsc{o} is outside.};
+\end{tikzpicture}

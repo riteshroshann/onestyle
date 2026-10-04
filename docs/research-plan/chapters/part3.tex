@@ -1,0 +1,174 @@
+\chapter{The Big Data Platform}\label{ch:data}
+
+\section{Why this needs big data}
+
+A single boutique produces a few hundred orders a year. The platform's value comes from pooling: which ease values led to alterations, which fabrics customers who say ``elegant, not flashy'' end up choosing, which tailors deliver fitted blouses on time. Until \sys{} has its own volume, public retail data stands in: the H\&M transaction log (about 31.8 million purchases), Amazon clothing reviews (66.0 million ratings), and the RentTheRunway and ModCloth fit records (about 275,000 transactions with body measurements). The same jobs run on the \sys{} event log as it grows.
+
+\section{Layout of the lake}
+
+Data moves through three layers (Figure~\ref{fig:lake}). \emph{Bronze} holds raw files converted to Parquet, partitioned by source and day. \emph{Silver} holds typed, de-duplicated records with text parsed into ontology values; parsing runs inside \texttt{mapPartitions} so each executor loads the tagger once. \emph{Gold} holds the tables the product reads: weekly attribute counts, the attribute co-occurrence graph, the user--item matrix and the fit table. Event payloads, which vary by event type, are stored in Spark 4's \texttt{VARIANT} column type instead of strings.
+
+\begin{figure}[h]
+\centering\input{figures/dataplatform}
+\caption{Sources, lake layers and MLlib jobs.}\label{fig:lake}
+\end{figure}
+
+Spark 4.2.0 (July 2026) runs on Java 17, 21 or 25 with Scala 2.13 and Python 3.10 or later. Development runs on local Spark on the laptops. Databricks Free Edition is useful for PySpark notebooks, but it runs serverless Spark Connect only, without Scala or the RDD API, so the Scala and MapReduce work stays local.
+
+\section{Scala: the domain in functional style}
+
+The spec's domain model is written in Scala as immutable data, which covers the functional programming unit directly.
+
+\begin{lstlisting}
+sealed trait Fit
+object Fit {
+  case object Fitted     extends Fit
+  case object SemiFitted extends Fit
+  case object Relaxed    extends Fit
+  case object Loose      extends Fit
+}
+
+final case class Value(v: String, p: Double, sources: List[String])
+final case class Spec(garment: String, slots: Map[String, Value], version: Int)
+
+sealed trait Update
+final case class SetSlot(slot: String, value: Value) extends Update
+final case class Remove(slot: String)                extends Update
+
+def step(s: Spec, u: Update): Spec = u match {
+  case SetSlot(k, v) => s.copy(slots = s.slots.updated(k, v), version = s.version + 1)
+  case Remove(k)     => s.copy(slots = s.slots - k,           version = s.version + 1)
+}
+
+// a whole conversation is a fold over its updates
+val current: Spec = updates.foldLeft(Spec("kurti", Map.empty, 0))(step)
+
+// ontology ancestors with tail recursion over a cons list
+@annotation.tailrec
+def ancestors(n: Node, acc: List[Node] = Nil): List[Node] = n.parent match {
+  case None    => acc
+  case Some(p) => ancestors(p, p :: acc)
+}
+\end{lstlisting}
+
+\texttt{Spec} is immutable, so every version can be kept and replayed; \texttt{step} is a pure function, so the fold is the conversation; pattern matching on a sealed trait makes the compiler check that every update type is handled. Higher-order functions and closures appear in the filters (\texttt{orders.filter(withinBudget(5000))}); \texttt{Future}s fetch image metadata concurrently as the introduction to concurrency.
+
+\section{MapReduce: attribute co-occurrence}
+
+The first job is the textbook one (Figure~\ref{fig:mr}). The mapper parses a product text into ontology values and emits each unordered pair with a count of one; the framework shuffles pairs by key; the reducer sums. It is written twice, once with Hadoop Streaming in Python and once as a Scala RDD job with \texttt{flatMap} and \texttt{reduceByKey}, and the two outputs must match pair for pair. The counts give the positive pointwise mutual information graph between attributes, which the studio uses for suggestions (``customers who choose organza often choose pearl work'').
+
+\begin{figure}[h]
+\centering\input{figures/mapreduce}
+\caption{Attribute co-occurrence as map, shuffle and reduce.}\label{fig:mr}
+\end{figure}
+
+\section{DataFrames, lazy evaluation and the DAG}
+
+The trends job counts, for every week, how often each ontology value appears in delivered orders (in H\&M, in purchased articles) and keeps the top values per slot. Written as DataFrame transformations it does nothing until the final \texttt{write}; then Catalyst prunes columns at the scan, pushes the filter into the Parquet reader and splits the plan into stages at each shuffle (Figure~\ref{fig:dag}). The report includes the \texttt{explain()} output and the Spark UI's DAG for this job, and a scaling run over 1, 2, 4 and 8 cores and over growing data fractions. A typed \texttt{Dataset[Order]} version in Scala shows the compile-time checking that DataFrames lack.
+
+\begin{figure}[h]
+\centering\input{figures/dag}
+\caption{The weekly trends job as Spark executes it: three stages separated by two shuffles. The small ontology table is broadcast instead of shuffled.}\label{fig:dag}
+\end{figure}
+
+\section{MLlib pipelines}
+
+Five pipelines cover the machine learning unit.
+
+\begin{enumerate}
+\item \emph{Text classification.} \texttt{Tokenizer}, \texttt{StopWordsRemover}, \texttt{NGram}, \texttt{HashingTF}, \texttt{IDF} and \texttt{LogisticRegression}, predicting H\&M garment group from \texttt{detail\_desc}, tuned with \texttt{CrossValidator}. The same pipeline predicts occasion for requests.
+\item \emph{Word vectors and topics.} \texttt{Word2Vec} over product titles and reviews for ontology synonyms; \texttt{LDA} over clothing reviews for recurring themes.
+\item \emph{Association rules.} \texttt{FPGrowth} over each article's or order's set of ontology values gives rules with support, confidence and lift, such as \{pastel, A-line\} $\Rightarrow$ \{georgette\}.
+\item \emph{Collaborative filtering.} Implicit-feedback ALS \cite{hu2008implicit} on H\&M purchases, evaluated with MAP@12 on the last week, against a popularity baseline. ALS is the baseline here; the competition's winners used candidate generation plus a gradient-boosted ranker, and we report that honestly.
+\item \emph{Fit.} A classifier on RentTheRunway and ModCloth predicts small, fit or large from body measurements, size and category, and its errors become ease priors per category.
+\end{enumerate}
+
+Spark NLP 7.0 runs Hugging Face token classifiers inside Spark pipelines on Spark 4, so the fine-tuned \sys{} tagger can also parse all 7.2 million Amazon clothing titles at scale.
+
+\section{From data to suggestions}
+
+Suggestions combine three signals: content similarity between the current spec and past specs, using FashionSigLIP text embeddings with locality-sensitive hashing in Spark; association rules from FP-Growth; and outcomes, meaning which past choices led to good ratings and no alterations. Tailor matching scores skill coverage for the garment and its parts, capacity, on-time rate and a Bayesian-averaged rating; once enough orders exist it becomes a learned ranker. Figure~\ref{fig:fly} shows the loop that makes this improve with use.
+
+\begin{figure}[h]
+\centering\input{figures/flywheel}
+\caption{The data flywheel.}\label{fig:fly}
+\end{figure}
+
+\section{Privacy}
+
+Body measurements and photos are personal data under India's Digital Personal Data Protection Act 2023. The Rules were notified in November 2025, and their main obligations apply from 13 May 2027. The platform is built for that date now: consent tied to a stated purpose, measurements and photos kept encrypted and apart from analytics, pseudonymous ids in the lake, faces blurred before images enter any training set, and deletion that reaches every layer. Delta Lake's \texttt{DELETE} makes the last point practical on Parquet tables.
+
+% ======================================================================
+\chapter{Engineering Workflow}\label{ch:eng}
+
+This chapter is written like developer documentation: what runs where, what each endpoint takes and returns, and how a change moves from a laptop to production.
+
+\section{Repository}
+
+\begin{lstlisting}
+onestyle/
+  docs/research-plan/   this document (LaTeX, figures, verified sources)
+  ontology/             bespoke.yaml, glossary_hi.tsv, ease.yaml
+  engine/               Python package: lang/, board/, resolver/, sheet/
+  api/                  FastAPI service
+  web/                  Next.js app with Excalidraw
+  spark/                PySpark jobs, scala/ (sbt), hadoop/ (streaming)
+  data/annotations/     BESPOKE-Spec (raw data is downloaded, not committed)
+  eval/                 benchmark runners, metrics, significance tests
+  paper/  report/       manuscripts; every number read from eval/ outputs
+\end{lstlisting}
+
+\section{Services}
+
+The web app (Next.js, deployed on Vercel as a static site) holds the studio and the Excalidraw canvas. The API (FastAPI) owns sessions, specs and orders, and calls the engine in-process. Models run on a GPU machine behind the API: the encoder through ONNX Runtime, FashionSigLIP through \texttt{open\_clip}, and the LLM through vLLM or llama.cpp with schema-constrained decoding. Postgres stores sessions, specs (JSONB, append-only versions) and orders; object storage holds uploaded images; the event log is written as Parquet for Spark.
+
+\section{API reference}
+
+All endpoints are under \texttt{/v1}, take and return JSON, and accept an \texttt{Idempotency-Key} header on writes.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}P{6.0cm}L@{}}
+\thd{endpoint} & \thd{does}\\
+\texttt{POST /sessions} & start a design session; returns \texttt{session\_id}\\
+\texttt{POST /sessions/\{id\}/messages} & add customer text; returns the spec delta, new version, and questions\\
+\texttt{PUT /sessions/\{id\}/board} & send the Excalidraw scene and files (\texttt{If-Match} on the board version); returns board evidence, new spec version and questions\\
+\texttt{POST /sessions/\{id\}/answers} & answer a question; returns the new version\\
+\texttt{GET /specs/\{spec\_id\}?version=} & read a DesignSpec\\
+\texttt{GET /specs/\{spec\_id\}/sheet?lang=hi} & tailor sheet as HTML or PDF\\
+\texttt{POST /orders} & create an order from a spec, measurements and a tailor\\
+\texttt{POST /orders/\{id\}/events} & cut, trial, alteration, delivered, rated\\
+\texttt{GET /recommendations?spec\_id=\&kind=} & fabrics, colours, designs or tailors\\
+\texttt{GET /integrations/pinterest/authorize} & start OAuth; redirects to Pinterest\\
+\texttt{GET /integrations/pinterest/callback} & exchange the code server-side; tokens kept encrypted\\
+\texttt{GET /integrations/pinterest/boards}, \texttt{\ldots/boards/\{id\}/pins} & picker data, fetched live, never stored\\
+\end{tabularx}
+\end{table}
+
+A message call looks like this:
+
+\begin{lstlisting}
+POST /v1/sessions/s_81f2/messages
+{ "text": "kurti chahiye, waist pe fitted, neeche se thoda loose, V neck thoda deep" }
+
+200 OK
+{ "spec_version": 2,
+  "delta": [
+    {"op": "set", "slot": "garment", "value": "kurti", "p": 0.98},
+    {"op": "set", "slot": "bodice.fit", "value": "fitted", "p": 0.93},
+    {"op": "set", "slot": "lower.fit_hip", "value": "relaxed", "p": 0.81},
+    {"op": "set", "slot": "neckline.shape", "value": "V", "p": 0.96},
+    {"op": "set", "slot": "neckline.depth", "value": "moderate-deep", "p": 0.62,
+     "status": "ask"} ],
+  "questions": [
+    {"id": "q1", "slot": "neckline.front_depth_in",
+     "text": "How deep should the V be?", "options": [6, 6.5, 7]} ] }
+\end{lstlisting}
+
+\section{Events}
+
+Every state change emits one event: \texttt{event\_id}, \texttt{ts}, \texttt{type}, a pseudonymous \texttt{session\_id} or \texttt{order\_id}, \texttt{spec\_version} and a \texttt{payload}. Events are appended, never updated; the lake is rebuilt from them.
+
+\section{Quality gates}
+
+Every pull request runs the unit tests, a parity test that the Python and TypeScript ontology loaders agree (352 fixtures generated from the Python engine), and a regression run on the development split that fails if triple F1 drops by more than one point. Specs are validated against the schema at every boundary. Each evaluation number in the paper is read from a file written by \texttt{eval/}, never typed by hand.

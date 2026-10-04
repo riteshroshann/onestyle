@@ -1,0 +1,26 @@
+\begin{tikzpicture}[x=1.05cm,y=1cm,
+  who/.style={font=\small,anchor=east,align=right}]
+% \blk{start}{end}{row y}{style}{text}; 1 unit = 10 minutes
+\newcommand{\blk}[5]{\pgfmathsetmacro{\w}{(#2-#1)*1.05-0.12}\node[#4,box,font=\scriptsize,inner xsep=2pt,inner ysep=2pt,minimum height=1.05cm,anchor=west,text width=\w cm-4pt,minimum width=\w cm] at (#1+0.06,#3) {#5};}
+\foreach \m/\l in {0/0:00,3/0:30,6/1:00,9/1:30,12/2:00}{
+  \draw[draw=greyD] (\m,0.45) -- (\m,0.6);
+  \node[tiny,above] at (\m,0.6) {\l};
+}
+\draw[draw=greyD] (0,0.45) -- (12,0.45);
+\node[who] at (-0.2,-0.4) {back end};
+\node[who] at (-0.2,-1.85) {front end};
+\node[who] at (-0.2,-3.3) {data};
+\blk{0}{2}{-0.4}{grey}{repo and FastAPI}
+\blk{2}{6}{-0.4}{lav}{ontology v0, rule tagger, \texttt{/parse}}
+\blk{6}{10}{-0.4}{lav}{FashionSigLIP on board images, \texttt{/board}}
+\blk{10}{12}{-0.4}{sand}{merge to a spec}
+\blk{0}{3}{-1.85}{blue}{Next.js with Excalidraw}
+\blk{3}{7}{-1.85}{blue}{``Analyse board'' posts elements and files}
+\blk{7}{10}{-1.85}{blue}{editable spec panel}
+\blk{10}{12}{-1.85}{sand}{print view of the sheet}
+\blk{0}{3}{-3.3}{grey}{local Spark, H\&M articles}
+\blk{3}{7}{-3.3}{green}{TF-IDF and logistic regression on descriptions}
+\blk{7}{12}{-3.3}{green}{RDD map and reduce: attribute pair counts}
+\draw[dashed,draw=ph4] (12,0.45) -- (12,-4.0);
+\node[font=\scriptsize\scshape,text=ph4,anchor=north] at (12,-4.0) {demo};
+\end{tikzpicture}

@@ -1,0 +1,266 @@
+\chapter{Models and Datasets}\label{ch:sota}
+
+The rule for choosing is simple: the newest model that is openly licensed, fits the hardware, and has evidence on a task close to ours. The hardware is one laptop RTX 4050 with 6\,GB, plus free Kaggle and Colab GPUs. Every version, date and licence below was checked in October 2026.
+
+\section{Language models}
+
+\begin{table}[h]
+\centering\small
+\caption{Language models used, and the role each plays.}\label{tab:lm}
+\begin{tabularx}{\textwidth}{@{}P{3.3cm}P{3.6cm}L@{}}
+\thd{model} & \thd{size, licence, date} & \thd{role in \sys{}}\\
+MuRIL \cite{khanuja2021muril} & BERT-base, Apache-2.0, 2021 & encoder trained on 17 Indian languages and their romanised forms; first candidate for Hinglish tagging\\
+HingRoBERTa, HingMBERT \cite{nayak2022hingbert} & base, CC BY 4.0, 2022 & pretrained on 52.9M romanised Hinglish tweets; second candidate\\
+mmBERT \cite{marone2025mmbert} & 140M and 307M, MIT, 2025 & modern encoder over 1,833 languages, 8K context; third candidate\\
+ModernBERT \cite{warner2025modernbert} & 149M and 395M, Apache-2.0, 2024 & English-only reference point\\
+GLiNER2 \cite{zaratiana2025gliner2} & 205M to 340M, Apache-2.0, 2025 & schema-driven zero-shot extraction baseline; LoRA-adaptable\\
+Qwen3.5-4B \cite{qwen35} & 4B, Apache-2.0, March 2026 & small LLM for structured generation; 201 languages; QLoRA fits in about 3.5 to 5\,GB\\
+Qwen3-Embedding-0.6B & 0.6B, Apache-2.0, 2025 & maps free phrases (``flowy'') to ontology values\\
+IndicTrans2 \cite{gala2023indictrans2} & 200M to 1B, MIT, 2023 & English to Hindi for free-text notes on the tailor sheet\\
+\end{tabularx}
+\end{table}
+
+Two choices deserve a reason. The encoder, not the LLM, is the expected main extractor: tagging is a span problem, encoders of 150 to 300M parameters fine-tune comfortably in 6\,GB, they run in milliseconds, and our earlier prototype already shipped a 33M encoder that runs in a browser. The LLM is the comparison system and the teacher that produces silver labels. And Qwen3.5-4B is preferred over larger models because it is the newest Apache-licensed multilingual model whose QLoRA training fits the laptop.
+
+\section{Vision models}
+
+Marqo-FashionSigLIP \cite{marqo2024} (about 0.2B parameters, Apache-2.0) is the image encoder. It reports text-to-image average recall 0.231 against 0.163 for FashionCLIP~2.0 across seven fashion benchmarks, and it was the strongest single channel in our retrieval prototype. On top of its frozen embeddings we train small attribute heads per slot; zero-shot prompting (``a photo of a kurta with a boat neckline'') is the fallback for values without training data. A general vision-language model, Qwen3.5-4B (natively multimodal) or Qwen3-VL-8B on Kaggle, answers open questions about an image and powers the whole-board baseline of RQ2. SAM~2.1 with a text-grounded detector crops garment parts when the customer has not circled one. Image generation for previews (FLUX.2 [klein] 4B, Apache-2.0) is optional and never feeds the specification.
+
+\section{Datasets}
+
+\begin{table}[h]
+\centering\small
+\caption{Datasets and what each is used for.}\label{tab:data}
+\begin{tabularx}{\textwidth}{@{}P{3.4cm}P{4.0cm}L@{}}
+\thd{dataset} & \thd{size and licence} & \thd{use}\\
+Fashionpedia \cite{jia2020fashionpedia} & 48,825 images; 27 categories, 19 parts, 294 attributes; annotations CC BY 4.0 & ontology backbone; part-level attribute heads\\
+DeepFashion-MultiModal \cite{jiang2022text2human} & 44,096 images with parsing, shape, fabric labels and text; non-commercial & text--attribute pairs; image heads\\
+Kouture \cite{suman2025kouture}, IndoFashion \cite{rajput2021indofashion}, Atlas \cite{umaashankar2020atlas} & 20K kurtas; 106K images in 15 Indian classes; 184K catalogue items & Indian garments, the main gap\\
+Fashion IQ \cite{wu2021fashioniq} & 77,684 images, 60,272 relative captions & comparative language (``longer than'')\\
+SIMMC 2.1 \cite{kottur2021simmc} & 11,244 dialogues; CC BY-NC-SA & state-tracking pretraining\\
+COMI-LINGUA \cite{comilingua} & 125K+ code-mixed Hindi--English instances; CC BY 4.0 & Hinglish normalisation and NER\\
+H\&M recommendations \cite{hm2022} & 1.37M customers, 105,542 articles, about 31.8M transactions & Spark: trends, ALS, text pipelines\\
+Amazon Reviews 2023 \cite{hou2024amazon} & Clothing: 66.0M ratings, 7.2M items & Spark scale; word vectors; review topics\\
+RentTheRunway, ModCloth \cite{misra2018fit} & 192,544 and 82,790 transactions with body data and fit labels & fit model; ease priors\\
+GarmentCodeData \cite{korosteleva2024gcd} & 115K garments; CC BY 4.0 & stretch goal: spec to sewing pattern\\
+\end{tabularx}
+\end{table}
+
+None of these contains what we need most: real customer requests, in Hinglish, labelled by garment part. That is why \textsc{bespoke-spec} (Chapter~\ref{ch:eval}) is a contribution, not a chore.
+
+% ======================================================================
+\chapter{System Design}\label{ch:design}
+
+\section{Architecture}
+
+Figure~\ref{fig:arch} shows the system. Two engines turn the two inputs into evidence. A resolver merges that evidence with the customer's profile into the DesignSpec, decides what to ask, and records where every value came from. The studio, the tailor sheet and the order flow read the spec. Every event lands in a log that the Spark platform turns into trends, priors and suggestions.
+
+\begin{figure}[p]
+\centering\input{figures/architecture}
+\caption{\sys{} end to end. Dashed arrows are feedback: questions to the customer, edits from the studio, and suggestions learned by the data platform.}\label{fig:arch}
+\end{figure}
+
+\section{The ontology}
+
+The ontology is a typed graph (Figure~\ref{fig:onto}). A garment has parts; each part has attributes; each attribute has a type. Categorical attributes take one value from a list (neckline shape). Ordinal attributes take a value from an ordered list and can be compared (neckline depth: shallow $<$ moderate $<$ deep $<$ plunging). Numeric attributes carry a number and a unit, and ordinal fit values map to ease ranges in inches. The types matter because ``deeper than \#1'' only makes sense on an ordered or numeric attribute, and because a tailor needs inches, not adjectives.
+
+\begin{figure}[h]
+\centering\input{figures/ontology}
+\caption{Part of the ontology for a kurti. Small capitals give the type: \textsc{cat} categorical, \textsc{ord} ordinal, \textsc{in} inches, \textsc{int} integer; an arrow means the ordinal value is converted to a number.}\label{fig:onto}
+\end{figure}
+
+The ontology starts from Fashionpedia's attribute groups (silhouette, neckline type, length, opening type, waistline, finishing, textile pattern) and adds Indian garments and parts: kalis, side slits, katori cups, potli buttons, back-neck depth, and embellishments such as zari, gota patti, mirror work and chikankari. Each value carries surface forms in English, romanised Hindi and Devanagari (``dheela, dhila, dheeli, \hi{ढीला}'' all map to \emph{loose}). It is stored as YAML in the repository and versioned like code.
+
+\section{The DesignSpec}
+
+The DesignSpec is a JSON document validated by a schema generated from the ontology. Every value is an object with five fields: the value itself, a probability, an interval when the value is numeric, a status (\emph{confirmed}, \emph{inferred}, \emph{ask}) and the list of sources. A source is a pointer: a message and character span, an image element id, a circled region, a note, the profile, or a prior from the data platform. Specs are immutable; every change makes a new version, so the order of events can always be replayed. Appendix~\ref{app:spec} gives an example.
+
+Ease is what turns adjectives into cloth. Finished measurement = body measurement + ease, and the fit value chooses the ease. We start from a table with fitted at 1 to 1.5\,in, semi-fitted at 2 to 3\,in, relaxed at 3 to 4\,in and loose at 4 to 6\,in, and replace it in Phase~1 with the values our partner tailors actually use. The table is data in the ontology, not code.
+
+\section{The resolver}
+
+For each slot $s$, the resolver holds evidence from up to five sources: the customer's words, notes on the board, the images, the profile, and a population prior from Spark. It combines them by weighted log-linear pooling,
+\begin{equation}
+\log P(s = v) \;=\; \sum_{k} \lambda_k \,\log p_k(s=v) \;-\; \log Z,
+\end{equation}
+with weights in the order words $>$ notes $>$ images $>$ profile $>$ prior, tuned on development data. When the two strongest sources disagree and both are confident, the slot becomes a conflict and is asked about, not averaged.
+
+What to ask is a decision, not a threshold. Each construction-critical slot has a cost of being wrong, $c_s$, set with tailors: a neckline cut too deep cannot be raised, while a sleeve cut too long can be shortened. The expected cost of not asking is $c_s\,(1-\max_v P(s=v))$. The resolver asks at most three questions per round, in order of that expected cost, and for irreversible dimensions proposes the conservative end of the feasible range. Following conformal intent clarification \cite{hengst2024cicc}, a question offers the values in a calibrated prediction set rather than an open text box: ``How deep should the V be: about 6, 6.5 or 7 inches?''
+
+% ======================================================================
+\chapter{The Language Engine}\label{ch:lang}
+
+\section{The pipeline}
+
+The engine runs in five steps: normalise the text, tag spans, bind spans into (part, attribute, value) triples, ground each value in the ontology, and update the conversation state. Each step is built as a ladder of models (Figure~\ref{fig:ladder}), so every syllabus method is implemented, measured on the same test set, and kept only if it earns its place.
+
+\begin{figure}[h]
+\centering\input{figures/ladder}
+\caption{The model ladder. Left: what each rung is. Right: the syllabus topics it covers and its role.}\label{fig:ladder}
+\end{figure}
+
+\section{Normalisation: morphology and variants}
+
+Customers write ``flowy'', ``flowing'' and ``flows''; and ``neeche'', ``niche'' and ``nichey''. Normalisation lowercases, removes character elongation (``loooose''), lemmatises English with a fashion suffix list (\emph{-y}, \emph{-ing}, \emph{-ed}), and maps Hindi inflections that agree with gender and number (``dheela, dheeli, dheele'') to one lemma. Romanised spelling variants are resolved two ways and compared: a variant lexicon mined from HingCorpus with character n-gram similarity, and transliteration to Devanagari with IndicXlit followed by a Hindi lemma lookup. Token-level language identification is kept as a feature for later models.
+
+\section{Collocations, bag of words and n-grams}
+
+Fashion vocabulary is full of multiword units: ``boat neck'', ``puff sleeve'', ``gota patti'', ``A-line''. We find them by pointwise mutual information over 7.2 million Amazon clothing titles and the H\&M descriptions,
+\begin{equation}
+\mathrm{PMI}(x,y) = \log \frac{P(x,y)}{P(x)\,P(y)},
+\end{equation}
+keeping pairs above a minimum count, and add them to the gazetteer as single tokens.
+
+Whole-request slots (occasion, style, formality) do not need spans. A TF-IDF representation with $\mathrm{tfidf}(t,d)=\mathrm{tf}(t,d)\cdot\log(N/\mathrm{df}(t))$ over word unigrams and bigrams, fed to logistic regression, is the baseline, compared against one-hot and raw counts to show what the weighting buys. A Kneser--Ney smoothed trigram language model trained on requests gives two practical tools: autocomplete in the studio (``puff sl\ldots'' $\to$ ``puff sleeves'') and a perplexity score that flags requests unlike anything seen, which are routed to the LLM.
+
+\section{HMM and CRF taggers}
+
+Span tagging uses BIO labels over 18 types: garment, part, location (``neeche''), fit, shape, length, dimension word (``deep''), neckline, sleeve, colour, shade, fabric, pattern, embellishment, occasion, intensity (``thoda'', ``bahut''), negation (``no'', ``mat'', ``nahi'') and reference (``\#2'', ``this one''). Comparison cues (``deeper than'', ``se zyada'') are a 19th type.
+
+The first tagger is a hidden Markov model, the generative baseline:
+\begin{equation}
+P(x, y) = \prod_{i} P(y_i \mid y_{i-1})\,P(x_i \mid y_i),
+\end{equation}
+trained by counting and decoded with Viterbi. It cannot use overlapping features such as ``ends in -ed'' or ``is in the gazetteer'', which is exactly what the conditional random field \cite{lafferty2001crf} fixes. The CRF models $P(y\mid x)$ directly, with features for the word, its lemma, shape, suffixes, gazetteer hits, language tag, POS tag and a window of neighbours. It is the strongest classic baseline and the one the neural models must clearly beat.
+
+\section{How BERT tags a request}
+
+Figure~\ref{fig:bert} follows one request through an encoder with a CRF head.
+
+\begin{figure}[h]
+\centering\input{figures/bert}
+\caption{Token classification with an encoder and a CRF head on ``fitted at the waist, neeche se thoda loose''.}\label{fig:bert}
+\end{figure}
+
+\paragraph{Tokens} The tokenizer splits text into sub-words from a fixed vocabulary, so an unseen romanised word still has a representation (``neeche'' becomes ``nee'' and ``\#\#che''). Special tokens mark the start and end.
+
+\paragraph{Embeddings} Each sub-word is looked up in an embedding table to get a vector of width $d$ (768 for base models). Position is added as a learned vector in BERT and MuRIL, or applied as a rotation inside attention in ModernBERT and mmBERT.
+
+\paragraph{Encoder layers} Each of $L$ layers (12 in BERT-base) does two things. Self-attention lets every token build its new vector as a weighted mix of all tokens:
+\begin{equation}
+\mathrm{Attention}(Q,K,V) = \mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V,
+\end{equation}
+where $Q$, $K$ and $V$ are linear projections of the layer input, computed separately in each of 12 heads. Then a feed-forward network transforms each token on its own. Residual connections and layer normalisation wrap both. Because attention looks both left and right, ``loose'' can take its meaning from ``neeche'' before it and the garment after it; this is the advantage over left-to-right models for tagging.
+
+\paragraph{Pretraining} The encoder was pretrained by masked language modelling: hide a share of tokens (15\% in BERT \cite{devlin2019bert}, 30\% in ModernBERT) and predict them from both sides. MuRIL additionally saw translated and transliterated pairs, which is why it is the first candidate for romanised Hindi.
+
+\paragraph{Classification head} For token $i$ with final vector $h_i$, a linear layer gives one score per tag, $s_i = W h_i + b$, with $2K+1$ tags for $K$ span types. Only the first sub-word of each word is labelled; the others get the label $-100$, which the loss ignores. Plain fine-tuning minimises cross-entropy on these positions.
+
+\paragraph{CRF head} Tags are not independent: \textsc{i-fit} cannot follow \textsc{o}. A CRF adds a learned transition matrix $A$ and scores a whole tag sequence,
+\begin{equation}
+\mathrm{score}(x,y) = \sum_i s_i[y_i] + \sum_i A[y_{i-1},y_i], \qquad
+P(y\mid x) = \frac{\exp \mathrm{score}(x,y)}{\sum_{y'} \exp\mathrm{score}(x,y')}.
+\end{equation}
+The denominator is computed with the forward algorithm and the best sequence with Viterbi, the same dynamic programmes as the HMM; the difference is that the scores now come from a transformer, not from counts.
+
+\paragraph{Training recipe} AdamW, learning rate $3\times10^{-5}$ for the encoder and $10^{-3}$ for the head and transitions, 10\% linear warm-up, 10 epochs with early stopping on development triple F1, batch 16, maximum length 128, bf16 on the RTX 4050, three seeds. Training data: the human-annotated training split of \textsc{bespoke-spec}, plus silver data labelled by the LLM teacher and checked on a sample; the test split is never touched by the teacher.
+
+\paragraph{Which encoder} MuRIL, HingRoBERTa, mmBERT-base and mDeBERTa-v3 are fine-tuned identically and compared on the Hinglish development set. GLiNER2 \cite{zaratiana2025gliner2} is run zero-shot with the tag names as its schema, then LoRA-adapted, as the strongest off-the-shelf alternative.
+
+\section{Binding and grounding}
+
+Tags are not yet a specification. In ``fitted at the waist, neeche se thoda loose, V neck thoda deep'', the engine must decide that \emph{fitted} applies to the waist, \emph{loose} to the part below it, and \emph{thoda} softens \emph{loose} (Figure~\ref{fig:binding}).
+
+\begin{figure}[h]
+\centering\input{figures/binding}
+\caption{Binding turns tagged spans into (part, attribute, value) triples.}\label{fig:binding}
+\end{figure}
+
+For English, a dependency parse (Stanza) gives the attachment directly. Parsers trained on standard English or Hindi break on code-mixed text, so the main binder is a pair classifier: for every pair of spans it concatenates their encoder vectors and the distance between them and predicts a relation (\emph{applies-to}, \emph{softens}, \emph{negates}, \emph{compares-with}, none). The resulting graph is checked against the ontology graph: a value must belong to an attribute that its part allows. This is the graph NLP of the syllabus, and it removes impossible triples before they reach the spec.
+
+Grounding maps each value phrase to an ontology value. Exact and variant matches come from the gazetteer. Everything else (``flowy'', ``ghera wala'') is embedded with Qwen3-Embedding and matched to the nearest value description; below a similarity threshold, the phrase is kept as free text for the tailor and flagged.
+
+\section{Small LLM with schema-constrained decoding}
+
+The comparison system treats extraction as sequence-to-sequence generation. Qwen3.5-4B receives the request and emits the DesignSpec JSON directly. A decoder model generates left to right, $P(y)=\prod_t P(y_t\mid y_{<t},x)$, so on its own it can emit invalid JSON or values outside the ontology. Schema-constrained decoding removes both failure modes: XGrammar \cite{dong2025xgrammar} or llguidance compiles the JSON schema into a grammar and masks, at every step, every token that would break it. Errors become semantic, never syntactic. Each value must also carry an \texttt{evidence} field quoting the request; a post-check rejects values whose evidence is not in the input, which is how we measure and suppress hallucination. The model is fine-tuned with QLoRA on the same training split, and compared zero-shot against GLiNER2.
+
+\section{Conversation state}
+
+Customers revise: ``actually make it full sleeves'', ``colour wahi rakho''. Following dialogue state tracking by function calling \cite{li2024fnctod}, each turn produces a list of updates (\emph{set}, \emph{remove}, \emph{keep}) to the current spec, and the new spec is the old one with the updates applied. In functional terms this is a fold over the turns, which is how it is written in Scala in Chapter~\ref{ch:data}. A WhatsApp export is handled the same way: the summary given to the tailor is the final state plus a short changelog, evaluated with state-tracking metrics rather than ROUGE.
+
+\section{Calibration}
+
+A probability is useful only if it is honest. Span confidences from the CRF marginals and value probabilities from the LLM are temperature-scaled on development data, and their expected calibration error is reported \cite{jagannatha2020calib}. The resolver uses the calibrated values to decide what to ask (Chapter~\ref{ch:design}).
+
+\section{Other syllabus tasks in the engine}
+
+\emph{POS tagging} supplies CRF features and is evaluated on its own with an HMM tagger. \emph{Word embeddings}: word2vec trained with Spark MLlib on the product corpus gives neighbours such as ``flowy'' $\to$ ``fluid'', ``loose'', ``relaxed'' for ontology synonyms. \emph{Topic modelling}: LDA in Spark and BERTopic \cite{grootendorst2022bertopic} over reviews and requests find themes the ontology does not yet cover. \emph{Sentiment}: aspect-based sentiment over reviews on fit, fabric and colour feeds size advice, and the same model reads trial feedback (``neck bahut deep ho gaya'') as a negative signal on neckline depth. \emph{Machine translation}: ontology terms go to Hindi through a curated glossary, because a tailor's term must be exact; free-text notes go through IndicTrans2. \emph{Question answering}: a tailor can ask the order ``sleeve kitni lambi?'' and get the value and its source.
+
+% ======================================================================
+\chapter{The Moodboard Engine}\label{ch:board}
+
+\section{Why Excalidraw}
+
+The customer needs a canvas, not an upload form: a place to drop images, write notes, draw arrows and circle the part they like. Excalidraw is MIT-licensed, embeds as a React component (\texttt{@excalidraw/excalidraw} 0.18.1, April 2026), and exposes the whole scene as JSON. tldraw, the obvious alternative, requires a licence key for production use. Embedding in Next.js takes a client component that loads Excalidraw through \texttt{dynamic(\ldots, \{ssr:false\})} and imports its stylesheet.
+
+\section{Reading the board as a graph}
+
+The ``Analyse board'' button sends the scene: \texttt{elements} from \texttt{getSceneElements()}, the image bytes from \texttt{getFiles()}, and \texttt{appState}. Each image element carries a \texttt{fileId} (by default the SHA-1 of its bytes, which de-duplicates exact copies for free) and an optional \texttt{crop}; each arrow carries \texttt{startBinding} and \texttt{endBinding} with the ids of the elements it connects; text, frames and groups carry \texttt{containerId}, \texttt{frameId} and \texttt{groupIds}. From these the engine builds a graph (Figure~\ref{fig:board}) with five edge types: \emph{inside} (a circle drawn over an image), \emph{arrow} (a note pointing at an image or circle), \emph{mentions} (a note that names ``\#2''), \emph{frame} (images grouped as alternatives) and \emph{near} (a note close to an image, used only when nothing else binds it). Near-duplicate images, such as two screenshots of the same pin, are merged by perceptual hash.
+
+\begin{figure}[h]
+\centering\input{figures/board}
+\caption{A customer's board and the graph the engine builds from it.}\label{fig:board}
+\end{figure}
+
+\section{Evidence from each element}
+
+Figure~\ref{fig:mood} shows the pipeline. \emph{Images} are embedded once with FashionSigLIP; small trained heads give a probability distribution for every slot the garment type allows (neckline shape, sleeve style, silhouette, length and so on). The heads are trained on Fashionpedia, DeepFashion-MultiModal and Kouture, with Indian values labelled by the team where no public label exists. \emph{Circled regions} are cropped and scored by the part-level heads for the part they cover. \emph{Notes} go through the language engine, where ``this'' resolves to whatever the arrow points at and ``\#2'' to the image labelled 2. A note with negation (``not this colour'') gives its target negative polarity for the slots the note names.
+
+\begin{figure}[h]
+\centering\input{figures/moodboard}
+\caption{The moodboard engine. Every value leaves with its sources attached.}\label{fig:mood}
+\end{figure}
+
+\section{Pooling}
+
+For slot $s$, image $i$ gives a distribution $p_i(v)$, a weight $w_i$ and a polarity $\sigma_i\in\{+1,-1\}$. The board's belief is
+\begin{equation}
+P_B(s=v) \;\propto\; \exp\Big(\sum_i \sigma_i\, w_i \log p_i(v)\Big).
+\end{equation}
+The weight encodes salience: an image targeted by a note or circle for this slot gets full weight, an image with no annotation gets half, and an image in a frame of rejected alternatives gets none. A negative reference pushes probability away from the values it shows; if it is confident about its value, that value becomes a hard exclusion, the mechanism that worked best in our retrieval prototype.
+
+\section{Comparisons between references}
+
+``Neck deeper than \#1 but less than \#2'' is parsed into two constraints on an ordered slot: depth $>$ depth(\#1) and depth $<$ depth(\#2). Each reference gets an estimate with an uncertainty band. For neckline depth, the estimate is the depth as a fraction of the shoulder-to-bust distance in the image, from body keypoints and the neckline's lowest point, transferred to the customer's own shoulder-to-bust measurement. The feasible interval lies between the bands (Figure~\ref{fig:interval}). If it is empty, the request contradicts itself and the resolver asks.
+
+\begin{figure}[h]
+\centering\input{figures/interval}
+\caption{A comparison between two references becomes an interval in inches on the customer's body.}\label{fig:interval}
+\end{figure}
+
+\section{The whole-board baseline}
+
+Excalidraw's own diagram-to-code feature exports a frame as one image plus its texts and sends both to a model. The same approach is our baseline for RQ2: render the board with \texttt{exportToBlob}, add every note's text and the individual images labelled by element id, and ask a vision-language model for the DesignSpec under the same schema constraint. If the structured engine does not beat this on comparison constraints and negative references, the structure is not earning its keep, and we will say so.
+
+\section{Importing inspiration}
+
+\paragraph{Uploads} The default path, and the only one used for analysis and training: the customer drops, pastes or shares images they chose. On Android and desktop Chrome and Edge, an installed web app can register as a share target, so ``share to \sys{}'' works from the Instagram or Pinterest apps; Safari and Firefox do not support it.
+
+\paragraph{Pinterest} The Pinterest API v5 supports what a picker needs (Figure~\ref{fig:pin}): OAuth with \texttt{boards:read} and \texttt{pins:read}, \texttt{GET /v5/boards}, and \texttt{GET /v5/boards/\{id\}/pins} with bookmark pagination, returning image URLs at 150, 400, 600 and 1200 pixels. Its developer guidelines are strict: content may not be stored (the API is to be called each time), Pinterest data and derivatives must be deleted within 30 days of revocation, pins must link back to Pinterest, and using Pinterest content to train or improve AI models requires Pinterest's express written consent. Apps registered after 14 September 2026 also need Pinterest's approval before reading non-business users' boards. So the integration ships as a picker behind a feature flag, images are fetched at analysis time and never stored, and analysis of pins is switched on only after written approval.
+
+\paragraph{Instagram} The consumer Basic Display API ended on 4 December 2024. The current APIs serve only a professional account's own media and offer no access to saved posts or other people's posts. Instagram inspiration enters as screenshots or through the share target.
+
+\begin{figure}[h]
+\centering\input{figures/pinterest}
+\caption{Pinterest import as a picker, following the API's storage and attribution rules.}\label{fig:pin}
+\end{figure}
+
+% ======================================================================
+\chapter{Studio and Tailor Sheet}\label{ch:sheet}
+
+\section{The studio}
+
+The studio is where the customer sees the spec as a garment, not as JSON: a parametric flat sketch drawn from the spec (SVG components per neckline, sleeve and silhouette), a short list of open questions, and every value editable by tapping it. Edits are updates to the spec, exactly like a chat message, so they are versioned and logged. An optional preview image can be generated, but the preview is never treated as evidence.
+
+\section{The tailor sheet}
+
+The tailor sheet (Figure~\ref{fig:sheet}) is the product the tailor sees. It lists each part with one instruction in workshop language, gives finished measurements computed as body measurement plus ease, shows the references with the customer's marks, names the source of every instruction so the tailor knows what is negotiable, and repeats the critical instructions in Hindi. It opens as a link on WhatsApp and prints on one A4 page. Part names and values are translated through a glossary agreed with the partner tailors; only free-text notes use machine translation.
+
+\begin{figure}[h]
+\centering\input{figures/sheet}
+\caption{A tailor sheet generated from a DesignSpec. Measurements are an example.}\label{fig:sheet}
+\end{figure}
+
+\section{Sewing patterns, later}
+
+For Western garments, the DesignSpec can be compiled to GarmentCode parameters, as ChatGarment and Design2GarmentCode do, giving a sewing pattern and a draped preview. This is a stretch goal. Writing GarmentCode components for kalis, side slits and katori cups is a research project of its own, and the first version of \sys{} serves tailors who cut from measurements, which is how most Indian custom garments are made.

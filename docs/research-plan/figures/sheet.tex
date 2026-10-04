@@ -1,0 +1,34 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  k/.style={font=\footnotesize,text=soft,anchor=base west,inner sep=0pt},
+  v/.style={font=\footnotesize,anchor=base west,inner sep=0pt},
+  hd/.style={font=\scriptsize\scshape,text=soft,anchor=base west,inner sep=0pt}]
+\draw[draw=greyD,rounded corners=3pt,fill=white] (0,0) rectangle (14.4,-11.2);
+\node[anchor=base west,font=\large] at (0.6,-0.95) {Order 1024 \quad Kurti};
+\node[anchor=base east,font=\footnotesize,text=soft] at (13.8,-0.95) {spec v3 \quad trial 14 Oct \quad delivery 18 Oct};
+\node[anchor=base west,font=\footnotesize,text=soft] at (0.6,-1.5) {college farewell \quad georgette, cotton lining \quad powder blue, no mustard};
+\node[hd] at (0.6,-2.35) {part};
+\node[hd] at (2.6,-2.35) {instruction};
+\node[hd] at (10.1,-2.35) {from};
+\foreach \y/\a/\b/\c in {
+ -2.95/Neckline/{V, front depth 6.5 in from high shoulder point}/{notes, \#1, \#2},
+ -3.5/Sleeve/{three-quarter, puff at the cap, relaxed}/{circle on \#2},
+ -4.05/Bodice/{fitted, 1.5 in ease at bust and waist}/{customer words},
+ -4.6/Lower body/{A-line from the waist, 4 in ease at hip}/{``thoda loose''},
+ -5.15/Length/{42 in; side slits 8 in}/{profile},
+ -5.7/Finish/{pearl buttons at back neck; no embroidery}/{notes}}{
+  \node[v] at (0.6,\y) {\a}; \node[v] at (2.6,\y) {\b}; \node[k] at (10.1,\y) {\c};
+}
+\node[hd] at (0.6,-6.55) {measurements, inches};
+\foreach \x/\a/\b in {0.6/bust/34, 2.1/waist/28, 3.6/hip/38, 5.1/shoulder/14, 6.75/armhole/16, 8.4/sleeve/17, 9.9/length/42}{
+  \node[k] at (\x,-7.1) {\a}; \node[v] at (\x,-7.6) {\b};
+}
+\node[hd] at (0.6,-8.45) {references};
+\foreach \x/\l/\c/\nk/\sv in {0.6/\#1/lavF!80!lavD/v/short, 2.2/\#2/blueF!60!blueD/deepv/puff}{
+  \draw[draw=greyD,rounded corners=1.5pt] (\x,-8.75) rectangle ++(1.25,-1.65);
+  \garment{\x+0.625}{-9.62}{0.52}{\c}{\nk}{\sv}
+  \node[font=\scriptsize,text=soft,anchor=north west,inner sep=1pt] at (\x,-8.75) {\l};
+}
+\draw[draw=peachT,dashed] (3.22,-9.43) ellipse (0.2cm and 0.17cm);
+\node[hd] at (4.4,-8.45) {for the tailor, in Hindi};
+\node[anchor=north west,font=\footnotesize,align=left,inner sep=0pt] at (4.4,-8.8) {\hi{गला: वी आकार, आगे से 6.5 इंच गहरा}\\[2pt]\hi{कमर पर फिट, नीचे से थोड़ा ढीला (कूल्हे पर 4 इंच ढील)}\\[2pt]\hi{आस्तीन: तीन-चौथाई, कंधे पर पफ}};
+\end{tikzpicture}

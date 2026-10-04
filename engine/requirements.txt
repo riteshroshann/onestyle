@@ -1,0 +1,10 @@
+transformers>=5
+accelerate
+seqeval
+sklearn-crfsuite
+onnx
+onnxruntime
+numpy
+pandas
+pyarrow
+pytest
