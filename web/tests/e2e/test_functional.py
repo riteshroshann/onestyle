@@ -7,7 +7,7 @@ def answer_all(page, limit=10):
         last = page.locator(".reply").last
         if last.locator(".ask").count() == 0:
             return
-        last.locator(".ask").first.locator(".opt").first.click()
+        last.locator(".ask").first.locator(".opt, .look").first.click()
         page.wait_for_timeout(250)
 
 
@@ -36,7 +36,7 @@ def test_garment_picker_changes_the_garment(page):
     send(page, "a red kurti")
     page.locator(".order .item").first.locator("button").click()
     page.fill(".sheetpop .search", "sweat")
-    page.click(".sheetpop .choice >> text=sweatshirt")
+    page.click('.sheetpop .look:has-text("sweatshirt")')
     assert order_rows(page)["Garment"].startswith("sweatshirt")
 
 
@@ -99,3 +99,51 @@ def test_conversation_survives_a_reload(page):
     page.reload()
     page.wait_for_selector(".said")
     assert "kurti" in page.inner_text(".said")
+
+
+def loaded(locator):
+    """Every picture in these tiles has actually decoded."""
+    return locator.evaluate_all("els => els.map(e => e.querySelector('img')).every(i => i && i.complete && i.naturalWidth > 0)")
+
+
+def test_questions_are_answered_by_picture(page):
+    open_home(page)
+    send(page, "a kurti for my farewell")
+    ask = page.locator(".reply").last.locator(".ask").first
+    tiles = ask.locator(".look")
+    assert tiles.count() >= 3
+    page.wait_for_function("[...document.querySelectorAll('.reply:last-of-type .look img, .reply .look img')].every(i => i.complete)")
+    assert loaded(tiles)
+    slot_before = ask.locator(".q").inner_text()
+    tiles.first.click()
+    page.wait_for_timeout(300)
+    assert page.locator(".reply").last.locator(".ask .q").first.inner_text() != slot_before
+
+
+def test_picker_shows_pictures_for_this_garment(page):
+    open_home(page)
+    send(page, "navy joggers")
+    page.locator(".order .item").first.locator("button").click()          # garment
+    assert page.locator(".sheetpop .look").count() >= 40
+    page.keyboard.press("Escape")
+    send(page, "make them tapered")
+    row = page.locator(".order .item", has=page.locator("dt", has_text="Silhouette"))
+    row.locator("button").first.click()
+    first = page.locator(".sheetpop .looks").first.locator(".look .name").all_inner_texts()
+    assert first[:4] == ["straight", "wide-leg", "jogger", "tapered"]          # the trouser shapes come first
+    src = page.locator('.sheetpop .look:has-text("straight") img').first.get_attribute("src")
+    assert src.endswith("--bottom.webp")
+    page.click('.sheetpop .look:has-text("wide-leg")')
+    assert order_rows(page)["Silhouette"].startswith("wide-leg")
+
+
+def test_sheet_shows_drawings_for_the_tailor(page):
+    open_home(page)
+    send(page, "a maroon silk anarkali with a sweetheart neckline and full sleeves")
+    page.click('.seg >> text="Sheet"')
+    figs = page.locator(".drawings figure")
+    assert figs.count() >= 4
+    caps = " ".join(figs.locator("figcaption").all_inner_texts()).lower()
+    assert "sweetheart" in caps and "silk" in caps
+    page.click("text=हिंदी में दिखाएँ")
+    assert "चित्र" in page.inner_text(".sheet")

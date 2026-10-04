@@ -13,3 +13,7 @@ docs/research-plan/main.pdf
 *.pyc
 .DS_Store
 Thumbs.db
+engine/looks/raw/
+docs/report/main.pdf
+docs/report/fonts/*.ttc
+engine/looks/*.log

@@ -1,0 +1,26 @@
+\chapter{Phases}\label{ch:phases}
+
+The work is organised in six phases, each with an exit test that decides when it is done (Figure~\ref{fig:roadmap}). Phases 0, 1 and 3 are complete and the application is live. Phase 2 is built: the board reader is deployed and the picture pipeline, catalogue, interface and tests are finished, with the library itself being generated. Phases 4 and 5 are planned and are where the Big Data Analytics half of the course is applied at scale.
+
+\begin{figure}[tbp]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/roadmap}}
+\caption{The phases, their state as of October 2026, and the test each must pass.}
+\label{fig:roadmap}
+\end{figure}
+
+\section{System across the phases}
+Figure~\ref{fig:across} places each component in its phase. Solid blocks are built and deployed; dashed blocks are planned. The planned blocks attach to the outputs that exist today: the data platform will learn from the designs and answers the application already records, and the tailor study will test the sheet the application already prints.
+
+\begin{figure}[tbp]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/across}}
+\caption{The components and the phases that build them. Solid blocks exist and are tested; dashed blocks are planned.}
+\label{fig:across}
+\end{figure}
+
+\section{Phase 4: the data platform}
+The research plan specifies the platform in detail. Designs, answers and orders are written as events to a lake of Parquet files partitioned by day, alongside the public H\&M and Amazon fashion datasets. Spark jobs written with DataFrames clean and join them, and their execution plans are kept as evidence of how the work is divided across executors. MLlib pipelines learn what the application cannot learn from one customer: TF-IDF and Word2Vec over request text to find new surface forms for the ontology, FP-Growth over completed designs to find attribute combinations that go together, and ALS over customers and attributes to suggest fabrics and colours. The exit test is that suggestions beat a popularity baseline on held-out orders.
+
+\section{Phase 5: tailors and the benchmark}
+The test set is 52 requests written by the developer. Phase 5 replaces it with \textsc{bespoke-spec}: 1,200 requests, 40\% in Hinglish, labelled by two annotators with agreement measured. The other half of the phase is a study with practising tailors, who receive tailor sheets for real orders. The exit test is the one that matters for the product: a tailor cuts the garment from the sheet without phoning the customer.

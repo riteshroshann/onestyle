@@ -3,9 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
-import { Measurements, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines } from "../lib/engine/describe";
+import { Measurements, PART_HI, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines } from "../lib/engine/describe";
 import { hindi } from "../lib/engine/lexicon";
-import { Question, Spec, Update, answer, apply, bind, depthInches, emptySpec, questions, wearerOf, wearerUpdates } from "../lib/engine/spec";
+import { Question, Spec, Update, answer, apply, bind, contextOf, depthInches, emptySpec, questions, wearerOf, wearerUpdates } from "../lib/engine/spec";
+import { allHaveLooks, groupOf, isPhoto, isTall, lookOf } from "../lib/looks";
 import { isCommonWord, loadTagger, tag } from "../lib/models";
 import { understand } from "../lib/understand";
 
@@ -34,6 +35,10 @@ const ROWS: [string, string][] = [
   ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"], ["bodice.fit", "Fit"], ["lower.fit", "Below the waist"],
   ["lower.silhouette", "Silhouette"], ["garment.length", "Length"], ["fabric", "Fabric"], ["colour", "Colour"], ["shade", "Shade"],
   ["pattern", "Print"], ["embellishment", "Finish"], ["occasion", "Occasion"], ["style", "Mood"],
+];
+const DRAWN: [string, string][] = [
+  ["garment", "Garment"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"],
+  ["bodice.fit", "Fit"], ["lower.silhouette", "Silhouette"], ["garment.length", "Length"], ["fabric", "Fabric"], ["pattern", "Print"], ["embellishment", "Finish"],
 ];
 const SOURCE: Record<string, string> = { model: "your words", words: "your words", note: "a note on your board", image: "your pictures", answer: "your answer", edit: "your edit", profile: "your profile" };
 const LIST_SLOTS = ["colour", "embellishment", "style", "pattern", "occasion", "shade", "components"];
@@ -245,8 +250,21 @@ function ShadeMaker({ onUse }: { onUse: (hex: string) => void }) {
     </div>
   );
 }
-function Picker({ slot, label, current, onPick, onClose }: {
-  slot: string; label: string; current: string[]; onPick: (value: string, note?: string) => void; onClose: () => void;
+/** A choice shown as a picture with its name underneath. */
+function Look({ slot, value, ctx, label, pressed, onClick }: {
+  slot: string; value: string; ctx?: string | null; label: string; pressed?: boolean; onClick: () => void;
+}) {
+  const src = lookOf(slot, value, ctx);
+  return (
+    <button className={`look${isPhoto(slot) ? " photo" : ""}${isTall(slot) ? " tall" : ""}`} aria-pressed={pressed} onClick={onClick}>
+      <span className="pic">{src && <img src={src} alt="" loading="lazy" decoding="async" draggable={false} />}</span>
+      <span className="name">{label}</span>
+    </button>
+  );
+}
+
+function Picker({ slot, label, current, ctx, onPick, onClose }: {
+  slot: string; label: string; current: string[]; ctx?: string | null; onPick: (value: string, note?: string) => void; onClose: () => void;
 }) {
   const [q, setQ] = useState("");
   useEffect(() => {
@@ -280,7 +298,9 @@ function Picker({ slot, label, current, onPick, onClose }: {
           return (
             <div key={fam}>
               <h4>{FAMILY_TITLE[fam] ?? fam}</h4>
-              <div className="choices">{shown.map((g) => <button key={g} className="choice" aria-pressed={current.includes(g)} onClick={() => onPick(g)}>{nice(g)}</button>)}</div>
+              {allHaveLooks("garment", shown)
+                ? <div className="looks">{shown.map((g) => <Look key={g} slot="garment" value={g} label={nice(g)} pressed={current.includes(g)} onClick={() => onPick(g)} />)}</div>
+                : <div className="choices">{shown.map((g) => <button key={g} className="choice" aria-pressed={current.includes(g)} onClick={() => onPick(g)}>{nice(g)}</button>)}</div>}
             </div>
           );
         })}
@@ -289,7 +309,13 @@ function Picker({ slot, label, current, onPick, onClose }: {
   } else {
     const values: string[] = slot === "neckline.depth" || slot === "back.depth" ? ONTO.depth_order
       : slot === "sleeve.length" ? ONTO.sleeve_length_order : slot === "garment.length" ? ONTO.length_order : Object.keys(ONTO.lexicon[tagName] ?? {});
-    body = <div className="choices">{values.map((v) => <button key={v} className="choice" aria-pressed={current.includes(v)} onClick={() => onPick(v)}>{nice(v)}</button>)}</div>;
+    const own = ctx ? Object.keys(groupOf(slot, ctx)) : [];
+    const first = own.length ? values.filter((v) => own.includes(v)) : values;
+    const more = own.length ? values.filter((v) => !own.includes(v)) : [];
+    const tiles = (vs: string[]) => <div className="looks">{vs.map((v) => <Look key={v} slot={slot} value={v} ctx={ctx} label={nice(v)} pressed={current.includes(v)} onClick={() => onPick(v)} />)}</div>;
+    body = allHaveLooks(slot, values, ctx)
+      ? <>{tiles(first)}{more.length > 0 && <><h4>More</h4>{tiles(more)}</>}</>
+      : <div className="choices">{values.map((v) => <button key={v} className="choice" aria-pressed={current.includes(v)} onClick={() => onPick(v)}>{nice(v)}</button>)}</div>;
   }
   return createPortal(
     <div className="scrim" onClick={onClose}>
@@ -322,7 +348,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
               <div className="item" key={slot}>
                 <dt>{label}</dt>
                 <dd>
-                  {v && <button onClick={open}>{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}{editable && <span className="chev">›</span>}</button>}
+                  {v && <button onClick={open}>{lookOf(slot, v.value, contextOf(slot, spec)) && <img className={`thumb${isPhoto(slot) ? " photo" : ""}`} src={lookOf(slot, v.value, contextOf(slot, spec))} alt="" />}{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}{editable && <span className="chev">›</span>}</button>}
                   {list.length > 0 && <button onClick={open}>{slot === "colour" && list.map((x) => <span key={x.value} className="dot" style={{ background: SWATCH[x.value] ?? "#ccc" }} />)}{list.map((x) => nice(x.value)).join(", ")}{editable && <span className="chev">›</span>}</button>}
                   {ex.map((x) => <span key={x.value} className="no" title={x.evidence}>{nice(x.value)}</span>)}
                   {(v || list.length > 0) && <small>from {[...new Set([v, ...list].filter(Boolean).map((x) => SOURCE[x!.src] ?? x!.src))].join(" and ")}</small>}
@@ -335,7 +361,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
         </dl>
       )}
       {editing && (
-        <Picker slot={editing[0]} label={editing[1]} onClose={() => setEditing(null)}
+        <Picker slot={editing[0]} label={editing[1]} ctx={contextOf(editing[0], spec)} onClose={() => setEditing(null)}
           current={[spec.slots[editing[0]]?.value, ...(spec.lists[editing[0]] ?? []).map((x) => x.value)].filter(Boolean) as string[]}
           onPick={(value, note) => { onEdit(editing[0], value, note); if (!note) setEditing(null); }} />
       )}
@@ -346,6 +372,11 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
 function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: Measurements) => void }) {
   const lines = sheetLines(spec, m);
   const f = finished(spec, m);
+  const drawings = DRAWN.flatMap(([slot, part]) => {
+    const v = spec.slots[slot]?.value ?? spec.lists[slot]?.[0]?.value;
+    const src = v ? lookOf(slot, v, contextOf(slot, spec)) : undefined;
+    return v && src ? [{ slot, part, value: v, src }] : [];
+  });
   const [hi, setHi] = useState(false);
   const field = (k: keyof Measurements, label: string) => (
     <label>{label}<input inputMode="decimal" value={m[k] ?? ""} onChange={(e) => setM({ ...m, [k]: e.target.value ? parseFloat(e.target.value) : undefined })} /></label>
@@ -364,6 +395,15 @@ function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: M
         {lines.length ? (
           <table><tbody>{lines.map((l) => <tr key={l.part}><td className={hi ? "hi" : ""}>{hi ? l.hiPart : l.part}</td><td className={hi ? "hi" : ""}>{hi ? l.hi : l.en}</td><td className="from">{l.from}</td></tr>)}</tbody></table>
         ) : <p style={{ color: "var(--ink-3)" }}>Describe the garment first; its instructions appear here.</p>}
+        {drawings.length > 0 && (<>
+          <h4 className={hi ? "hi" : ""}>{hi ? "चित्र" : "Drawings"}</h4>
+          <div className="drawings">{drawings.map((d) => (
+            <figure key={d.slot} className={`${isPhoto(d.slot) ? "photo" : ""}${isTall(d.slot) ? " tall" : ""}`}>
+              <img src={d.src} alt={`${d.part}: ${nice(d.value)}`} />
+              <figcaption className={hi ? "hi" : ""}><b>{hi ? (PART_HI[d.part] ?? d.part) : d.part}</b>{hi ? hindi(SLOT_TAG[d.slot] as never, d.value) : nice(d.value)}</figcaption>
+            </figure>
+          ))}</div>
+        </>)}
         <h4 className={hi ? "hi" : ""}>{hi ? "माप (इंच में)" : "Measurements in inches"}</h4>
         <div className={`meas ${hi ? "hi" : ""}`}>{field("bust", hi ? "छाती" : "Bust")}{field("waist", hi ? "कमर" : "Waist")}{field("hip", hi ? "कूल्हा" : "Hip")}{field("shoulder", hi ? "कंधा" : "Shoulder")}{field("length", hi ? "लंबाई" : "Length")}{field("sleeve", hi ? "आस्तीन" : "Sleeve")}</div>
         {(f.bust || f.waist || f.hip) && <div className={`finished ${hi ? "hi" : ""}`}>{hi
@@ -554,7 +594,9 @@ export default function App() {
                 {x.questions.slice(0, 2).map((q) => (
                   <div className="ask" key={q.slot}>
                     <div className="q">{q.text}</div>
-                    <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? nice(o)}</button>)}</div>
+                    {allHaveLooks(q.slot, q.options, contextOf(q.slot, spec))
+                      ? <div className="looks inline">{q.options.map((o) => <Look key={o} slot={q.slot} value={o} ctx={contextOf(q.slot, spec)} label={q.labels?.[o] ?? nice(o)} onClick={() => pick(q, o)} />)}</div>
+                      : <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? nice(o)}</button>)}</div>}
                   </div>
                 ))}
                 {i === msgs.length - 1 && spec.slots.garment && (questions(spec).length === 0

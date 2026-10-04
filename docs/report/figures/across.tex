@@ -1,0 +1,24 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  b/.style={box,minimum height=1.55cm,text width=1.75cm,font=\small},
+  br/.style={decorate,decoration={brace,mirror,amplitude=5pt},line width=0.6pt},
+  bl/.style={font=\small,anchor=north}]
+\node[blue,b] (w) at (0,0.95) {words\\{\scriptsize\color{soft}typed, spoken}};
+\node[peach,b] (p) at (0,-0.95) {board\\{\scriptsize\color{soft}pictures, notes}};
+\node[blue,b] (tg) at (2.7,0.95) {tagger\\{\scriptsize\color{soft}rules + MiniLM}};
+\node[peach,b] (cl) at (2.7,-0.95) {CLIP\\{\scriptsize\color{soft}pooled}};
+\node[lav,b,minimum height=3.45cm] (bd) at (5.3,0) {binder\\{\scriptsize\color{soft}parts, sets, seasons}};
+\node[green,b,minimum height=3.45cm] (sp) at (7.9,0) {Design\-Spec\\{\scriptsize\color{soft}a fold of updates}};
+\node[sand,b] (q) at (10.5,0.95) {questions\\{\scriptsize\color{soft}by picture}};
+\node[rose,b] (sh) at (10.5,-0.95) {tailor sheet\\{\scriptsize\color{soft}English, Hindi}};
+\node[green,b,planned] (ml) at (13.1,0.95) {Spark\\{\scriptsize\color{soft}trends, ALS}};
+\node[grey,b,planned] (tl) at (13.1,-0.95) {tailors\\{\scriptsize\color{soft}study, feedback}};
+\draw[flow] (w) -- (tg); \draw[flow] (p) -- (cl);
+\draw[flow] (tg) -- (tg-|bd.west); \draw[flow] (cl) -- (cl-|bd.west);
+\draw[flow] (bd) -- (sp);
+\draw[flow] (sp.east|-q) -- (q); \draw[flow] (sp.east|-sh) -- (sh);
+\draw[dflow] (q) -- (ml); \draw[dflow] (sh) -- (tl);
+\draw[flow] (q.north) -- ++(0,0.45) -| node[pos=0.25,above,font=\scriptsize,text=soft]{answers fold back into the design} (sp.north);
+\draw[br,draw=ph1] (1.75,-1.95) -- (6.25,-1.95) node[bl,midway,below=5pt,text=ph1] {Phases 1, 2};
+\draw[br,draw=ph3] (6.95,-1.95) -- (11.45,-1.95) node[bl,midway,below=5pt,text=ph3] {Phases 2, 3};
+\draw[br,draw=ph4] (12.15,-1.95) -- (14.05,-1.95) node[bl,midway,below=5pt,text=ph4] {Phases 4, 5};
+\end{tikzpicture}

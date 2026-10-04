@@ -1,0 +1,52 @@
+\documentclass[11pt,oneside,openany]{book}
+\usepackage{bespoke}
+\hypersetup{pdftitle={Bespoke: project report},pdfauthor={Ritesh Roshan}}
+
+\begin{document}
+\frontmatter
+\pagestyle{empty}
+
+\begin{titlepage}
+\centering
+\vspace*{38mm}
+{\fontsize{40}{44}\selectfont\scshape bespoke\par}
+\vspace{12mm}
+{\Large Clothes made from your words:\\[3pt] a customer's description and pictures turned into a garment a tailor can cut\par}
+\vspace{16mm}
+{\large\itshape Project report\par}
+\vspace{4mm}
+{\normalsize\color{soft} Text Analytics and Big Data Analytics\par}
+\vfill
+{\large Ritesh Roshan\par}
+\vspace{12mm}
+{\normalsize Amrita School of Artificial Intelligence, Faridabad\par}
+\vspace{3mm}
+{\normalsize\color{soft} October 2026\par}
+\vspace*{14mm}
+\end{titlepage}
+
+\chapter*{Summary}
+\pagestyle{body}
+Most custom clothing in India is ordered through chat messages and phone photos. What reaches the cutting table is the tailor's memory of that conversation. Bespoke replaces the memory with a specification. A customer types or speaks a request in English, Hinglish or Hindi, answers a few questions by tapping pictures, and receives a tailor sheet in English and Hindi, searches for ready-made alternatives, and fabric to buy.
+
+The system is built and deployed. Its language engine runs entirely in the browser: a gazetteer over an ontology of 1,212 surface forms and 47 garment types, a fine-tuned 33-million-parameter MiniLM token classifier exported to 33.8\,MB of int8 ONNX, a constrained Viterbi decoder, a binder that attaches values to garment parts, and a state tracker that folds every turn into a versioned design. On 52 held-out hand-written requests the deployed tagger reaches span F1 of 0.953 (95\% interval 0.918 to 0.982), ahead of rules (0.936), a CRF (0.900) and an HMM (0.751). An answer appears 75\,ms after the customer presses send (median; 130\,ms at the 95th percentile). An optional language-model layer on a serverless function handles what the engine cannot, and every value it returns is checked against the ontology before it is used.
+
+Choices are made by looking. A pipeline generates a library of 171 line drawings and photographs, one for each ontology value, on a 6\,GB laptop GPU with FLUX.2 [klein] 4B (Apache 2.0), ranks them with CLIP for review by hand, and serves them as static files; the library is being generated as this report is written. The application is covered by seven kinds of tests, from 352 parity fixtures between the Python and browser engines to accessibility audits in a real browser. This report describes the workflow, the models, the measurements and what remains.
+
+\cleardoublepage
+\tableofcontents
+
+\mainmatter
+\pagestyle{body}
+\input{chapters/c1}
+\input{chapters/c2}
+\input{chapters/c3}
+\input{chapters/c4}
+\input{chapters/c5}
+\input{chapters/c6}
+\input{chapters/c7}
+\input{chapters/c8}
+
+\backmatter
+\input{chapters/refs}
+\end{document}

@@ -1,0 +1,48 @@
+\chapter{The language engine}\label{ch:language}
+
+\section{The ontology}
+Every component shares one file, the ontology. It names 21 span types (garment, part, fit, silhouette, length, neckline, sleeve, colour, shade, fabric, pattern, finish, occasion, style, and the small words that change meaning: intensity, negation, comparison, location, dimension, number and reference), 1,212 surface forms that map to canonical values, 47 garment types in seven families, the 18 slots of a design with the cost of getting each wrong, the questions each family needs, fabrics suited to each season, and the Hindi term for every value so that the tailor sheet can be printed in Hindi. Forms include Hinglish and Devanagari spellings (\hi{कुर्ती}, kurta, kurtee), so ``lehenga chahiye shaadi ke liye, maroon, gota patti'' is read without translation. The Python engine used for training and the TypeScript engine in the browser both load this file, and 352 fixtures check that they agree.
+
+\section{Data}
+There is no public corpus of customers describing garments to tailors, so the training data is weakly labelled and the test data is written by hand.
+
+\paragraph{Training} 12,000 sentences: 8,000 generated from clause templates that combine attribute bags in random order with distractor phrases, so the model cannot learn position, and 4,000 product titles from the Myntra catalogue of 44,000 items \cite{aggarwal2019myntra}, labelled by the gazetteer. A further 1,000 generated sentences are used to choose the checkpoint.
+
+\paragraph{Evaluation} 82 requests written by hand in bracket markup, in the way customers write: run-on, misspelt, mixing languages. The first 30 are a development set; the remaining 52 are the test set and were not looked at while building the engine. Seven labels were changed when the ontology grew to version 1.1, and each change is recorded. The set is small, so every result is reported with a 95\% bootstrap interval over requests.
+
+\section{A ladder of taggers}
+Each method taught in the course was trained on the same data and scored on the same 52 requests (Figure~\ref{fig:ladder}). Spans count as correct only when both boundaries and the type match.
+
+\begin{figure}[tbp]
+\centering
+\resizebox{0.93\linewidth}{!}{\input{figures/ladder}}
+\caption{Span F1 for each method. The deployed tagger combines the gazetteer with the fine-tuned transformer and is the only system whose interval lies wholly above 0.91.}
+\label{fig:ladder}
+\end{figure}
+
+\paragraph{Rules} Longest-match lookup of the 1,212 forms. Precise (0.953) because every form was chosen by hand, and limited by what was listed: it misses ``thoda flared'' when only ``flared'' is a form and cannot generalise to new words. F1 0.936.
+
+\paragraph{HMM} A first-order hidden Markov model over BIO tags with additive smoothing ($k=0.1$), decoded with Viterbi. It sees only the current word and the previous tag, so an unseen word is a guess. F1 0.751.
+
+\paragraph{CRF} A linear-chain conditional random field (sklearn-crfsuite) trained with L-BFGS and elastic-net regularisation, using suffixes and prefixes, word length, digit and Devanagari flags, and the two words on either side. Adding the gazetteer's own tag for each word as a feature raises F1 from 0.832 to 0.900: the two sources of knowledge are complementary.
+
+\paragraph{Transformer} MiniLM-L12-H384 \cite{wang2020minilm}, a 33-million-parameter distillation of a BERT-style encoder \cite{devlin2019bert}, fine-tuned for token classification for six epochs (AdamW, learning rate $5\times10^{-5}$ for the encoder and $10^{-3}$ for the new head, batch 32, on a laptop RTX 4050). Alone it scores 0.812: it generalises to unseen words but makes boundary errors that the gazetteer does not. Combined, with gazetteer spans first and model spans only where no rule span overlaps, it scores \textbf{0.953}, with recall rising from 0.918 to 0.951. This combination is what the browser runs.
+
+\begin{figure}[tbp]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/tagger}}
+\caption{The deployed tagger on ``pastel blue kurti for my farewell''. The encoder reads the whole request at once; constrained decoding then forbids tag sequences that cannot form a span.}
+\label{fig:tagger}
+\end{figure}
+
+\section{Decoding and export}
+The model's 43 scores per sub-word are turned into tags with a Viterbi search whose transition matrix forbids illegal moves: \textsc{i-colour} cannot follow \textsc{o} or \textsc{b-fabric}. This removes the fragments a per-token argmax produces and costs nothing at inference. The trained model was exported to ONNX and quantised to int8 with dynamic quantisation, which shrinks it from 133\,MB to 33.8\,MB. In the browser it runs with transformers.js on WebAssembly; on a laptop CPU it takes 3.6\,ms per request in ONNX Runtime (median, one thread) and 20\,ms in the browser. Quantisation costs accuracy when the model runs alone (0.812 to 0.792), which the gazetteer absorbs.
+
+\section{Binding values to parts}
+Tags say what a word is, not what it belongs to. The binder walks the tagged request and attaches each value to the part it describes: ``V neck thoda deep'' gives the neckline a shape and a depth, softened by ``thoda''; ``neeche se thoda loose'' applies a looser fit below the waist. It also resolves the whole message. Two garment words naming a top and a bottom become a co-ord set with two pieces, or a kurta set when the top is a kurta; a season word becomes an occasion that changes the fabric question; ``not too flashy'' excludes flashy rather than softening it; ``for my brother'' marks the wearer as a man, so shopping searches look in the men's section, while ``my brother's wedding'' does not, because the possessive names the occasion, not the wearer.
+
+\section{Voice}
+The microphone uses the browser's speech recognition where it works (Chrome, Edge, Safari). In Brave and Firefox, or when that service fails, the page records audio, resamples it to 16\,kHz mono and transcribes it on the device with Whisper base \cite{radford2023whisper}, stopping automatically after a pause. Recognisers mangle garment words they were not trained on, so the transcript is corrected by sound: each word is reduced to a phonetic key and replaced by an ontology form with the same key and similar length, unless the word is common English in the tagger's vocabulary.
+
+\section{The model layer}
+Some requests are beyond any tagger: ``something like what Deepika wore at Cannes but for a day function''. When a key is configured, the same message is sent in parallel to a language model behind a serverless function (Gemini by default, through its OpenAI-compatible endpoint, or any compatible provider). The prompt lists the allowed values for each slot; the reply must be JSON; and the function checks every returned value against the ontology. Values the ontology does not know become notes for the tailor rather than slots, so the model can add detail but cannot invent a value the tailor sheet does not understand. Model updates are applied after the engine's own, so the customer's words take precedence. The call times out after 7 seconds; on timeout, error or missing key the page continues with the engine alone, and the tests check all three paths.

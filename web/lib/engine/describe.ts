@@ -60,7 +60,7 @@ export function advice(spec: Spec): string {
 }
 
 export interface SheetLine { part: string; hiPart?: string; en: string; hi: string; from: string }
-export const PART_HI: Record<string, string> = { Pieces: "हिस्से", Neckline: "गला", "Back neck": "पीछे का गला", Sleeve: "आस्तीन", Bodice: "ऊपरी भाग",
+export const PART_HI: Record<string, string> = { Garment: "पोशाक", "Neck depth": "गले की गहराई", "Sleeve length": "आस्तीन की लंबाई", Fit: "फ़िटिंग", Silhouette: "आकार", Print: "छपाई", Pieces: "हिस्से", Neckline: "गला", "Back neck": "पीछे का गला", Sleeve: "आस्तीन", Bodice: "ऊपरी भाग",
   "Lower body": "निचला भाग", Length: "लंबाई", Fabric: "कपड़ा", Colour: "रंग", Finish: "सजावट", Avoid: "नहीं चाहिए", Notes: "टिप्पणी" };
 export interface Measurements { bust?: number; waist?: number; hip?: number; shoulder?: number; length?: number; sleeve?: number }
 

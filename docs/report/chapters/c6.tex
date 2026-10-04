@@ -1,0 +1,59 @@
+\chapter{Testing and measurement}\label{ch:tests}
+
+\section{What is tested}
+Seven kinds of test run locally before every release (Table~\ref{tab:tests}). Node runs the engine suites directly on the TypeScript sources; pytest runs the engine and model tests; and Playwright drives a real Chromium against the production build, with a server that behaves like a deployment without a model key.
+
+\begin{table}[tbp]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}P{2.7cm}P{4.1cm}L@{}}
+\thd{kind} & \thd{where} & \thd{what it holds the system to}\\\gap
+unit & 34 engine tests; 14 Python tests & tokeniser, gazetteer, decoding, binding, the fold, questions, links\\
+regression & 352 parity fixtures; F1 floor & the browser engine matches Python on every fixture; deployed F1 stays at or above 0.93; ONNX within 0.03 of PyTorch\\
+functional & 21 realistic requests; browser flows & sets, seasons, wearers, editing, contradictions, the Hindi sheet, the picture picker\\
+integration & model layer; tagger with the page & validation of model output, timeouts and errors fall back; tagger, engine and interface together\\
+smoke & every view; shipped files & the build serves, each view opens, the model files are present, no console errors\\
+usability & axe-core audits; phone & WCAG 2 AA with no serious findings, keyboard-only use, touch targets, no sideways scrolling, reduced motion\\
+negative and edge & 22 engine cases; browser & empty, 20,000-character, emoji, Devanagari, gibberish and contradictory input; markup; double send; blocked storage; model CDN unreachable\\
+\end{tabularx}
+\caption{The test suite. All suites pass on the released build.}
+\label{tab:tests}
+\end{table}
+
+\section{Accuracy}
+Table~\ref{tab:f1} gives precision, recall and F1 for each tagger on the 52 test requests. The deployed combination is best on all three measures. The interval of the rules alone overlaps it, which is expected on a test set this size; the plan's benchmark of 1,200 requests, 40\% Hinglish and labelled by two annotators, is what will separate them.
+
+\begin{table}[tbp]
+\centering
+\small
+\begin{tabularx}{0.92\linewidth}{@{}Lrrrr@{}}
+\thd{system} & \thd{precision} & \thd{recall} & \thd{F1} & \thd{95\% interval}\\\gap
+HMM & 0.792 & 0.714 & 0.751 & 0.693--0.809\\
+MiniLM alone & 0.842 & 0.784 & 0.812 & 0.754--0.866\\
+CRF & 0.881 & 0.788 & 0.832 & 0.789--0.876\\
+CRF with gazetteer features & 0.919 & 0.882 & 0.900 & 0.853--0.942\\
+rules and gazetteer & 0.953 & 0.918 & 0.936 & 0.898--0.967\\
+\textbf{MiniLM with gazetteer} & \textbf{0.955} & \textbf{0.951} & \textbf{0.953} & 0.918--0.982\\
+\end{tabularx}
+\caption{Span-level scores on held-out hand-written requests.}
+\label{tab:f1}
+\end{table}
+
+\section{Speed}
+Latency was measured on the development laptop (Table~\ref{tab:lat}). The engine itself is negligible; the tagger dominates, and the whole round trip from pressing send to the answer on screen is under a tenth of a second at the median. The only slow moment is the first visit, when the 33.8\,MB tagger downloads; the page answers from the gazetteer alone until it arrives.
+
+\begin{table}[tbp]
+\centering
+\small
+\begin{tabularx}{0.8\linewidth}{@{}Lrr@{}}
+\thd{step} & \thd{median} & \thd{95th percentile}\\\gap
+engine, one request after tagging & 0.04\,ms & 0.09\,ms\\
+int8 tagger, ONNX Runtime, one thread & 3.6\,ms & 7.0\,ms\\
+tagger in the browser, WebAssembly & 20\,ms & 53\,ms\\
+send to answer on screen & 75\,ms & 130\,ms\\
+first contentful paint & 340\,ms & \\
+tagger first load, empty cache & 3.4\,s & \\
+\end{tabularx}
+\caption{Latency on a laptop CPU, with no GPU used for the tagger.}
+\label{tab:lat}
+\end{table}

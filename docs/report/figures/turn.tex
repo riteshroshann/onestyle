@@ -1,0 +1,21 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  st/.style={box,text width=2.35cm,font=\footnotesize,minimum height=3.15cm,align=left,anchor=north},
+  hd/.style={font=\small\scshape,anchor=base},
+  nb/.style={font=\scriptsize,text=soft,anchor=base}]
+\def\dx{3.3}
+\foreach \i/\h/\f/\d/\t in {
+ 0/{1 words}/blueF/blueD/{``i want a sweatshirt and pants dark blue cord set that i can wear in the cold''},
+ 1/{2 spans}/lavF/lavD/{\textsc{garment} sweatshirt, pants\\\textsc{shade} dark\\\textsc{colour} blue\\\textsc{garment} cord set\\\textsc{occasion} cold},
+ 2/{3 bound}/lavF/lavD/{garment: co-ord set\\pieces: sweatshirt, pants\\colour: navy\\season: winter},
+ 3/{4 design}/greenF/greenD/{DesignSpec version 1, each value with its source and confidence},
+ 4/{5 asked}/sandF/sandD/{How should the top fit?\\Which fabric? Warm ones: fleece, wool, terry}}{
+  \node[hd] at (\i*\dx,0.45) {\h};
+  \node[st,fill=\f,draw=\d] (s\i) at (\i*\dx,0) {\t};
+}
+\foreach \a/\b in {0/1,1/2,2/3,3/4}{\draw[flow] (s\a.east) -- (s\b.west);}
+\node[nb] at (0*\dx,-3.4) {typed, or Whisper};
+\node[nb] at (1*\dx,-3.4) {0.05 to 20 ms};
+\node[nb] at (2*\dx,-3.4) {sets and seasons};
+\node[nb] at (3*\dx,-3.4) {a fold of updates};
+\node[nb] at (4*\dx,-3.4) {no neckline question};
+\end{tikzpicture}

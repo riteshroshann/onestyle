@@ -251,10 +251,23 @@ export function seasonOf(spec: Spec): string | null {
   return ["winter", "summer", "monsoon", "gym", "lounge"].find((s) => occ.includes(s)) ?? null;
 }
 
+const isKnit = (fams: Set<string>) => fams.has("knit_top") || (fams.has("set") && !fams.has("top_long") && !fams.has("top_short"));
+const isBottomish = (fams: Set<string>) => fams.has("bottom") || fams.has("set");
+const bottomLength = (fams: Set<string>) => fams.has("bottom") && !fams.has("top_long");
+
+/** Which drawing fits this garment: "straight" means one shape on a kurta and another on trousers. */
+export function contextOf(slot: string, spec: Spec): string | null {
+  const fams = families(spec);
+  if (slot === "bodice.fit") return isKnit(fams) ? "knit" : null;
+  if (slot === "lower.silhouette") return isBottomish(fams) ? "bottom" : null;
+  if (slot === "garment.length") return bottomLength(fams) ? "bottom" : null;
+  return null;
+}
+
 function questionFor(slot: string, spec: Spec): Omit<Question, "cost"> | null {
   const fams = families(spec);
-  const knit = fams.has("knit_top") || (fams.has("set") && !fams.has("top_long") && !fams.has("top_short"));
-  const bottomish = fams.has("bottom") || fams.has("set");
+  const knit = isKnit(fams);
+  const bottomish = isBottomish(fams);
   const season = seasonOf(spec);
   const seasonal: Record<string, string[]> = ONTO.fabric_by_season;
   switch (slot) {
@@ -271,7 +284,7 @@ function questionFor(slot: string, spec: Spec): Omit<Question, "cost"> | null {
       return bottomish ? { slot, text: fams.has("set") ? "How should the bottoms fit?" : "How should they fit?", options: ["straight", "wide-leg", "jogger", "tapered"] }
         : { slot, text: "What shape below the waist?", options: ["a-line", "straight", "flared", "anarkali"], labels: { "a-line": "A-line", anarkali: "kalidar (anarkali)" } };
     case "garment.length":
-      return fams.has("bottom") && !fams.has("top_long") ? { slot, text: "What length?", options: ["ankle", "floor", "knee"], labels: { ankle: "ankle length", floor: "full length", knee: "knee (shorts)" } }
+      return bottomLength(fams) ? { slot, text: "What length?", options: ["ankle", "floor", "knee"], labels: { ankle: "ankle length", floor: "full length", knee: "knee (shorts)" } }
         : { slot, text: "How long should it be?", options: ["hip", "knee", "midi", "ankle"], labels: { midi: "below the knee" } };
     case "fabric": {
       const opts = season && seasonal[season] ? seasonal[season]

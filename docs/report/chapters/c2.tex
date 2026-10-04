@@ -1,0 +1,34 @@
+\chapter{System and workflow}\label{ch:system}
+
+\section{From a sentence to a tailor sheet}
+Figure~\ref{fig:system} shows the whole system. Everything inside the shaded region runs in the customer's browser. The page loads the ontology and the engine as code, downloads the 33.8\,MB tagger once and keeps it in the browser cache, and from then on understands a request without a network call. Two things live outside: an optional language-model layer on a serverless function, and the picture library, which is a folder of static files.
+
+\begin{figure}[tbp]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/system}}
+\caption{The system as deployed. The shaded blocks run in the customer's browser on every request. The dashed model layer runs only when a key is configured, in parallel with the engine, and its output is checked against the ontology before it reaches the design. Answers given by tapping a picture fold back into the design as updates.}
+\label{fig:system}
+\end{figure}
+
+A turn has five steps (Figure~\ref{fig:turn}). The words are normalised: lower-cased, tokenised, and corrected where a word is close in sound to a known garment term (``kurtee'' becomes kurti, ``pass del'' becomes pastel), guarded by the tagger's vocabulary so that ordinary words are left alone. The tagger marks spans with one of 21 types. The binder turns spans into updates on named slots, attaching each value to the part it describes and resolving sets (a top and a bottom named together become a co-ord set) and seasons (``in the cold'' becomes winter, which changes the fabric question). The updates are folded into the design. The question policy then picks what to ask.
+
+\begin{figure}[tbp]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/turn}}
+\caption{One turn on a real request that the first version of the system got wrong. It now becomes a navy co-ord set for winter, and the assistant asks about fit and warm fabrics rather than a neckline.}
+\label{fig:turn}
+\end{figure}
+
+\section{The design as a fold}
+The design is never edited in place. Every source of evidence (the words, a picture, an answer, an edit on the order card) produces a list of updates, and the design is the result of applying them in order:
+\[
+\mathrm{spec}_k = \mathrm{apply}(\mathrm{spec}_{k-1},\; u_1, u_2, \dots, u_n), \qquad u_i \in \{\textsc{set}, \textsc{add}, \textsc{exclude}, \textsc{replace}, \textsc{compare}, \textsc{note}\}.
+\]
+Each value carries its source and a confidence $p$. Sources are ranked: an edit on the order card outranks an answer to a question, which outranks the customer's words, which outrank a note on the board, a picture and the stored profile. A later update replaces an earlier one when its source ranks at least as high, or when it is more confident by more than 0.25, so a guess from a picture never overwrites something the customer said. An exclusion (``no heavy work'', ``not too flashy'') removes the value and stops it coming back. A comparison (``deeper than picture 2'') is kept until the board is read and then resolved against the picture. Because the design is a fold, every version can be rebuilt, the order card can show where each value came from, and the tailor sheet can mark which instructions were the customer's words and which were defaults.
+
+\section{Which questions to ask}
+A tailor needs different things for different garments. The ontology groups the 47 garments into seven families (long tops, short tops, knits, outerwear, bottoms, sets and drapes) and lists, for each family, the slots that must be settled. A slot is asked about when it is missing or its confidence is below 0.7, and slots are ordered by
+\[
+\mathrm{priority}(s) = \mathrm{cost}(s)\,\bigl(1 - p(s)\bigr),
+\]
+where the cost is how expensive a wrong guess is at the cutting table. A neckline cut too deep cannot be raised, so neckline depth costs 9; colour costs 4. The options offered depend on the garment as well: a sweatshirt is asked about crew, hood, turtle or V necks and about regular, relaxed or oversized fit; a kurti about round, V, boat, square, sweetheart or mandarin necklines and about fit at the bust and waist. When nothing is left to ask, the conversation ends with the tailor sheet, ideas and shopping in place.

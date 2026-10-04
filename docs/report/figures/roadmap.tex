@@ -1,0 +1,26 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  ttl/.style={font=\normalsize,anchor=base,text width=3.0cm,align=center},
+  ph/.style={font=\small\scshape,anchor=base},
+  pill/.style={rounded corners=4pt,inner xsep=5pt,inner ysep=2pt,font=\scriptsize\scshape,text=white},
+  st/.style={box,text width=2.75cm,font=\small,inner ysep=5pt,minimum height=1.25cm},
+  ex/.style={font=\footnotesize,text width=2.95cm,align=left,text=soft,anchor=north}]
+\def\dx{3.32}
+\draw[draw=greyD,line width=0.9pt] (-0.6,0) -- (5*\dx+0.6,0);
+\foreach \i/\c/\t/\p/\s/\pc/\fl/\dr/\a/\b/\cc/\e in {
+ 0/ph0/{Environment\\and data}/Phase 0/done/greenT/sandF/sandD/{ontology: 1,212 forms, 47 garments}/{12,000 weak labels; 82 hand-written requests}/{Python and browser engines, 352 parity fixtures}/{both engines agree on every fixture.},
+ 1/ph1/{Language\\engine}/Phase 1/done/greenT/blueF/blueD/{rules, HMM, CRF, MiniLM on one split}/{constrained Viterbi; int8 ONNX, 33.8\,MB}/{binder, fold, question policy, voice}/{F1 0.953 on held-out requests; 75\,ms per turn.},
+ 2/ph2/{Pictures and\\moodboard}/Phase 2/{built, library in progress}/sandT/lavF/lavD/{board reading with CLIP, words outrank pictures}/{FLUX.2 [klein] on a 6\,GB GPU}/{CLIP ranking, review, 171 static pictures}/{every question answerable by picture.},
+ 3/ph3/{Studio and\\deployment}/Phase 3/live/greenT/roseF/roseD/{Talk, Board, Sheet, Shop, Home}/{Hindi sheet; model layer behind a key}/{seven kinds of test; Vercel}/{all suites pass on the released build.},
+ 4/ph4/{Data\\platform}/Phase 4/planned/greyT/greenF/greenD/{lake of orders and public retail data}/{Spark DataFrame jobs and their DAGs}/{MLlib: trends, ALS, FP-Growth}/{suggestions beat popularity on held-out orders.},
+ 5/ph5/{Tailors and\\benchmark}/Phase 5/planned/greyT/greyF/greyD/{1,200-request benchmark, 40\% Hinglish}/{study with practising tailors}/{paper and course report}/{tailors cut from the sheet without calling.}}{
+  \node[ttl] at (\i*\dx,2.15) {\t};
+  \node[ph,text=\c] at (\i*\dx,0.55) {\p};
+  \path[fill=\c] (\i*\dx,0) circle (3.4pt);
+  \node[pill,fill=\pc] at (\i*\dx,-0.62) {\s};
+  \node[st,fill=\fl,draw=\dr] (a\i) at (\i*\dx,-1.95) {\a};
+  \node[st,fill=\fl,draw=\dr] (b\i) at (\i*\dx,-3.6) {\b};
+  \node[st,fill=\fl,draw=\dr] (c\i) at (\i*\dx,-5.25) {\cc};
+  \draw[flow] (a\i) -- (b\i); \draw[flow] (b\i) -- (c\i);
+  \node[ex] at (\i*\dx,-6.12) {\textit{Exit:} \e};
+}
+\end{tikzpicture}

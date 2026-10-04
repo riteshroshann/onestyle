@@ -1,0 +1,32 @@
+\chapter{Introduction}
+
+\section{The problem}
+About 12 million people in India work as custom tailors \cite{dataforindia}. Their customers describe what they want in a mixture of English, Hindi and the two together: ``kurti chahiye, fitted at the waist, neeche se thoda loose, V neck thoda deep''. They send screenshots from Instagram and Pinterest and circle the parts they like. The tailor reads all of it, asks a few questions on the phone, and cuts. Nothing in this chain is written down in a form the tailor can check against. When the garment comes back wrong, there is no record of what was asked for.
+
+Software for fashion understands product titles and catalogue images well. It does not take a customer's loose description, find which part of the garment each word is about, notice what is still missing, ask about it in the order that matters to a tailor, and hand over a sheet the tailor can cut from. The research plan that preceded this work reviewed fifteen papers from 2022 to 2026 and found that the closest systems take one clean input, ignore code-mixed language and Indian garments, and never ask a question \cite{bian2025chatgarment,cheng2026chatpref}.
+
+\section{What was built}
+Bespoke is a web application with one job: from what a customer says and shows, produce a garment specification and a tailor sheet. It has five views.
+
+\begin{description}[leftmargin=0pt,labelsep=0.6em,itemsep=4pt,font=\normalfont\scshape]
+\item[Home] explains the service and starts a design.
+\item[Talk] is the conversation. The customer types or speaks; the assistant restates the design in one sentence, lists what it understood on an order card beside the conversation, and asks at most two questions, answered by tapping pictures.
+\item[Board] is a moodboard on an embedded Excalidraw canvas. Pictures, notes and arrows are read together; words always outrank pictures.
+\item[Sheet] is the tailor sheet in English or Hindi, with drawings of the chosen neckline, sleeves, shape and length, measurements and the finished sizes they imply.
+\item[Shop] turns the design into searches on Indian stores, Pinterest boards for ideas, fabric by the metre and tailors nearby.
+\end{description}
+
+\section{Contributions}
+\begin{enumerate}
+\item A complete language engine for garment requests that runs in the browser with no server: ontology, gazetteer, fine-tuned transformer tagger, constrained decoding, part binding and turn-by-turn state, measured against hand-written requests with confidence intervals.
+\item A ladder of tagging methods taught in the course (rules, HMM, CRF, transformer), trained and tested on the same split, so each step's gain is visible.
+\item A question policy that asks only what a tailor needs for this kind of garment, ordered by the cost of a wrong guess.
+\item A visual picker: a pipeline that makes 171 pictures, one per ontology value, on a laptop GPU with an open model, ranks them automatically for review by hand, and serves them so customers choose by looking.
+\item A deployed application with an optional language-model layer whose output is validated against the ontology, and a test suite that covers unit, regression, functional, integration, smoke, usability, edge-case and latency testing.
+\end{enumerate}
+
+\section{How the course maps onto the work}
+From Text Analytics: tokenisation and normalisation of code-mixed text, gazetteers and collocations, sequence labelling with HMMs and CRFs, the Viterbi algorithm, transformer encoders and transfer learning, evaluation with precision, recall, F1 and bootstrap intervals, and speech recognition as an input channel. From Big Data Analytics: the weak-label corpus is generated from the 44,000-row Myntra catalogue \cite{aggarwal2019myntra}, the ontology is the schema shared by every component, and the data platform described in the plan (Spark over public retail data and the order log) is the next phase; Chapter~\ref{ch:phases} states what is built and what is not.
+
+\section{Structure of this report}
+Chapter~\ref{ch:system} gives the workflow from a sentence to a tailor sheet. Chapter~\ref{ch:language} describes the language engine and its ladder of models. Chapter~\ref{ch:pictures} describes how the picture library was made. Chapter~\ref{ch:app} covers the application and its deployment, Chapter~\ref{ch:tests} the tests and measurements, Chapter~\ref{ch:phases} the phases, and Chapter~\ref{ch:end} the limits and what comes next.

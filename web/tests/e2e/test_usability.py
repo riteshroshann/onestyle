@@ -50,7 +50,7 @@ def test_keyboard_only(page):
 def test_touch_targets_on_a_phone(page):
     open_home(page)
     send(page, "a black kurti")
-    small = page.evaluate("""() => [...document.querySelectorAll('.send, .mic, .opt, .seg button, .order dd button')]
+    small = page.evaluate("""() => [...document.querySelectorAll('.send, .mic, .opt, .look, .seg button, .order dd button')]
         .map(e => e.getBoundingClientRect()).filter(r => r.width && (r.height < 32))
         .map(r => [Math.round(r.width), Math.round(r.height)])""")
     assert small == [], small

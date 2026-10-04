@@ -1,0 +1,19 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  st/.style={box,text width=2.35cm,font=\footnotesize,minimum height=1.55cm},
+  hd/.style={font=\small\scshape,anchor=base},
+  nb/.style={font=\scriptsize,text=soft,align=center,text width=2.5cm,anchor=north}]
+\def\dx{2.85}
+\foreach \i/\h/\f/\d/\t/\n in {
+ 0/catalogue/greyF/greyD/{171 options keyed by ontology IDs}/{one style sentence for every drawing},
+ 1/encode/blueF/blueD/{4B text encoder, every prompt once}/{streamed through the GPU, then freed},
+ 2/draw/lavF/lavD/{FLUX.2 [klein] 4B, 4 steps, 640 px}/{float8 weights on a 6 GB GPU},
+ 3/edit/lavF/lavD/{same base sketch, one detail changed}/{necklines, sleeves, fits, lengths},
+ 4/rank/sandF/sandD/{CLIP ViT-L/14 against all options in the group}/{plus penalties for clutter},
+ 5/review/roseF/roseD/{contact sheets, picks by hand}/{recorded in picks.json},
+ 6/publish/greenF/greenD/{ink on transparent, 384 px WebP}/{manifest shared with the engine}}{
+  \node[hd] at (\i*\dx,0.95) {\h};
+  \node[st,fill=\f,draw=\d] (s\i) at (\i*\dx,0) {\t};
+  \node[nb] at (\i*\dx,-0.95) {\n};
+}
+\foreach \a/\b in {0/1,1/2,2/3,3/4,4/5,5/6}{\draw[flow] (s\a.east) -- (s\b.west);}
+\end{tikzpicture}

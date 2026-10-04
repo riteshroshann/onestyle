@@ -1,0 +1,25 @@
+\begin{tikzpicture}[x=1cm,y=1cm,
+  lb/.style={font=\small,anchor=east,align=right,text width=4.6cm},
+  vl/.style={font=\small,anchor=west},
+  ax/.style={font=\scriptsize,text=soft,anchor=north}]
+\def\sc{14}   % 1 cm per 1/14 of F1 above 0.6
+\foreach \x/\t in {0.6/0.60,0.7/0.70,0.8/0.80,0.9/0.90,1.0/1.00}{
+  \node[ax] at ({(\x-0.6)*\sc},-6.15) {\t};
+}
+\foreach \y/\n/\f/\lo/\hi/\fl/\dr in {
+ 0/{HMM}/0.751/0.693/0.809/blueF/blueD,
+ -0.95/{int8 ONNX in the browser, model alone}/0.792/0.792/0.792/lavF/lavD,
+ -1.9/{MiniLM, model alone}/0.812/0.754/0.866/lavF/lavD,
+ -2.85/{CRF}/0.832/0.789/0.876/blueF/blueD,
+ -3.8/{CRF with gazetteer features}/0.900/0.853/0.942/blueF/blueD,
+ -4.75/{rules and gazetteer}/0.936/0.898/0.967/greyF/greyD,
+ -5.7/{\textbf{MiniLM with gazetteer, deployed}}/0.953/0.918/0.982/greenF/greenD}{
+  \node[lb] at (-0.25,\y) {\n};
+  \path[fill=\fl,draw=\dr,rounded corners=1.5pt] (0,\y-0.27) rectangle ({(\f-0.6)*\sc},\y+0.27);
+  \draw[arrow,line width=0.6pt] ({(\lo-0.6)*\sc},\y) -- ({(\hi-0.6)*\sc},\y);
+  \draw[arrow,line width=0.6pt] ({(\lo-0.6)*\sc},\y-0.1) -- ({(\lo-0.6)*\sc},\y+0.1);
+  \draw[arrow,line width=0.6pt] ({(\hi-0.6)*\sc},\y-0.1) -- ({(\hi-0.6)*\sc},\y+0.1);
+  \node[vl] at ({(\hi-0.6)*\sc+0.15},\y) {\f};
+}
+\node[font=\scriptsize,text=soft,anchor=north] at ({0.2*\sc},-6.55) {span F1 on 52 held-out hand-written requests, with 95\% bootstrap intervals};
+\end{tikzpicture}
