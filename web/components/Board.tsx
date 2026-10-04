@@ -17,6 +17,7 @@ export default function Board({ onEvidence, comparisons }: {
   const [busy, setBusy] = useState("");
   const [initial] = useState(() => { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch { return null; } });
   const saveTimer = useRef<any>(null);
+  const [dark] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const persist = (elements: readonly any[], files: any) => {
     clearTimeout(saveTimer.current);
@@ -42,9 +43,9 @@ export default function Board({ onEvidence, comparisons }: {
     if (!a) return;
     const elements = a.getSceneElements().filter((e: any) => !isLabel(e));
     const board = readBoard(elements, a.getFiles());
-    if (!board.images.length && !board.notes.length) { setBusy("Drop a few inspiration images first."); return; }
+    if (!board.images.length && !board.notes.length) { setBusy("Add a few pictures first. Drag them in or paste them."); return; }
     relabel();
-    setBusy("Loading the image model (first time only)…");
+    setBusy("Preparing to read your pictures. The first time takes a moment.");
     try {
       const res = await analyseBoard(board, zeroShot, tag, setBusy);
       const comps = [...comparisons, ...res.updates.filter((u) => u.op === "compare").map((u) => ({ slot: u.slot, cmp: u.cmp!, ref: u.ref! }))];
@@ -61,7 +62,7 @@ export default function Board({ onEvidence, comparisons }: {
       onEvidence(ups, `From the board (${board.images.length} images, ${board.regions.length} circled, ${board.notes.length} notes): ${seen}. ${notes.join(" ")}`);
       setBusy("");
     } catch (e: any) {
-      setBusy(`Could not read the board: ${e?.message ?? e}`);
+      setBusy(`The board could not be read: ${e?.message ?? e}`);
     }
   };
 
@@ -71,14 +72,15 @@ export default function Board({ onEvidence, comparisons }: {
     <div className="boardwrap">
       <Excalidraw
         excalidrawAPI={(a: any) => { api.current = a; }}
-        initialData={initial ? { elements: initial.elements, files: initial.files, appState: { viewBackgroundColor: "#fbfaf7" } } : { appState: { viewBackgroundColor: "#fbfaf7" } }}
+        initialData={initial ? { elements: initial.elements, files: initial.files, appState: { viewBackgroundColor: dark ? "#000000" : "#ffffff" } } : { appState: { viewBackgroundColor: dark ? "#000000" : "#ffffff" } }}
+        theme={dark ? "dark" : "light"}
         onChange={(els: readonly any[], _s: any, files: any) => persist(els, files)}
         UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false, export: { saveFileToDisk: true } } }}
       />
       <div className="boardbar">
-        <span>{busy || "Drop images, write notes, draw arrows to what you mean, circle the part you love."}</span>
-        <button className="btn light" onClick={relabel}>Number images</button>
-        <button className="btn" onClick={analyse}>Analyse board</button>
+        <span>{busy || "Add pictures, write notes, draw an arrow from a note to what it means, circle the part you love."}</span>
+        <button className="btn quiet" onClick={relabel}>Number pictures</button>
+        <button className="btn" onClick={analyse}>Read the board</button>
       </div>
     </div>
   );

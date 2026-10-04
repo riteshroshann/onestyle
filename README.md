@@ -1,6 +1,6 @@
 # bespoke
 
-Describe what you wish to wear, by typing or speaking, in English or Hinglish. Pin inspiration on a moodboard. Bespoke turns the words and the board into a part-by-part garment specification a tailor can cut from, with a tailor sheet in English and Hindi, Pinterest ideas and shopping links.
+Describe the garment you want made, by typing or speaking, in English or Hinglish. Pin inspiration on a moodboard. Bespoke turns the words and the board into a part-by-part garment specification a tailor can cut from, with a tailor sheet in English and Hindi, Pinterest ideas and shopping links.
 
 ```
 "kurti chahiye, waist pe fitted, neeche se thoda loose, V neck thoda deep, no embroidery"
@@ -84,7 +84,7 @@ npm test             # parity with Python + engine behaviour
 
 ## Deploy
 
-Import this repository on Vercel and set **Root Directory** to `web`. `vercel.json` builds a static export into `out/`; no environment variables are needed. Voice input uses the browser's speech recognition (Chrome, Edge, Safari); Firefox users type.
+Import this repository on Vercel and set **Root Directory** to `web`. `vercel.json` builds a static export into `out/`; no environment variables are needed. Voice input uses the browser's speech recognition where it works (Chrome, Edge, Safari). In Brave and Firefox, or if that service fails, the site records locally and transcribes on the device with Whisper, then corrects garment words the recogniser mangles ("curty" to kurti, "pass del" to pastel) using the ontology and the tagger's vocabulary.
 
 ## Not done yet
 

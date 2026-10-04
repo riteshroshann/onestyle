@@ -18,6 +18,7 @@ async function hf() {
 // ------------------------------------------------------------------ tagger
 type Tagger = { tok: any; model: any; cls: number; sep: number };
 let tagger: Promise<Tagger | null> | null = null;
+let loadedTagger: Tagger | null = null;
 export type TaggerState = "rules" | "loading" | "bert";
 
 export function loadTagger(onState: (s: TaggerState) => void) {
@@ -29,10 +30,13 @@ export function loadTagger(onState: (s: TaggerState) => void) {
       const tok = await t.AutoTokenizer.from_pretrained("bespoke-tagger", { local_files_only: true });
       const model = await t.AutoModelForTokenClassification.from_pretrained("bespoke-tagger", { dtype: "q8", local_files_only: true });
       const ids: number[] = tok.encode("a");
+      t.env.allowLocalModels = false;   // later models (Whisper, CLIP) come from the Hub; skip local lookups
       onState("bert");
-      return { tok, model, cls: ids[0], sep: ids[ids.length - 1] };
+      loadedTagger = { tok, model, cls: ids[0], sep: ids[ids.length - 1] };
+      return loadedTagger;
     } catch (e) {
       console.warn("tagger unavailable, using the gazetteer", e);
+      if (T) T.env.allowLocalModels = false;
       onState("rules");
       return null;
     }
@@ -78,6 +82,41 @@ export async function tag(text: string): Promise<{ tokens: string[]; spans: Span
   for (const r of rules) if (!spans.some((s) => s.start < r.end && r.start < s.end)) spans.push(r);
   spans.sort((a, b) => a.start - b.start);
   return { tokens, spans, by: "bert" };
+}
+
+/** A word that is one whole token of the tagger's vocabulary is ordinary language. */
+export function isCommonWord(w: string): boolean {
+  const m = loadedTagger;
+  if (!m) return false;
+  return m.tok.encode(w, { add_special_tokens: false }).length === 1;
+}
+
+// ------------------------------------------------------------------ speech
+// On-device Whisper, used when the browser has no working speech service (Brave, Firefox, offline).
+let asr: Promise<any> | null = null;
+export function loadSpeech() {
+  if (!asr) asr = hf().then((t) => t.pipeline("automatic-speech-recognition", "Xenova/whisper-base", { dtype: "q8" }));
+  return asr;
+}
+
+export async function transcribe(audio: Float32Array, lang: "en-IN" | "hi-IN"): Promise<string> {
+  const pipe = await loadSpeech();
+  const out = await pipe(audio, { language: lang === "hi-IN" ? "hindi" : "english", task: "transcribe" });
+  return String((Array.isArray(out) ? out[0]?.text : out?.text) ?? "").trim();
+}
+
+/** Decode a recorded blob to 16 kHz mono, the input Whisper expects. */
+export async function toMono16k(blob: Blob): Promise<Float32Array> {
+  const ctx = new AudioContext({ sampleRate: 16000 });
+  try {
+    const buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+    if (buf.numberOfChannels === 1) return buf.getChannelData(0);
+    const a = buf.getChannelData(0), b = buf.getChannelData(1), out = new Float32Array(a.length);
+    for (let i = 0; i < a.length; i++) out[i] = (a[i] + b[i]) / 2;
+    return out;
+  } finally {
+    void ctx.close();
+  }
 }
 
 // ------------------------------------------------------------------ vision

@@ -101,6 +101,70 @@ export function groundFuzzy(text: string, tag: Tag): { value: string; score: num
   return best && best.score >= 0.5 ? best : null;
 }
 
+// ------------------------------------------------------------------ speech transcript correction
+// Speech recognisers mangle domain words ("curty" for kurti, "pass del" for pastel, "av-nic" for V neck).
+// A word or adjacent pair that is not in the lexicon is replaced by a lexicon form with the same sound key,
+// so correction can only ever move a transcript towards known garment vocabulary.
+const SKIP = new Set(["the", "and", "with", "want", "need", "make", "like", "for", "but", "not", "this", "that", "have", "want", "wanna",
+  "please", "some", "very", "just", "also", "mujhe", "chahiye", "hai", "kar", "karo", "aur", "par", "mein", "ke", "ki", "ka", "liye",
+  "my", "me", "can", "you", "should", "would", "could", "will", "what", "maybe", "something", "looking", "wear", "dress up"]);
+export function soundKey(word: string): string {
+  const s = word.toLowerCase().replace(/[^a-z]/g, "").replace(/ph/g, "f").replace(/ck/g, "k").replace(/sh/g, "s").replace(/ch/g, "c");
+  const map: Record<string, string> = { c: "k", q: "k", g: "k", d: "t", b: "p", w: "v", z: "s", x: "s" };
+  let out = "";
+  for (const ch of s) {
+    if ("aeiouyh".includes(ch)) continue;
+    const m = map[ch] ?? ch;
+    if (out[out.length - 1] !== m) out += m;
+  }
+  return out;
+}
+let KEYS: Map<string, string> | null = null;
+function keyIndex(): Map<string, string> {
+  if (KEYS) return KEYS;
+  KEYS = new Map();
+  for (const values of Object.values<any>(ONTO.lexicon)) {
+    for (const entry of Object.values<any>(values)) {
+      for (const form of entry.forms as string[]) {
+        const f = form.toLowerCase();
+        if (f.replace(/[^a-z]/g, "").length < 4) continue;
+        const k = soundKey(f);
+        if (k.length >= 3 && !KEYS.has(k)) KEYS.set(k, f);
+      }
+    }
+  }
+  return KEYS;
+}
+function editDistance(a: string, b: string): number {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...new Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+/** isCommon(word) says the word is ordinary language (a whole token in the tagger's vocabulary): never rewrite it alone. */
+export function correctTranscript(text: string, isCommon: (w: string) => boolean = () => false): string {
+  const index = formIndex(), keys = keyIndex();
+  const words = text.split(/\s+/).filter(Boolean);
+  const bare = (w: string) => w.toLowerCase().replace(/[^a-z]/g, "");
+  const known = (w: string) => index.has(tokenize(w).join(" ")) || SKIP.has(bare(w));
+  const out: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i], next = words[i + 1];
+    if (next && !known(w) && !known(next)) {
+      const joined = bare(w + next), hit = keys.get(soundKey(joined));
+      if (hit && soundKey(joined).length >= 4 && editDistance(joined, hit.replace(/[^a-z]/g, "")) <= 2) { out.push(hit); i++; continue; }
+    }
+    if (!known(w) && bare(w).length >= 3 && !isCommon(bare(w))) {
+      const hit = keys.get(soundKey(w));
+      if (hit && Math.abs(hit.replace(/[^a-z]/g, "").length - bare(w).length) <= 3) { out.push(hit); continue; }
+    }
+    out.push(w);
+  }
+  return out.join(" ");
+}
+
 export function hindi(tag: Tag, value: string): string {
   return ONTO.lexicon[tag]?.[value]?.hi ?? value;
 }

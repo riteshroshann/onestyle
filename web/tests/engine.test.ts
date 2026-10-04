@@ -1,7 +1,7 @@
 // node --experimental-strip-types tests/engine.test.ts
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { tagRules, tokenize } from "../lib/engine/lexicon.ts";
+import { correctTranscript, tagRules, tokenize } from "../lib/engine/lexicon.ts";
 import { apply, bind, depthInches, emptySpec, questions } from "../lib/engine/spec.ts";
 import { viterbi } from "../lib/engine/decode.ts";
 import { resolveComparisons } from "../lib/engine/board.ts";
@@ -47,4 +47,12 @@ assert.equal(bad[0].proposal, null);
 const L = ["O", "B-FIT", "I-FIT"];
 assert.deepEqual(viterbi([[0, -9, -9], [-5, -9, -0.1]], L), ["O", "O"]);
 
-console.log(`ok: ${ok} parity fixtures, binding, revision, questions, comparisons, decoding`);
+// 7. speech transcripts are pulled towards garment vocabulary, ordinary words left alone
+const vocab = JSON.parse(readFileSync(new URL("../public/models/bespoke-tagger/tokenizer.json", import.meta.url), "utf8")).model.vocab;
+const isCommon = (w: string) => w in vocab;
+const fixed = correctTranscript("i want to pass del blue curty with puff sleeves and av-nic , no embroidery .", isCommon);
+assert.match(fixed, /pastel/); assert.match(fixed, /kurti|kurta/); assert.match(fixed, /v ?neck/); assert.match(fixed, /^i want to /);
+for (const t of ["for my sister's wedding next month", "something nice for the office party", "i need it by monday"])
+  assert.equal(correctTranscript(t, isCommon), t);
+
+console.log(`ok: ${ok} parity fixtures, binding, revision, questions, comparisons, decoding, speech correction`);

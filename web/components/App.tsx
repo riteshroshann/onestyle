@@ -1,30 +1,23 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { ONTO, Span } from "../lib/engine/lexicon";
+import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
 import { Measurements, finished, links, phrase, sheetLines } from "../lib/engine/describe";
-import { Question, Spec, Update, answer, apply, bind, emptySpec, questions } from "../lib/engine/spec";
-import { TaggerState, loadTagger, tag } from "../lib/models";
+import { Question, Spec, Update, answer, apply, bind, depthInches, emptySpec, questions } from "../lib/engine/spec";
+import { isCommonWord, loadTagger, tag } from "../lib/models";
 
 const Board = dynamic(() => import("./Board"), { ssr: false });
 
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
   | { role: "bot"; text: string; questions: Question[]; note?: string };
-type Tab = "talk" | "board" | "sheet" | "shop";
+type View = "fitting" | "board" | "sheet" | "shop";
 
-const EXAMPLES = [
-  "A pastel blue kurti for my farewell, fitted at the waist, flowy below, not too flashy",
-  "lehenga chahiye shaadi ke liye, maroon, gota patti, ghera bahut zyada",
-  "saree blouse, deep back, puff sleeves, no sequins",
-  "something elegant in black for a reception, floor length, off shoulder",
+const SUGGESTIONS = [
+  "A pastel blue kurti for my farewell, fitted at the waist, flowy below",
+  "Lehenga chahiye shaadi ke liye, maroon, gota patti, ghera bahut zyada",
+  "A saree blouse with a deep back, puff sleeves and no sequins",
 ];
-const TAG_COLOUR: Record<string, string> = {
-  GARMENT: "var(--peach)", PART: "var(--line)", LOC: "var(--line)", FIT: "var(--mint)", SILHOUETTE: "var(--mint)", LENGTH: "var(--sky)",
-  NECKLINE: "var(--lav)", SLEEVE: "var(--lav)", DIM: "var(--lav)", COLOUR: "var(--rose)", SHADE: "var(--rose)", FABRIC: "var(--sky)",
-  PATTERN: "var(--sky)", EMBELL: "var(--peach)", OCCASION: "var(--mint)", STYLE: "var(--mint)", INT: "var(--line)", NEG: "#f3b0a8",
-  CMP: "var(--line)", REF: "var(--line)", NUM: "var(--sky)",
-};
 const SLOT_TAG: Record<string, string> = {
   garment: "GARMENT", "neckline.shape": "NECKLINE", "neckline.depth": "DIM", "back.depth": "DIM", "sleeve.style": "SLEEVE",
   "sleeve.length": "LENGTH", "sleeve.fit": "FIT", "bodice.fit": "FIT", "lower.fit": "FIT", "lower.silhouette": "SILHOUETTE",
@@ -32,138 +25,212 @@ const SLOT_TAG: Record<string, string> = {
   occasion: "OCCASION", style: "STYLE",
 };
 const ROWS: [string, string][] = [
-  ["garment", "garment"], ["neckline.shape", "neckline"], ["neckline.depth", "neck depth"], ["back.depth", "back"],
-  ["sleeve.style", "sleeve"], ["sleeve.length", "sleeve length"], ["bodice.fit", "bodice fit"], ["lower.fit", "lower fit"],
-  ["lower.silhouette", "silhouette"], ["garment.length", "length"], ["fabric", "fabric"], ["colour", "colour"], ["shade", "shade"],
-  ["pattern", "pattern"], ["embellishment", "finish"], ["occasion", "occasion"], ["style", "style"],
+  ["garment", "Garment"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["back.depth", "Back"],
+  ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"], ["bodice.fit", "Bodice"], ["lower.fit", "Below the waist"],
+  ["lower.silhouette", "Silhouette"], ["garment.length", "Length"], ["fabric", "Fabric"], ["colour", "Colour"], ["shade", "Shade"],
+  ["pattern", "Print"], ["embellishment", "Finish"], ["occasion", "Occasion"], ["style", "Mood"],
 ];
+const SOURCE: Record<string, string> = { words: "your words", note: "a note on your board", image: "your pictures", answer: "your answer", edit: "your edit", profile: "your profile" };
+const LIST_SLOTS = ["colour", "embellishment", "style", "pattern", "occasion", "shade"];
+const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", "off-shoulder": "off-shoulder" };
+const nice = (v: string) => NICE[v] ?? v;
 
 function load<T>(k: string, d: T): T {
   try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; }
 }
 function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } }
 
-export function Blob({ size = 220, state = "idle", level = 0 }: { size?: number; state?: string; level?: number }) {
-  return (
-    <div className="blob" data-state={state} style={{ ["--size" as any]: `${size}px`, ["--level" as any]: level }} aria-hidden>
-      <i /><i /><i /><i />
-    </div>
-  );
+export function Silk({ size = 200, state = "idle", level = 0 }: { size?: number; state?: string; level?: number }) {
+  return <div className="silk" data-state={state} style={{ ["--size" as any]: `${size}px`, ["--level" as any]: level }} aria-hidden><i /></div>;
 }
 
 // ------------------------------------------------------------------ voice
+// Two engines. The browser's speech service is instant where it works (Chrome, Edge, Safari). Brave ships the
+// API but blocks the service ("network" error) and Firefox has no API, so there we record locally and
+// transcribe on-device with Whisper. Any failure of the first engine falls through to the second.
+const micMessage = (e: any) =>
+  e?.name === "NotAllowedError" || e === "not-allowed" ? "The microphone is blocked. Allow it from the icon in the address bar, then try again."
+    : e?.name === "NotFoundError" || e === "audio-capture" ? "No microphone was found on this device."
+      : "The microphone could not start.";
+
 function useVoice(onFinal: (t: string) => void) {
   const [live, setLive] = useState(false);
+  const [status, setStatus] = useState("");
   const [interim, setInterim] = useState("");
   const [level, setLevel] = useState(0);
   const [lang, setLang] = useState<"en-IN" | "hi-IN">("en-IN");
   const rec = useRef<any>(null);
+  const media = useRef<MediaRecorder | null>(null);
   const stopMeter = useRef<() => void>(() => {});
   const SR = typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
+  const isBrave = typeof navigator !== "undefined" && !!(navigator as any).brave;
+  const engine = useRef<"browser" | "whisper">(SR && !isBrave ? "browser" : "whisper");
+  const supported = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
 
-  const stop = useCallback(() => { rec.current?.stop(); stopMeter.current(); setLive(false); setLevel(0); }, []);
-  const start = useCallback(async () => {
-    if (!SR) return;
+  const meter = (stream: MediaStream, onSilence?: () => void) => {
+    const ctx = new AudioContext();
+    const an = ctx.createAnalyser(); an.fftSize = 1024;
+    ctx.createMediaStreamSource(stream).connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    const t0 = performance.now();
+    let raf = 0, spoke = false, lastVoice = t0;
+    const tick = () => {
+      an.getByteTimeDomainData(buf);
+      let s = 0; for (const v of buf) s += ((v - 128) / 128) ** 2;
+      const lv = Math.min(1, Math.sqrt(s / buf.length) * 4);
+      setLevel(lv);
+      const now = performance.now();
+      if (lv > 0.08) { spoke = true; lastVoice = now; }
+      // stop after 1.6 s of silence once speech has started, or after 25 s in any case
+      if (onSilence && ((spoke && now - lastVoice > 1600) || now - t0 > 25000)) { onSilence(); return; }
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => { cancelAnimationFrame(raf); void ctx.close(); };
+  };
+
+  const startWhisper = useCallback(async () => {
+    let stream: MediaStream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch (e) { setStatus(micMessage(e)); setLive(false); return; }
+    void import("../lib/models").then((m) => m.loadSpeech());   // warm the model while the customer speaks
+    const chunks: globalThis.Blob[] = [];
+    const mr = new MediaRecorder(stream);
+    mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    mr.onstop = async () => {
+      stopMeter.current(); stream.getTracks().forEach((t) => t.stop());
+      setLive(false); setLevel(0);
+      if (!chunks.length) { setStatus(""); return; }
+      setStatus("Writing down what you said. The first time takes a moment while the speech model loads.");
+      try {
+        const { toMono16k, transcribe } = await import("../lib/models");
+        const text = await transcribe(await toMono16k(new globalThis.Blob(chunks, { type: mr.mimeType })), lang);
+        setStatus("");
+        if (text && !/^\[.*\]$/.test(text)) onFinal(text); else setStatus("Nothing was heard. Speak a little closer to the microphone.");
+      } catch (e: any) { setStatus(`The speech model did not load: ${e?.message ?? e}`); }
+    };
+    media.current = mr;
+    mr.start(250);
+    setLive(true); setStatus("Listening. Pause when you have finished.");
+    stopMeter.current = meter(stream, () => { if (mr.state === "recording") mr.stop(); });
+  }, [lang, onFinal]);
+
+  const startBrowser = useCallback(() => {
     const r = new SR();
+    let heard = false;
     r.lang = lang; r.interimResults = true; r.continuous = false;
     r.onresult = (e: any) => {
+      heard = true;
       let fin = "", mid = "";
       for (const res of e.results) (res.isFinal ? (fin += res[0].transcript) : (mid += res[0].transcript));
       setInterim(mid);
       if (fin) { setInterim(""); onFinal(fin); }
     };
-    r.onend = () => { stopMeter.current(); setLive(false); setLevel(0); };
-    r.onerror = () => { stopMeter.current(); setLive(false); };
+    r.onerror = (e: any) => {
+      stopMeter.current(); setLive(false); setLevel(0);
+      if (e.error === "not-allowed" || e.error === "audio-capture") { setStatus(micMessage(e.error)); return; }
+      if (e.error === "no-speech" || e.error === "aborted") { setStatus(""); return; }
+      // network, service-not-allowed, language-not-supported: the browser's service is unavailable here
+      engine.current = "whisper";
+      if (!heard) void startWhisper();
+    };
+    r.onend = () => { stopMeter.current(); setLive(false); setLevel(0); setStatus((s) => (s.startsWith("Listening") ? "" : s)); };
     rec.current = r;
-    r.start();
-    setLive(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new AudioContext();
-      const an = ctx.createAnalyser(); an.fftSize = 512;
-      ctx.createMediaStreamSource(stream).connect(an);
-      const buf = new Uint8Array(an.fftSize);
-      let raf = 0;
-      const tick = () => { an.getByteTimeDomainData(buf); let s = 0; for (const v of buf) s += ((v - 128) / 128) ** 2; setLevel(Math.min(1, Math.sqrt(s / buf.length) * 4)); raf = requestAnimationFrame(tick); };
-      tick();
-      stopMeter.current = () => { cancelAnimationFrame(raf); stream.getTracks().forEach((t) => t.stop()); ctx.close(); };
-    } catch { /* level meter is decoration */ }
-  }, [SR, lang, onFinal]);
-  return { supported: !!SR, live, interim, level, lang, setLang, start, stop };
+    try { r.start(); } catch { engine.current = "whisper"; void startWhisper(); return; }
+    setLive(true); setStatus("Listening.");
+    navigator.mediaDevices?.getUserMedia({ audio: true }).then((stream) => {
+      const stopM = meter(stream);
+      stopMeter.current = () => { stopM(); stream.getTracks().forEach((t) => t.stop()); };
+    }).catch(() => { /* the level meter is decoration */ });
+  }, [SR, lang, onFinal, startWhisper]);
+
+  const start = useCallback(() => {
+    setStatus("");
+    if (engine.current === "browser" && SR) startBrowser(); else void startWhisper();
+  }, [SR, startBrowser, startWhisper]);
+  const stop = useCallback(() => {
+    if (media.current?.state === "recording") media.current.stop();
+    else { rec.current?.stop(); stopMeter.current(); setLive(false); setLevel(0); }
+  }, []);
+  return { supported, live, status, interim, level, lang, setLang, start, stop };
 }
 
-const Mic = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
-const Arrow = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
+const Mic = () => (<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
+const Send = () => (<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
 
-function Composer({ onSend, voice, big }: { onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; big?: boolean }) {
+function Line({ onSend, voice, autoFocus }: { onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; autoFocus?: boolean }) {
   const [text, setText] = useState("");
   const send = () => { const t = text.trim(); if (t) { onSend(t); setText(""); } };
   return (
-    <div className="composer" style={big ? { padding: "10px 10px 10px 26px" } : undefined}>
-      <input value={voice.live ? voice.interim || "Listening…" : text} onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Describe what you wish to wear…" aria-label="Describe the garment" />
-      {voice.supported && (
-        <button className="lang" onClick={() => voice.setLang(voice.lang === "en-IN" ? "hi-IN" : "en-IN")} title="Speech language">
-          {voice.lang === "en-IN" ? "EN" : "हिं"}
-        </button>
-      )}
-      {voice.supported && (
-        <button className={`iconbtn ${voice.live ? "live" : ""}`} onClick={() => (voice.live ? voice.stop() : voice.start())} aria-label="Speak"><Mic /></button>
-      )}
-      <button className="iconbtn primary" onClick={send} aria-label="Send"><Arrow /></button>
+    <div style={{ width: "100%" }}>
+      <div className="line">
+        <input value={voice.live ? voice.interim : text} onChange={(e) => setText(e.target.value)} autoFocus={autoFocus}
+          onKeyDown={(e) => e.key === "Enter" && send()} readOnly={voice.live}
+          placeholder={voice.live ? "" : "Describe your garment"} aria-label="Describe the garment" />
+        {voice.supported && (
+          <button className="lang" onClick={() => voice.setLang(voice.lang === "en-IN" ? "hi-IN" : "en-IN")}
+            aria-label={voice.lang === "en-IN" ? "Speaking English. Switch to Hindi" : "Speaking Hindi. Switch to English"}>
+            {voice.lang === "en-IN" ? "English" : "हिंदी"}
+          </button>
+        )}
+        {voice.supported && (
+          <button className={`icon ${voice.live ? "live" : ""}`} onClick={() => (voice.live ? voice.stop() : voice.start())} aria-label={voice.live ? "Stop listening" : "Speak instead"}><Mic /></button>
+        )}
+        <button className="icon send" onClick={send} aria-label="Send"><Send /></button>
+      </div>
+      <div className="hint" role="status">{voice.status}</div>
     </div>
   );
 }
 
-function Highlight({ m }: { m: Extract<Msg, { role: "me" }> }) {
+function Said({ m }: { m: Extract<Msg, { role: "me" }> }) {
   const parts: React.ReactNode[] = [];
   let i = 0;
   for (const s of m.spans) {
     if (s.start > i) parts.push(m.tokens.slice(i, s.start).join(" ") + " ");
-    parts.push(<span key={s.start} className="span" title={`${s.tag}${s.value ? ` → ${s.value}` : ""}`} style={{ background: TAG_COLOUR[s.tag] }}>{m.tokens.slice(s.start, s.end).join(" ")}</span>, " ");
+    parts.push(<span key={s.start} className="stitch" title={s.value ? `Understood as ${s.value}` : "Noted"}>{m.tokens.slice(s.start, s.end).join(" ")}</span>, " ");
     i = s.end;
   }
   if (i < m.tokens.length) parts.push(m.tokens.slice(i).join(" "));
-  return <div className="me">{parts}</div>;
+  return <div className="said"><span className="who">You</span>{m.spans.length ? parts : m.text}</div>;
 }
 
-function SpecPanel({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: string) => void }) {
+function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: string) => void }) {
   const [editing, setEditing] = useState<string | null>(null);
-  const filled = ROWS.filter(([slot]) => spec.slots[slot] || spec.lists[slot]?.length || spec.excluded.some((e) => e.slot === slot));
+  const rows = ROWS.filter(([slot]) => spec.slots[slot] || spec.lists[slot]?.length || spec.excluded.some((e) => e.slot === slot));
   return (
-    <aside className="panel">
-      <h2>Your design</h2>
-      <div className="sub">version {spec.version} · tap a value to change it</div>
-      {!filled.length && <div className="empty">As you talk, the garment takes shape here, part by part, with where each detail came from.</div>}
-      {filled.map(([slot, label]) => {
-        const v = spec.slots[slot];
-        const list = spec.lists[slot] ?? [];
-        const ex = spec.excluded.filter((e) => e.slot === slot);
-        const options = Object.keys(ONTO.lexicon[SLOT_TAG[slot]] ?? {});
-        return (
-          <div className="row" key={slot}>
-            <div className="k">{label}</div>
-            <div className="v">
-              {editing === slot ? (
-                <select className="val" autoFocus defaultValue={v?.value ?? ""} onBlur={() => setEditing(null)}
-                  onChange={(e) => { onEdit(slot, e.target.value); setEditing(null); }}>
-                  <option value="" disabled>choose</option>
-                  {options.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              ) : (
-                <>
-                  {v && <button className="val" onClick={() => setEditing(slot)} title={`${v.src}: “${v.evidence}”`}>{v.value}{v.intensity && <small>{v.intensity}</small>}<small>{v.src}</small></button>}
-                  {list.map((x) => <button key={x.value} className="val" onClick={() => setEditing(slot)} title={`${x.src}: “${x.evidence}”`}>{x.value}<small>{x.src}</small></button>)}
-                  {ex.map((x) => <span key={x.value} className="val excl" title={x.evidence}>{x.value}</span>)}
-                </>
-              )}
+    <aside className="order" aria-label="Your order">
+      <h2>{spec.slots.garment ? spec.slots.garment.value[0].toUpperCase() + spec.slots.garment.value.slice(1) : "Your order"}</h2>
+      <div className="meta">{rows.length ? `Draft ${spec.version}. Select any detail to change it.` : ""}</div>
+      {!rows.length && <div className="empty">Each detail you mention settles here, part by part, with where it came from.</div>}
+      <dl>
+        {rows.map(([slot, label]) => {
+          const v = spec.slots[slot];
+          const list = spec.lists[slot] ?? [];
+          const ex = spec.excluded.filter((e) => e.slot === slot);
+          const options = Object.keys(ONTO.lexicon[SLOT_TAG[slot]] ?? {});
+          return (
+            <div key={slot} style={{ display: "contents" }}>
+              <dt>{label}</dt>
+              <dd>
+                {editing === slot ? (
+                  <select autoFocus defaultValue={v?.value ?? ""} onBlur={() => setEditing(null)} onChange={(e) => { onEdit(slot, e.target.value); setEditing(null); }}>
+                    <option value="" disabled>Choose</option>
+                    {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : (
+                  <>
+                    {v && <button onClick={() => setEditing(slot)}>{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}<small>from {SOURCE[v.src] ?? v.src}</small></button>}
+                    {list.length > 0 && <button onClick={() => setEditing(slot)}>{list.map((x) => x.value).join(", ")}<small>from {[...new Set(list.map((x) => SOURCE[x.src] ?? x.src))].join(" and ")}</small></button>}
+                    {ex.map((x) => <span key={x.value} className="no" title={x.evidence}>{x.value}</span>)}
+                  </>
+                )}
+              </dd>
             </div>
-          </div>
-        );
-      })}
-      {spec.comparisons.length > 0 && (
-        <div className="row"><div className="k">compared</div><div className="v">{spec.comparisons.map((c, i) => <span key={i} className="val ask">{c.slot.split(".")[0]} {c.cmp} {c.ref}</span>)}</div></div>
-      )}
+          );
+        })}
+        {spec.comparisons.length > 0 && (<><dt>Compared</dt><dd>{spec.comparisons.map((c) => `${c.slot.split(".")[0]} ${c.cmp === "more" ? "beyond" : c.cmp === "less" ? "within" : "like"} ${c.ref}`).join("; ")}<small>set it on the moodboard</small></dd></>)}
+      </dl>
     </aside>
   );
 }
@@ -176,66 +243,61 @@ function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: M
     <label>{label}<input inputMode="decimal" value={m[k] ?? ""} onChange={(e) => setM({ ...m, [k]: e.target.value ? parseFloat(e.target.value) : undefined })} /></label>
   );
   return (
-    <div className="page">
+    <main className="page">
       <h2 className="noprint">Tailor sheet</h2>
-      <p className="lede noprint">What the tailor cuts from. Every instruction says where it came from, so the tailor knows what is the customer's word and what is a guess. Ease values are starting defaults to be confirmed with your tailor.</p>
-      <div className="noprint" style={{ display: "flex", gap: 10, marginBottom: 18 }}>
-        <button className="btn light" onClick={() => setHi(!hi)}>{hi ? "Show English" : "हिंदी में दिखाएँ"}</button>
-        <button className="btn" onClick={() => window.print()}>Print or save PDF</button>
+      <p className="lede noprint">What your tailor cuts from. Each instruction shows where it came from, so the tailor can tell your words from a suggestion. Ease is a starting allowance; your tailor will confirm it at the fitting.</p>
+      <div className="actions noprint">
+        <button className="btn quiet" onClick={() => setHi(!hi)}>{hi ? "Show in English" : "हिंदी में दिखाएँ"}</button>
+        <button className="btn" onClick={() => window.print()}>Print or save as PDF</button>
       </div>
       <div className="sheet">
         <h3>{spec.slots.garment ? spec.slots.garment.value[0].toUpperCase() + spec.slots.garment.value.slice(1) : "Garment"}</h3>
-        <div className="meta">spec v{spec.version} · {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · {phrase(spec)}</div>
-        <table><tbody>
-          {lines.map((l) => (
-            <tr key={l.part}><td>{l.part}</td><td className={hi ? "hi" : ""}>{hi ? l.hi : l.en}</td><td className="from">{l.from}</td></tr>
-          ))}
-        </tbody></table>
-        <div className="section" style={{ color: "#8a8378" }}>Measurements, inches</div>
-        <div className="meas">{field("bust", "bust")}{field("waist", "waist")}{field("hip", "hip")}{field("shoulder", "shoulder")}{field("length", "length")}{field("sleeve", "sleeve")}</div>
-        {(f.bust || f.waist || f.hip) && <div style={{ fontSize: 13, color: "#8a8378" }}>Finished garment: {f.bust ? `bust ${f.bust} in` : ""} {f.waist ? `· waist ${f.waist} in` : ""} {f.hip ? `· hip ${f.hip} in` : ""}</div>}
+        <div className="meta">Draft {spec.version}, {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. {phrase(spec)}.</div>
+        {lines.length ? (
+          <table><tbody>{lines.map((l) => <tr key={l.part}><td>{l.part}</td><td className={hi ? "hi" : ""}>{hi ? l.hi : l.en}</td><td className="from">{l.from}</td></tr>)}</tbody></table>
+        ) : <p style={{ color: "#76736e" }}>Describe the garment first; its instructions appear here.</p>}
+        <h4>Measurements in inches</h4>
+        <div className="meas">{field("bust", "Bust")}{field("waist", "Waist")}{field("hip", "Hip")}{field("shoulder", "Shoulder")}{field("length", "Length")}{field("sleeve", "Sleeve")}</div>
+        {(f.bust || f.waist || f.hip) && <div className="finished">Finished garment: {[f.bust && `bust ${f.bust} in`, f.waist && `waist ${f.waist} in`, f.hip && `hip ${f.hip} in`].filter(Boolean).join(", ")}.</div>}
       </div>
-    </div>
+    </main>
   );
 }
 
 function ShopView({ spec }: { spec: Spec }) {
   const L = links(spec);
+  const q = (url: string) => decodeURIComponent(url.split(/[?&](?:q|k|text|rawQuery)=/)[1]?.split("&")[0] ?? "");
   return (
-    <div className="page">
-      <h2>Inspire and shop</h2>
-      <p className="lede">Searches built from your design: ideas on Pinterest, similar pieces to buy ready-made, the fabric if you are having it made, and tailors near you. Links open the search; nothing is copied or stored.</p>
-      <div className="section">Ideas on Pinterest</div>
-      <div className="grid">{L.pinterest.map((p) => <a className="card" key={p.url} href={p.url} target="_blank" rel="noreferrer"><b>{p.label}</b><span>Pinterest search</span></a>)}</div>
-      <div className="section">Buy something close</div>
-      <div className="grid">{L.shops.map((p) => <a className="card" key={p.label} href={p.url} target="_blank" rel="noreferrer"><b>{p.label}</b><span>{spec.slots.garment ? `“${p.url.length ? decodeURIComponent(p.url.split(/[?=]/).pop() ?? "") : ""}”` : "search"}</span></a>)}</div>
-      {L.fabric.length > 0 && (<><div className="section">Fabric</div><div className="grid">{L.fabric.map((p) => <a className="card" key={p.url} href={p.url} target="_blank" rel="noreferrer"><b>{p.label}</b><span>by the metre</span></a>)}</div></>)}
-      <div className="section">Have it made</div>
-      <div className="grid"><a className="card" href={L.tailors.url} target="_blank" rel="noreferrer"><b>{L.tailors.label}</b><span>Take the tailor sheet with you</span></a></div>
-    </div>
+    <main className="page">
+      <h2>Ideas and shopping</h2>
+      <p className="lede">Searches written from your design. Look for ideas, buy something close ready-made, or find the fabric and a tailor to have it made. Each opens on the shop's own site.</p>
+      <section className="index"><h3>Ideas on Pinterest</h3><ul>{L.pinterest.map((p) => <li key={p.url}><a href={p.url} target="_blank" rel="noreferrer">{p.label}<span>Pinterest</span></a></li>)}</ul></section>
+      <section className="index"><h3>Buy ready-made</h3><ul>{L.shops.map((p) => <li key={p.label}><a href={p.url} target="_blank" rel="noreferrer">{q(p.url) || "Search"}<span>{p.label}</span></a></li>)}</ul></section>
+      {L.fabric.length > 0 && <section className="index"><h3>The fabric</h3><ul>{L.fabric.map((p) => <li key={p.url}><a href={p.url} target="_blank" rel="noreferrer">{p.label}<span>by the metre</span></a></li>)}</ul></section>}
+      <section className="index"><h3>Have it made</h3><ul><li><a href={L.tailors.url} target="_blank" rel="noreferrer">Tailors and boutiques near you<span>Maps</span></a></li></ul></section>
+    </main>
   );
 }
 
 // ------------------------------------------------------------------ app
 export default function App() {
-  const [tab, setTab] = useState<Tab>("talk");
+  const [view, setView] = useState<View>("fitting");
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
   const [thinking, setThinking] = useState(false);
-  const [tagger, setTagger] = useState<TaggerState>("rules");
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { loadTagger(setTagger); }, []);
+  useEffect(() => { loadTagger(() => {}); }, []);
   useEffect(() => { save("bespoke.spec", spec); save("bespoke.msgs", msgs); save("bespoke.meas", m); }, [spec, msgs, m]);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs]);
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [view]);
 
   const reply = useCallback((next: Spec, ups: Update[], note?: string) => {
-    const qs = questions(next);
     const got = ups.filter((u) => u.op !== "compare").length;
-    const text = !next.slots.garment && !got ? "Tell me a little more: what are we making, and for what occasion?"
-      : got ? `So far: ${phrase(next)}.` : "Noted.";
-    setMsgs((x) => [...x, { role: "bot", text, questions: qs, note }]);
+    const text = !next.slots.garment && !got ? "Tell me a little more. What should we make, and for which occasion?"
+      : got ? `${phrase(next)[0].toUpperCase()}${phrase(next).slice(1)}.` : "Noted.";
+    setMsgs((x) => [...x, { role: "bot", text, questions: questions(next), note }]);
   }, []);
 
   const send = useCallback(async (text: string) => {
@@ -245,52 +307,52 @@ export default function App() {
     setMsgs((x) => [...x, { role: "me", text, tokens, spans }]);
     const next = apply(spec, ups);
     setSpec(next);
-    setTimeout(() => { reply(next, ups); setThinking(false); }, 350);
+    setTimeout(() => { reply(next, ups); setThinking(false); }, 420);
   }, [spec, reply]);
 
-  const voice = useVoice(useCallback((t: string) => { void send(t); }, [send]));
+  const voice = useVoice(useCallback((t: string) => { void send(correctTranscript(t, isCommonWord)); }, [send]));
 
   const pick = (q: Question, v: string) => {
-    const next = apply(spec, answer(q.slot, v));
+    const ups = answer(q.slot, v);
+    const next = apply(spec, ups);
     setSpec(next);
     setMsgs((x) => [...x, { role: "me", text: v, tokens: [v], spans: [] }]);
-    reply(next, answer(q.slot, v));
+    reply(next, ups);
   };
-  const edit = (slot: string, value: string) => setSpec(apply(spec, [{ op: ["colour", "embellishment", "style", "pattern", "occasion", "shade"].includes(slot) ? "add" : "set", slot, value: { value, p: 1, src: "edit", evidence: "edited" } }]));
-  const fromBoard = (ups: Update[], note: string) => { const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setTab("talk"); };
-  const reset = () => { setSpec(emptySpec()); setMsgs([]); setTab("talk"); };
+  const edit = (slot: string, value: string) =>
+    setSpec(apply(spec, [{ op: LIST_SLOTS.includes(slot) ? "add" : "set", slot, value: { value, p: 1, src: "edit", evidence: "edited" } }]));
+  const fromBoard = (ups: Update[], note: string) => { const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("fitting"); };
+  const reset = () => { setSpec(emptySpec()); setMsgs([]); setView("fitting"); };
 
   const started = msgs.length > 0;
   const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
-  const header = useMemo(() => (
+  const NAV: [View, string][] = [["fitting", "Conversation"], ["board", "Moodboard"], ["sheet", "Tailor sheet"], ["shop", "Shop"]];
+  const header = (
     <header className="top">
-      <button className="mark" onClick={reset} title="Start over"><Blob size={22} state={state} />bespoke</button>
-      {(started || tab !== "talk") && (
-        <nav className="tabs">
-          {(["talk", "board", "sheet", "shop"] as Tab[]).map((t) => <button key={t} aria-pressed={tab === t} onClick={() => setTab(t)}>{t}</button>)}
-        </nav>
+      <button className="mark" onClick={reset} aria-label="Bespoke, start again">Bespoke</button>
+      {(started || view !== "fitting") && (
+        <nav className="nav">{NAV.map(([v, l]) => <button key={v} aria-current={view === v ? "page" : undefined} onClick={() => setView(v)}>{l}</button>)}</nav>
       )}
-      <div className="status" title="The request tagger runs in your browser">
-        <span className={`dot ${tagger === "bert" ? "on" : ""}`} />{tagger === "bert" ? "on-device BERT tagger" : tagger === "loading" ? "loading tagger…" : "gazetteer tagger"}
-      </div>
     </header>
-  ), [tab, started, tagger, state]);
+  );
 
-  if (tab === "board") return (<>{header}<Board onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
-  if (tab === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} /></>);
-  if (tab === "shop") return (<>{header}<ShopView spec={spec} /></>);
+  if (view === "board") return (<>{header}<Board onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
+  if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} /></>);
+  if (view === "shop") return (<>{header}<ShopView spec={spec} /></>);
 
   if (!started) return (
     <>
       {header}
-      <main className="hero">
-        <Blob size={230} state={state} level={voice.level} />
-        <h1>Describe what<br />you wish to wear.</h1>
-        <p>Type or speak, in English or Hinglish. Pin inspiration on the board. Bespoke turns it into a design your tailor can make.</p>
-        <Composer onSend={send} voice={voice} big />
-        <div className="chips">
-          {EXAMPLES.map((e) => <button key={e} className="chip" onClick={() => send(e)}>{e}</button>)}
-          <button className="chip ghost" onClick={() => setTab("board")}>Start with a moodboard</button>
+      <main className="salon">
+        <div className="salon-inner reveal">
+          <Silk size={190} state={state} level={voice.level} />
+          <h1><span>What would you</span><span>like made?</span></h1>
+          <p className="lede">Describe it or say it, in English or Hinglish, and add pictures you love. You get a design your tailor can cut from.</p>
+          <Line onSend={send} voice={voice} autoFocus />
+          <ul className="suggest">
+            {SUGGESTIONS.map((s) => <li key={s}><button onClick={() => send(s)}>{s}</button></li>)}
+            <li><button className="alt" onClick={() => setView("board")}>Start from pictures instead</button></li>
+          </ul>
         </div>
       </main>
     </>
@@ -299,40 +361,35 @@ export default function App() {
   return (
     <>
       {header}
-      <div className="room">
-        <section className="thread">
-          <div className="msgs">
-            {msgs.map((x, i) => x.role === "me" ? <Highlight key={i} m={x} /> : (
-              <div className="bot" key={i}>
-                <div className="mini"><Blob size={30} state={i === msgs.length - 1 ? state : "idle"} /></div>
-                <div className="text">
-                  <p>{x.text}</p>
-                  {x.note && <p style={{ color: "var(--muted)", fontSize: 13 }}>{x.note}</p>}
-                  {x.questions.slice(0, 2).map((q) => (
-                    <div className="q" key={q.slot}>
-                      <div className="label">{q.text}</div>
-                      <div className="chips" style={{ justifyContent: "flex-start" }}>{q.options.map((o) => <button key={o} className="chip" onClick={() => pick(q, o)}>{o}</button>)}</div>
-                    </div>
-                  ))}
-                  {i === msgs.length - 1 && spec.slots.garment && (
-                    <div className="chips" style={{ justifyContent: "flex-start", marginTop: 14 }}>
-                      <button className="chip ghost" onClick={() => setTab("board")}>Add a moodboard</button>
-                      <button className="chip ghost" onClick={() => setTab("sheet")}>Tailor sheet</button>
-                      <button className="chip ghost" onClick={() => setTab("shop")}>Ideas and shopping</button>
-                    </div>
-                  )}
-                </div>
+      <div className="fitting">
+        <section className="dialogue" aria-live="polite">
+          {msgs.map((x, i) => x.role === "me" ? <Said key={i} m={x} /> : (
+            <div className="reply" key={i}>
+              <Silk size={34} state={i === msgs.length - 1 ? state : "idle"} />
+              <div>
+                <p>{x.text}</p>
+                {x.note && <div className="aside">{x.note}</div>}
+                {x.questions.slice(0, 2).map((q) => (
+                  <div className="ask" key={q.slot}>
+                    <div className="q">{q.text}</div>
+                    <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{o}</button>)}</div>
+                  </div>
+                ))}
+                {i === msgs.length - 1 && spec.slots.garment && (
+                  <div className="next">
+                    <button onClick={() => setView("board")}>Add pictures</button>
+                    <button onClick={() => setView("sheet")}>See the tailor sheet</button>
+                    <button onClick={() => setView("shop")}>Ideas and shopping</button>
+                  </div>
+                )}
               </div>
-            ))}
-            <div ref={endRef} />
-          </div>
-          <div className="dock">
-            {voice.live && <Blob size={46} state="listening" level={voice.level} />}
-            <Composer onSend={send} voice={voice} />
-          </div>
+            </div>
+          ))}
+          <div ref={endRef} />
         </section>
-        <SpecPanel spec={spec} onEdit={edit} />
+        <Order spec={spec} onEdit={edit} />
       </div>
+      <div className="dock"><div className="wrap">{voice.live && <Silk size={40} state="listening" level={voice.level} />}<div><Line onSend={send} voice={voice} /></div></div></div>
     </>
   );
 }

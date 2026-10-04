@@ -37,7 +37,8 @@ export interface Measurements { bust?: number; waist?: number; hip?: number; sho
 
 export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
   const s = spec.slots, l = spec.lists, out: SheetLine[] = [];
-  const from = (...vs: (Value | undefined)[]) => [...new Set(vs.filter(Boolean).map((v) => `${v!.src}: “${v!.evidence}”`))].join("; ");
+  const SAID: Record<string, string> = { words: "said", note: "board note", image: "pictures", answer: "answered", edit: "edited", profile: "profile" };
+  const from = (...vs: (Value | undefined)[]) => [...new Set(vs.filter(Boolean).map((v) => (v!.src === "words" || v!.src === "note" ? `${SAID[v!.src]} “${v!.evidence}”` : SAID[v!.src] ?? v!.src)))].join("; ");
   const hv = (slot: string, v?: Value) => (v ? hindi(TAG_OF[slot], v.value) : "");
   if (s["neckline.shape"] || s["neckline.depth"]) {
     const d = s["neckline.depth"] ? depthInches(s["neckline.depth"]) : undefined;
