@@ -158,25 +158,26 @@ function useVoice(onFinal: (t: string) => void) {
 const Mic = () => (<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
 const Send = () => (<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
 
-function Line({ onSend, voice, autoFocus }: { onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; autoFocus?: boolean }) {
+function Line({ onSend, voice, autoFocus, label }: { onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; autoFocus?: boolean; label?: string }) {
   const [text, setText] = useState("");
   const send = () => { const t = text.trim(); if (t) { onSend(t); setText(""); } };
   return (
-    <div style={{ width: "100%" }}>
-      <div className="line">
-        <input value={voice.live ? voice.interim : text} onChange={(e) => setText(e.target.value)} autoFocus={autoFocus}
+    <div>
+      {label && <label htmlFor="brief">{label}</label>}
+      <div className="field">
+        <input id={label ? "brief" : undefined} value={voice.live ? voice.interim : text} onChange={(e) => setText(e.target.value)} autoFocus={autoFocus}
           onKeyDown={(e) => e.key === "Enter" && send()} readOnly={voice.live}
-          placeholder={voice.live ? "" : "Describe your garment"} aria-label="Describe the garment" />
+          placeholder={voice.live ? "" : "A pastel blue kurti for my farewell"} aria-label="Describe the garment" />
         {voice.supported && (
           <button className="lang" onClick={() => voice.setLang(voice.lang === "en-IN" ? "hi-IN" : "en-IN")}
             aria-label={voice.lang === "en-IN" ? "Speaking English. Switch to Hindi" : "Speaking Hindi. Switch to English"}>
-            {voice.lang === "en-IN" ? "English" : "हिंदी"}
+            {voice.lang === "en-IN" ? "EN" : "हिं"}
           </button>
         )}
         {voice.supported && (
-          <button className={`icon ${voice.live ? "live" : ""}`} onClick={() => (voice.live ? voice.stop() : voice.start())} aria-label={voice.live ? "Stop listening" : "Speak instead"}><Mic /></button>
+          <button className={`mic ${voice.live ? "live" : ""}`} onClick={() => (voice.live ? voice.stop() : voice.start())} aria-label={voice.live ? "Stop listening" : "Speak instead"}><Mic /></button>
         )}
-        <button className="icon send" onClick={send} aria-label="Send"><Send /></button>
+        <button className="send" onClick={send}>Send</button>
       </div>
       <div className="hint" role="status">{voice.status}</div>
     </div>
@@ -328,12 +329,12 @@ export default function App() {
   const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
   const NAV: [View, string][] = [["fitting", "Conversation"], ["board", "Moodboard"], ["sheet", "Tailor sheet"], ["shop", "Shop"]];
   const header = (
-    <header className="top">
+    <header className="top"><div className="inner">
       <button className="mark" onClick={reset} aria-label="Bespoke, start again">Bespoke</button>
       {(started || view !== "fitting") && (
         <nav className="nav">{NAV.map(([v, l]) => <button key={v} aria-current={view === v ? "page" : undefined} onClick={() => setView(v)}>{l}</button>)}</nav>
       )}
-    </header>
+    </div></header>
   );
 
   if (view === "board") return (<>{header}<Board onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
@@ -343,16 +344,20 @@ export default function App() {
   if (!started) return (
     <>
       {header}
-      <main className="salon">
-        <div className="salon-inner reveal">
-          <Silk size={190} state={state} level={voice.level} />
-          <h1><span>What would you</span><span>like made?</span></h1>
-          <p className="lede">Describe it or say it, in English or Hinglish, and add pictures you love. You get a design your tailor can cut from.</p>
-          <Line onSend={send} voice={voice} autoFocus />
-          <ul className="suggest">
-            {SUGGESTIONS.map((s) => <li key={s}><button onClick={() => send(s)}>{s}</button></li>)}
-            <li><button className="alt" onClick={() => setView("board")}>Start from pictures instead</button></li>
-          </ul>
+      <main className="hero">
+        <div className="row fade">
+          <h1>Describe it.<em>Wear it.</em></h1>
+          <div className="side">
+            <Silk size={150} state={state} level={voice.level} />
+            <p className="lede">Tell us the garment you have in mind, by typing or speaking, in English or Hinglish. Add pictures you love. You get a design your tailor can cut from, and where to buy something close.</p>
+          </div>
+        </div>
+        <div className="brief">
+          <Line onSend={send} voice={voice} autoFocus label="Your brief" />
+          <div className="tries">
+            {SUGGESTIONS.slice(1).map((x) => <button key={x} onClick={() => send(x)}>{x}</button>)}
+            <button className="alt" onClick={() => setView("board")}>Start from pictures instead</button>
+          </div>
         </div>
       </main>
     </>
@@ -365,7 +370,7 @@ export default function App() {
         <section className="dialogue" aria-live="polite">
           {msgs.map((x, i) => x.role === "me" ? <Said key={i} m={x} /> : (
             <div className="reply" key={i}>
-              <Silk size={34} state={i === msgs.length - 1 ? state : "idle"} />
+              <Silk size={44} state={i === msgs.length - 1 ? state : "idle"} />
               <div>
                 <p>{x.text}</p>
                 {x.note && <div className="aside">{x.note}</div>}

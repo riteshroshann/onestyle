@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Excalidraw, convertToExcalidrawElements } from "@excalidraw/excalidraw";
+import { Excalidraw, MainMenu, convertToExcalidrawElements } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { analyseBoard, readBoard, resolveComparisons } from "../lib/engine/board";
 import { Update } from "../lib/engine/spec";
@@ -17,7 +17,7 @@ export default function Board({ onEvidence, comparisons }: {
   const [busy, setBusy] = useState("");
   const [initial] = useState(() => { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch { return null; } });
   const saveTimer = useRef<any>(null);
-  const [dark] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const [empty, setEmpty] = useState(() => !initial?.elements?.length);
 
   const persist = (elements: readonly any[], files: any) => {
     clearTimeout(saveTimer.current);
@@ -72,13 +72,29 @@ export default function Board({ onEvidence, comparisons }: {
     <div className="boardwrap">
       <Excalidraw
         excalidrawAPI={(a: any) => { api.current = a; }}
-        initialData={initial ? { elements: initial.elements, files: initial.files, appState: { viewBackgroundColor: dark ? "#000000" : "#ffffff" } } : { appState: { viewBackgroundColor: dark ? "#000000" : "#ffffff" } }}
-        theme={dark ? "dark" : "light"}
-        onChange={(els: readonly any[], _s: any, files: any) => persist(els, files)}
-        UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false, export: { saveFileToDisk: true } } }}
-      />
+        initialData={initial ? { elements: initial.elements, files: initial.files, appState: { viewBackgroundColor: "#ffffff" } } : { appState: { viewBackgroundColor: "#ffffff" } }}
+        theme="light"
+        onChange={(els: readonly any[], _s: any, files: any) => { persist(els, files); setEmpty(!els.some((e) => !e.isDeleted)); }}
+        UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false, toggleTheme: false, changeViewBackgroundColor: true, export: { saveFileToDisk: true } } }}
+      >
+        <MainMenu>
+          <MainMenu.DefaultItems.LoadScene />
+          <MainMenu.DefaultItems.Export />
+          <MainMenu.DefaultItems.SaveAsImage />
+          <MainMenu.DefaultItems.ClearCanvas />
+          <MainMenu.DefaultItems.ChangeCanvasBackground />
+        </MainMenu>
+      </Excalidraw>
+      {empty && (
+        <div className="boardwelcome">
+          <div>
+            <h3>Your moodboard</h3>
+            <p>Drag pictures here or paste them. Write a note, draw an arrow from the note to the picture it means, and circle the part you love.</p>
+          </div>
+        </div>
+      )}
       <div className="boardbar">
-        <span>{busy || "Add pictures, write notes, draw an arrow from a note to what it means, circle the part you love."}</span>
+        <span>{busy || (empty ? "Your pictures stay on this device." : "Arrow a note to what it means. Circle the part you love.")}</span>
         <button className="btn quiet" onClick={relabel}>Number pictures</button>
         <button className="btn" onClick={analyse}>Read the board</button>
       </div>
