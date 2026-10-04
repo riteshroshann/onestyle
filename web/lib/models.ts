@@ -5,6 +5,10 @@ import { bioToSpans, labels, tagRules, tokenize } from "./engine/lexicon.ts";
 import type { Span } from "./engine/lexicon.ts";
 
 const CDN = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0";
+
+// Timings for the latency tests; read from window.__bespokeTimings, never sent anywhere.
+export const timings = { taggerLoadMs: -1, tagMs: [] as number[], tagBy: [] as string[] };
+if (typeof window !== "undefined") (window as any).__bespokeTimings = timings;
 let T: any = null;
 async function hf() {
   if (T) return T;
@@ -24,12 +28,14 @@ export type TaggerState = "rules" | "loading" | "bert";
 export function loadTagger(onState: (s: TaggerState) => void) {
   if (tagger) return tagger;
   onState("loading");
+  const t0 = performance.now();
   tagger = (async () => {
     try {
       const t = await hf();
       const tok = await t.AutoTokenizer.from_pretrained("bespoke-tagger", { local_files_only: true });
       const model = await t.AutoModelForTokenClassification.from_pretrained("bespoke-tagger", { dtype: "q8", local_files_only: true });
       const ids: number[] = tok.encode("a");
+      timings.taggerLoadMs = Math.round(performance.now() - t0);
       t.env.allowLocalModels = false;   // later models (Whisper, CLIP) come from the Hub; skip local lookups
       onState("bert");
       loadedTagger = { tok, model, cls: ids[0], sep: ids[ids.length - 1] };
@@ -44,12 +50,14 @@ export function loadTagger(onState: (s: TaggerState) => void) {
   return tagger;
 }
 
-/** Tag a request: transformer + constrained Viterbi, with gazetteer spans filling any gap the model left. */
+/** Tag a request: gazetteer first, then the transformer (constrained Viterbi) for the words the gazetteer does not know. */
 export async function tag(text: string): Promise<{ tokens: string[]; spans: Span[]; by: TaggerState }> {
+  const t0 = performance.now();
+  const done = <T extends { by: TaggerState }>(r: T): T => { timings.tagMs.push(Math.round((performance.now() - t0) * 10) / 10); timings.tagBy.push(r.by); return r; };
   const tokens = tokenize(text);
   const rules = tagRules(tokens);
   const m = tagger ? await tagger : null;
-  if (!m || !tokens.length) return { tokens, spans: rules, by: "rules" };
+  if (!m || !tokens.length) return done({ tokens, spans: rules, by: "rules" as TaggerState });
   const t = await hf();
   const ids: number[] = [m.cls];
   const first: number[] = [];
@@ -78,10 +86,11 @@ export async function tag(text: string): Promise<{ tokens: string[]; spans: Span
   });
   const tags = viterbi(logp, L);
   while (tags.length < tokens.length) tags.push("O");
-  const spans = bioToSpans(tokens, tags);
-  for (const r of rules) if (!spans.some((s) => s.start < r.end && r.start < s.end)) spans.push(r);
+  // the evaluated configuration: gazetteer spans first (precise), the model's spans only where the gazetteer found nothing
+  const spans = [...rules];
+  for (const m of bioToSpans(tokens, tags)) if (!rules.some((r) => r.start < m.end && m.start < r.end)) spans.push(m);
   spans.sort((a, b) => a.start - b.start);
-  return { tokens, spans, by: "bert" };
+  return done({ tokens, spans, by: "bert" as TaggerState });
 }
 
 /** A word that is one whole token of the tagger's vocabulary is ordinary language. */

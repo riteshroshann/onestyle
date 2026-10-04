@@ -72,7 +72,7 @@ export default function Board({ onEvidence, comparisons }: {
     <div className="boardwrap">
       <Excalidraw
         excalidrawAPI={(a: any) => { api.current = a; }}
-        initialData={initial ? { elements: initial.elements, files: initial.files, appState: { viewBackgroundColor: "#ffffff" } } : { appState: { viewBackgroundColor: "#ffffff" } }}
+        initialData={initial ? { elements: initial.elements, files: initial.files, appState: { viewBackgroundColor: "#fdf8f6" } } : { appState: { viewBackgroundColor: "#fdf8f6" } }}
         theme="light"
         onChange={(els: readonly any[], _s: any, files: any) => { persist(els, files); setEmpty(!els.some((e) => !e.isDeleted)); }}
         UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false, toggleTheme: false, changeViewBackgroundColor: true, export: { saveFileToDisk: true } } }}

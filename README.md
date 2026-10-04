@@ -15,7 +15,7 @@ Describe the garment you want made, by typing or speaking, in English or Hinglis
 
 Understanding works in two layers, so it never depends on one point of failure:
 
-1. **On the device, always.** The tokenizer and gazetteer (1,212 forms across 47 garment types, seasons, fabrics and styles, in English, Hinglish and Devanagari), a fine-tuned 33M-parameter BERT-family tagger (int8 ONNX, 33.8 MB), the binder that attaches values to garment parts and resolves sets ("a sweatshirt and pants") and seasons ("for the cold"), the state tracker and a garment-aware question policy. It answers instantly with no network and no key. `tests/requests.test.ts` holds it to 18 realistic requests.
+1. **On the device, always.** The tokenizer and gazetteer (1,212 forms across 47 garment types, seasons, fabrics and styles, in English, Hinglish and Devanagari), a fine-tuned 33M-parameter BERT-family tagger (int8 ONNX, 33.8 MB), the binder that attaches values to garment parts and resolves sets ("a sweatshirt and pants") and seasons ("for the cold"), the state tracker and a garment-aware question policy. It answers instantly with no network and no key. `tests/requests.test.ts` holds it to 21 realistic requests.
 2. **A language model, when configured.** `web/api/understand.js` is a Vercel function that sends the message and the current design to any OpenAI-compatible chat API and returns structured updates. Every value is checked against the ontology before use; details the ontology has no word for become notes for the tailor. If the function is not configured, times out or fails, the on-device answer stands and the customer never sees an error.
 
 Pictures on the moodboard are read with CLIP in the browser; from a whole picture only garment type, colour and print are used, and only when one reading clearly wins. Sleeve and neckline come only from a part the customer circles. Pictures suggest; they never override words.
@@ -75,7 +75,8 @@ engine/bespoke/         lexicon (tokenizer, gazetteer), data (templates, weak la
 engine/scripts/         ladder.py (data, classic, bert, export), check_onnx.py
 data/gold/              hand-written requests in bracket markup
 results/                tagging.json
-web/                    Next.js static site; lib/engine mirrors the Python engine; tests/engine.test.ts
+engine/tests/           unit, regression and latency tests for the engine and the exported model
+web/                    Next.js static site; lib/engine mirrors the Python engine; tests/ holds the Node and browser suites
 docs/                   research plan PDF and its LaTeX source
 ```
 
@@ -87,6 +88,37 @@ npm install
 npm run dev          # http://localhost:3000
 npm test             # parity with Python + engine behaviour
 ```
+
+## Tests
+
+```bash
+cd web && npm test                                              # unit, regression (352 parity fixtures), negative and edge cases
+cd web && npx next build                                        # the browser tests run against the production build
+engine/.venv/Scripts/python -m pytest engine/tests -q           # engine unit, F1 regression floor, ONNX latency
+engine/.venv/Scripts/python -m pytest web/tests/e2e -q          # smoke, functional, integration, usability, edge, latency (Playwright)
+```
+
+| kind | where | what it holds the system to |
+|---|---|---|
+| unit | `web/tests/unit.test.ts`, `engine/tests/test_engine.py` | tokenizer, gazetteer, BIO decoding, binding, the spec fold, questions, links |
+| regression | `web/tests/engine.test.ts`, `engine/tests/test_regression.py` | the browser engine matches Python on 352 fixtures; deployed F1 stays at or above 0.93 |
+| functional | `web/tests/requests.test.ts`, `web/tests/e2e/test_functional.py` | 21 realistic requests end to end; editing, contradictions, Hindi sheet, shop |
+| integration | `web/tests/api.test.ts`, `web/tests/e2e/test_integration.py` | the model-API fallback, its validation and failure paths; tagger, engine and UI together |
+| smoke | `web/tests/e2e/test_smoke.py` | the build serves, every page opens, the model files are shipped, no console errors |
+| usability | `web/tests/e2e/test_usability.py` | axe-core WCAG 2 AA audit, keyboard-only use, 32px touch targets, no sideways scroll on a phone, reduced motion |
+| negative and edge | `web/tests/edge.test.ts`, `web/tests/e2e/test_edge.py` | empty, 20,000-character, emoji, Devanagari, gibberish and contradictory input; markup in input; double send; blocked storage; model CDN unreachable |
+| latency | `results/latency-*.json` | measured below |
+
+Latency on a laptop CPU (Chromium, no GPU for the model):
+
+| step | p50 | p95 |
+|---|---|---|
+| engine, one request, after tagging | 0.04 ms | 0.09 ms |
+| int8 tagger, ONNX Runtime, one thread | 3.6 ms | 7.0 ms |
+| tagger in the browser (transformers.js, WASM) | 20 ms | 53 ms |
+| send to answer on screen | 75 ms | 130 ms |
+| first contentful paint | 340 ms | |
+| tagger first load, cold cache | 3.4 s | |
 
 ## Deploy
 

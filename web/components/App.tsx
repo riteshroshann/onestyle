@@ -4,16 +4,19 @@ import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
 import { Measurements, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines } from "../lib/engine/describe";
+import { hindi } from "../lib/engine/lexicon";
 import { Question, Spec, Update, answer, apply, bind, depthInches, emptySpec, questions, wearerOf, wearerUpdates } from "../lib/engine/spec";
 import { isCommonWord, loadTagger, tag } from "../lib/models";
 import { understand } from "../lib/understand";
 
 const Board = dynamic(() => import("./Board"), { ssr: false });
+import { Home } from "./Home";
+import { Orb } from "./Orb";
 
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
   | { role: "bot"; text: string; questions: Question[]; note?: string };
-type View = "talk" | "board" | "sheet" | "shop";
+type View = "home" | "talk" | "board" | "sheet" | "shop";
 
 const PLACEHOLDER = "A pastel blue kurti for my farewell";
 const SUGGESTIONS = [
@@ -190,18 +193,58 @@ function Line({ onSend, voice, autoFocus, label }: { onSend: (t: string) => void
 }
 
 function Said({ m }: { m: Extract<Msg, { role: "me" }> }) {
+  // map each understood span back onto the original text, so the message reads exactly as it was written
+  const low = m.text.toLowerCase();
+  const marks: [number, number, string][] = [];
+  let cursor = 0;
+  for (const s of m.spans) {
+    const first = m.tokens[s.start], last = m.tokens[s.end - 1];
+    const a = low.indexOf(first, cursor);
+    if (a < 0) continue;
+    const b = low.indexOf(last, a);
+    if (b < 0) continue;
+    marks.push([a, b + last.length, s.value]);
+    cursor = b + last.length;
+  }
   const parts: React.ReactNode[] = [];
   let i = 0;
-  for (const s of m.spans) {
-    if (s.start > i) parts.push(m.tokens.slice(i, s.start).join(" ") + " ");
-    parts.push(<span key={s.start} className="stitch" title={s.value ? `Understood as ${s.value}` : "Noted"}>{m.tokens.slice(s.start, s.end).join(" ")}</span>, " ");
-    i = s.end;
-  }
-  if (i < m.tokens.length) parts.push(m.tokens.slice(i).join(" "));
-  return <div className="said"><span className="who">You</span>{m.spans.length ? parts : m.text}</div>;
+  marks.forEach(([a, b, v], k) => {
+    if (a > i) parts.push(m.text.slice(i, a));
+    parts.push(<span key={k} className="stitch" title={v ? `Understood as ${v}` : "Noted"}>{m.text.slice(a, b)}</span>);
+    i = b;
+  });
+  parts.push(m.text.slice(i));
+  return <div className="said"><span className="who">You</span>{parts}</div>;
 }
 
 // ------------------------------------------------------------------ picker sheet
+function hslHex(h: number, s: number, l: number): string {
+  s /= 100; l /= 100;
+  const k = (n: number) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+  const f = (n: number) => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))));
+  return "#" + [f(0), f(8), f(4)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+/** An exact shade, chosen with three sliders instead of the system colour dialog. */
+function ShadeMaker({ onUse }: { onUse: (hex: string) => void }) {
+  const [h, setH] = useState(225), [sat, setSat] = useState(40), [l, setL] = useState(22);
+  const hex = hslHex(h, sat, l);
+  return (
+    <div className="custom">
+      <div className="shade-head">
+        <span className="shade-preview" style={{ background: hex }} />
+        <div><b>An exact shade</b><small>Closest named colour: {nearestColour(hex)}. The exact shade goes to your tailor.</small></div>
+      </div>
+      <label>Colour<input type="range" className="slider" min={0} max={360} value={h} onChange={(e) => setH(+e.target.value)}
+        style={{ background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)" }} /></label>
+      <label>Intensity<input type="range" className="slider" min={0} max={100} value={sat} onChange={(e) => setSat(+e.target.value)}
+        style={{ background: `linear-gradient(to right, hsl(${h} 0% ${l}%), hsl(${h} 100% ${l}%))` }} /></label>
+      <label>Lightness<input type="range" className="slider" min={4} max={96} value={l} onChange={(e) => setL(+e.target.value)}
+        style={{ background: `linear-gradient(to right, #000, hsl(${h} ${sat}% 50%), #fff)` }} /></label>
+      <button className="btn" onClick={() => onUse(hex)}>Use this shade</button>
+    </div>
+  );
+}
 function Picker({ slot, label, current, onPick, onClose }: {
   slot: string; label: string; current: string[]; onPick: (value: string, note?: string) => void; onClose: () => void;
 }) {
@@ -223,10 +266,7 @@ function Picker({ slot, label, current, onPick, onClose }: {
             </button>
           ))}
         </div>
-        <label className="custom">
-          <input type="color" defaultValue="#1e2a46" onChange={(e) => onPick(nearestColour(e.target.value), `exact colour ${e.target.value}`)} />
-          Pick an exact shade; the nearest named colour is used and the exact shade goes to your tailor.
-        </label>
+        <ShadeMaker onUse={(hex) => onPick(nearestColour(hex), `exact colour ${hex}`)} />
       </>
     );
   } else if (tagName === "GARMENT") {
@@ -319,14 +359,16 @@ function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: M
         <button className="btn" onClick={() => window.print()}>Print or save as PDF</button>
       </div>
       <div className="sheet">
-        <h3>{spec.slots.garment ? nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1) : "Garment"}</h3>
-        <div className="meta">Draft {spec.version}, {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. {phrase(spec)}.</div>
+        <h3 className={hi ? "hi" : ""}>{spec.slots.garment ? (hi ? hindi("GARMENT", spec.slots.garment.value) : nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1)) : (hi ? "पोशाक" : "Garment")}</h3>
+        <div className={`meta ${hi ? "hi" : ""}`}>{hi ? `ड्राफ़्ट ${spec.version}, ${new Date().toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric" })}` : `Draft ${spec.version}, ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. ${phrase(spec)}.`}</div>
         {lines.length ? (
-          <table><tbody>{lines.map((l) => <tr key={l.part}><td>{l.part}</td><td className={hi ? "hi" : ""}>{hi ? l.hi : l.en}</td><td className="from">{l.from}</td></tr>)}</tbody></table>
+          <table><tbody>{lines.map((l) => <tr key={l.part}><td className={hi ? "hi" : ""}>{hi ? l.hiPart : l.part}</td><td className={hi ? "hi" : ""}>{hi ? l.hi : l.en}</td><td className="from">{l.from}</td></tr>)}</tbody></table>
         ) : <p style={{ color: "var(--ink-3)" }}>Describe the garment first; its instructions appear here.</p>}
-        <h4>Measurements in inches</h4>
-        <div className="meas">{field("bust", "Bust")}{field("waist", "Waist")}{field("hip", "Hip")}{field("shoulder", "Shoulder")}{field("length", "Length")}{field("sleeve", "Sleeve")}</div>
-        {(f.bust || f.waist || f.hip) && <div className="finished">Finished garment: {[f.bust && `bust ${f.bust} in`, f.waist && `waist ${f.waist} in`, f.hip && `hip ${f.hip} in`].filter(Boolean).join(", ")}.</div>}
+        <h4 className={hi ? "hi" : ""}>{hi ? "माप (इंच में)" : "Measurements in inches"}</h4>
+        <div className={`meas ${hi ? "hi" : ""}`}>{field("bust", hi ? "छाती" : "Bust")}{field("waist", hi ? "कमर" : "Waist")}{field("hip", hi ? "कूल्हा" : "Hip")}{field("shoulder", hi ? "कंधा" : "Shoulder")}{field("length", hi ? "लंबाई" : "Length")}{field("sleeve", hi ? "आस्तीन" : "Sleeve")}</div>
+        {(f.bust || f.waist || f.hip) && <div className={`finished ${hi ? "hi" : ""}`}>{hi
+          ? `तैयार कपड़े का माप: ${[f.bust && `छाती ${f.bust} इंच`, f.waist && `कमर ${f.waist} इंच`, f.hip && `कूल्हा ${f.hip} इंच`].filter(Boolean).join(", ")}।`
+          : `Finished garment: ${[f.bust && `bust ${f.bust} in`, f.waist && `waist ${f.waist} in`, f.hip && `hip ${f.hip} in`].filter(Boolean).join(", ")}.`}</div>}
       </div>
     </main>
   );
@@ -401,9 +443,9 @@ function Finale({ spec, onSheet, onShop }: { spec: Spec; onSheet: () => void; on
 
 // ------------------------------------------------------------------ app
 export default function App() {
-  const [view, setView] = useState<View>("talk");
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
+  const [view, setView] = useState<View>(() => (msgs.length ? "talk" : "home"));
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
   const [thinking, setThinking] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -424,7 +466,7 @@ export default function App() {
     setThinking(true);
     // the language model (when configured) and the on-device engine run together; the device answers alone if the model cannot
     const second = understand(text, spec);
-    const { tokens, spans } = await tag(text);
+    const { tokens, spans } = await tag(correctTranscript(text, isCommonWord));
     const ups = [...bind(tokens, spans, "words"), ...wearerUpdates(text)];
     setMsgs((x) => [...x, { role: "me", text, tokens, spans }]);
     const model = await second;
@@ -435,7 +477,7 @@ export default function App() {
     setThinking(false);
   }, [spec, reply]);
 
-  const voice = useVoice(useCallback((t: string) => { void send(correctTranscript(t, isCommonWord)); }, [send]));
+  const voice = useVoice(useCallback((t: string) => { void send(t); }, [send]));
 
   const pick = (q: Question, v: string) => {
     const ups = answer(q.slot, v);
@@ -455,16 +497,23 @@ export default function App() {
 
   const started = msgs.length > 0;
   const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
-  const NAV: [View, string][] = [["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
+  const NAV: [View, string][] = [["home", "Home"], ["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 4);
+    on(); window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, [view]);
   const header = useMemo(() => (
-    <header className="top"><div className="inner">
-      <button className="mark" onClick={() => setView("talk")} aria-label="Bespoke home">Bespoke</button>
+    <header className={`top ${scrolled ? "scrolled" : ""}`}><div className="inner">
+      <button className="mark" onClick={() => setView("home")} aria-label="Bespoke home">Bespoke</button>
       <nav className="seg" aria-label="Sections">{NAV.map(([v, l]) => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{l}</button>)}</nav>
       <div className="right">{started && <button className="ghost" onClick={reset}>New design</button>}</div>
     </div></header>
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [view, started]);
+  ), [view, started, scrolled]);
 
+  if (view === "home") return (<>{header}<Home onStart={() => setView("talk")} /></>);
   if (view === "board") return (<>{header}<Board onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} /></>);
@@ -476,7 +525,7 @@ export default function App() {
         <div className="row fade">
           <h1>Describe it.<em>Wear it.</em></h1>
           <div className="side">
-            <Silk size={150} state={state} level={voice.level} />
+            <Orb size={170} state={state} level={voice.level} />
             <p className="lede">Tell us the garment you have in mind, by typing or speaking, in English or Hinglish. Add pictures you love. You get a design your tailor can cut from, and where to buy something close.</p>
           </div>
         </div>
@@ -523,7 +572,7 @@ export default function App() {
         </section>
         <Order spec={spec} onEdit={edit} />
       </div>
-      <div className="dock"><div className="wrap">{voice.live && <Silk size={40} state="listening" level={voice.level} />}<div><Line onSend={send} voice={voice} /></div></div></div>
+      <div className="dock"><div className="wrap">{voice.live && <Orb size={52} state="listening" level={voice.level} />}<div className="grow"><Line onSend={send} voice={voice} /></div></div></div>
     </>
   );
 }

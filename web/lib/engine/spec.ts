@@ -311,8 +311,9 @@ export const words = (s: string) => tokenize(s);
 
 // ------------------------------------------------------------------ who it is for
 // Read from the words ("for my brother", "ladies", "men's") or, failing that, from the garment itself.
-const MEN = /\b(men'?s|mens|male|gents?|for (?:my )?(?:husband|brother|father|dad|papa|son|boyfriend|fianc[eé]|him|groom)|groom|dulha|ladka|ladke|bhai|bhaiya|boys?)\b/i;
-const WOMEN = /\b(women'?s|womens|ladies|female|for (?:my )?(?:wife|sister|mother|mom|mummy|daughter|girlfriend|fianc[eé]e|her|bride)|bride|dulhan|ladki|didi|girls?)\b/i;
+// A possessive ("my brother's wedding") names whose event it is, not who wears the garment, so it does not count.
+const MEN = /\b(men'?s|mens|male|gents?|husband|brother|father|dad|papa|son|boyfriend|groom|dulha|ladka|ladke|bhai|bhaiya|boys?|him)\b(?!['’]s)/i;
+const WOMEN = /\b(women'?s|womens|ladies|female|wife|sister|mother|mom|mummy|daughter|girlfriend|bride|dulhan|ladki|didi|behen|girls?|her)\b(?!['’]s)/i;
 const MEN_GARMENTS = new Set(["sherwani", "nehru jacket"]);
 const WOMEN_GARMENTS = new Set(["kurti", "anarkali", "salwar suit", "lehenga", "saree blouse", "saree", "dress", "gown", "skirt", "crop top", "corset", "bodysuit", "sharara", "palazzo", "churidar", "dupatta", "leggings"]);
 

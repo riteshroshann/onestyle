@@ -1,0 +1,14 @@
+{
+ "first_contentful_paint_ms": 340,
+ "hero_visible_ms": 535,
+ "tagger_load_ms_cold": 3361,
+ "send_to_answer": {
+  "requests": 16,
+  "send_to_message_p50_ms": 71.0,
+  "send_to_message_p95_ms": 125.8,
+  "send_to_answer_p50_ms": 74.9,
+  "send_to_answer_p95_ms": 130.4,
+  "tagger_p50_ms": 20.2,
+  "tagger_p95_ms": 53
+ }
+}

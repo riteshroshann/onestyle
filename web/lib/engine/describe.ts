@@ -59,7 +59,9 @@ export function advice(spec: Spec): string {
   return "";
 }
 
-export interface SheetLine { part: string; en: string; hi: string; from: string }
+export interface SheetLine { part: string; hiPart?: string; en: string; hi: string; from: string }
+export const PART_HI: Record<string, string> = { Pieces: "हिस्से", Neckline: "गला", "Back neck": "पीछे का गला", Sleeve: "आस्तीन", Bodice: "ऊपरी भाग",
+  "Lower body": "निचला भाग", Length: "लंबाई", Fabric: "कपड़ा", Colour: "रंग", Finish: "सजावट", Avoid: "नहीं चाहिए", Notes: "टिप्पणी" };
 export interface Measurements { bust?: number; waist?: number; hip?: number; shoulder?: number; length?: number; sleeve?: number }
 
 export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
@@ -98,7 +100,7 @@ export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
   if (spec.excluded.length)
     out.push({ part: "Avoid", en: spec.excluded.map((e) => e.value).join(", "), hi: spec.excluded.map((e) => `${hindi(TAG_OF[e.slot] ?? "", e.value)} नहीं`).join(", "), from: spec.excluded.map((e) => `“${e.evidence}”`).join("; ") });
   if (spec.notes?.length) out.push({ part: "Notes", en: spec.notes.join("; "), hi: spec.notes.join("; "), from: "details in the customer's words" });
-  return out;
+  return out.map((l) => ({ ...l, hiPart: PART_HI[l.part] ?? l.part }));
 }
 
 export function finished(spec: Spec, m: Measurements) {
