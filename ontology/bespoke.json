@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "note": "Single source of truth for the BESPOKE engine (Python) and web app (TypeScript). Forms are lowercase; multiword forms are matched longest-first. 'hi' is the Hindi term printed on the tailor sheet. Ease values are initial defaults in inches, to be replaced by partner tailors' values.",
   "tags": ["GARMENT", "PART", "LOC", "FIT", "SILHOUETTE", "LENGTH", "NECKLINE", "SLEEVE", "DIM", "COLOUR", "SHADE", "FABRIC", "PATTERN", "EMBELL", "OCCASION", "STYLE", "INT", "NEG", "CMP", "REF", "NUM"],
   "lexicon": {
@@ -11,18 +11,46 @@
       "saree blouse": {"forms": ["saree blouse", "sari blouse", "blouse", "choli", "ब्लाउज"], "hi": "ब्लाउज"},
       "sherwani": {"forms": ["sherwani", "achkan"], "hi": "शेरवानी"},
       "nehru jacket": {"forms": ["nehru jacket", "bandhgala", "bandh gala", "waistcoat", "modi jacket"], "hi": "नेहरू जैकेट"},
-      "dress": {"forms": ["dress", "dresses", "frock", "sundress", "maxi dress", "midi dress", "one piece", "onepiece"], "hi": "ड्रेस"},
+      "dress": {"forms": ["dress", "dresses", "frock", "sundress", "maxi dress", "midi dress", "one piece", "onepiece", "shirt dress", "slip dress", "wrap dress", "sweater dress", "bodycon dress"], "hi": "ड्रेस"},
       "gown": {"forms": ["gown", "gowns", "ball gown", "evening gown"], "hi": "गाउन"},
-      "top": {"forms": ["top", "tops", "crop top", "tunic", "tee", "t-shirt", "tshirt"], "hi": "टॉप"},
+      "top": {"forms": ["top", "tops", "tunic"], "hi": "टॉप"},
       "shirt": {"forms": ["shirt", "shirts", "button down"], "hi": "शर्ट"},
-      "skirt": {"forms": ["skirt", "skirts"], "hi": "स्कर्ट"},
-      "trousers": {"forms": ["trousers", "pants", "pant", "pyjama", "pajama"], "hi": "पैंट"},
+      "skirt": {"forms": ["skirt", "skirts", "maxi skirt", "midi skirt", "mini skirt", "pencil skirt", "pleated skirt"], "hi": "स्कर्ट"},
+      "trousers": {"forms": ["trousers", "pants", "pant", "formal pants", "slacks", "chinos"], "hi": "पैंट"},
       "palazzo": {"forms": ["palazzo", "palazzos", "palazzo pants"], "hi": "प्लाज़ो"},
-      "churidar": {"forms": ["churidar", "churidaar", "leggings"], "hi": "चूड़ीदार"},
+      "churidar": {"forms": ["churidar", "churidaar"], "hi": "चूड़ीदार"},
       "sharara": {"forms": ["sharara", "gharara"], "hi": "शरारा"},
       "jumpsuit": {"forms": ["jumpsuit", "jumpsuits", "romper"], "hi": "जंपसूट"},
-      "co-ord set": {"forms": ["co-ord set", "co-ord", "coord set", "coord", "two piece", "matching set"], "hi": "को-ऑर्ड सेट"},
-      "jacket": {"forms": ["jacket", "blazer", "shrug"], "hi": "जैकेट"}
+      "co-ord set": {"forms": ["co-ord set", "co-ord", "coord set", "coord", "two piece", "matching set", "cord set", "co ord set", "co ord", "co-ords", "coords", "cord-set", "twinset", "matching top and bottom"], "hi": "को-ऑर्ड सेट"},
+      "jacket": {"forms": ["jacket", "bomber", "bomber jacket", "denim jacket", "leather jacket", "windcheater", "biker jacket"], "hi": "जैकेट"},
+      "sweatshirt": {"forms": ["sweatshirt", "sweatshirts", "sweat shirt", "crewneck sweatshirt"], "hi": "स्वेटशर्ट"},
+      "hoodie": {"forms": ["hoodie", "hoodies", "hoody", "hooded sweatshirt", "zip hoodie"], "hi": "हुडी"},
+      "sweater": {"forms": ["sweater", "sweaters", "jumper", "pullover", "knit sweater", "swetar", "sweter"], "hi": "स्वेटर"},
+      "cardigan": {"forms": ["cardigan", "cardigans"], "hi": "कार्डिगन"},
+      "t-shirt": {"forms": ["t-shirt", "t-shirts", "tshirt", "tshirts", "tee", "tees", "t shirt"], "hi": "टी-शर्ट"},
+      "polo": {"forms": ["polo", "polo shirt", "polo tshirt"], "hi": "पोलो"},
+      "tank top": {"forms": ["tank top", "tank", "camisole", "cami", "vest top"], "hi": "टैंक टॉप"},
+      "crop top": {"forms": ["crop top", "crop tops"], "hi": "क्रॉप टॉप"},
+      "corset": {"forms": ["corset", "bustier"], "hi": "कॉर्सेट"},
+      "bodysuit": {"forms": ["bodysuit"], "hi": "बॉडीसूट"},
+      "blazer": {"forms": ["blazer", "blazers", "suit jacket"], "hi": "ब्लेज़र"},
+      "coat": {"forms": ["coat", "overcoat", "trench coat", "trench", "long coat", "peacoat", "pea coat"], "hi": "कोट"},
+      "puffer jacket": {"forms": ["puffer", "puffer jacket", "quilted jacket", "down jacket", "padded jacket"], "hi": "पफर जैकेट"},
+      "shrug": {"forms": ["shrug", "kimono jacket"], "hi": "श्रग"},
+      "kaftan": {"forms": ["kaftan", "caftan"], "hi": "कफ़्तान"},
+      "cape": {"forms": ["cape", "poncho"], "hi": "केप"},
+      "jeans": {"forms": ["jeans", "denims", "jean"], "hi": "जींस"},
+      "joggers": {"forms": ["joggers", "jogger", "track pants", "trackpants", "sweatpants", "sweat pants", "lowers"], "hi": "जॉगर्स"},
+      "cargo pants": {"forms": ["cargo", "cargos", "cargo pants"], "hi": "कार्गो पैंट"},
+      "shorts": {"forms": ["shorts", "bermuda", "bermudas"], "hi": "शॉर्ट्स"},
+      "leggings": {"forms": ["leggings", "jeggings"], "hi": "लेगिंग्स"},
+      "pyjama set": {"forms": ["pyjama", "pajama", "pyjamas", "pajamas", "nightsuit", "night suit", "loungewear", "lounge set"], "hi": "पजामा सेट"},
+      "tracksuit": {"forms": ["tracksuit", "track suit", "sweatsuit"], "hi": "ट्रैकसूट"},
+      "dungarees": {"forms": ["dungarees", "dungaree", "overalls"], "hi": "डंगरी"},
+      "saree": {"forms": ["saree", "sari", "sarees", "saari", "साड़ी"], "hi": "साड़ी"},
+      "dupatta": {"forms": ["dupatta", "stole", "chunni", "odhni"], "hi": "दुपट्टा"},
+      "kurta set": {"forms": ["kurta set", "kurti set", "kurta pajama", "kurta pyjama", "kurta palazzo set"], "hi": "कुर्ता सेट"},
+      "dhoti pants": {"forms": ["dhoti pants", "dhoti", "dhoti salwar"], "hi": "धोती पैंट"}
     },
     "PART": {
       "neckline": {"forms": ["neckline", "neck", "neck line", "gala", "gale", "galaa", "गला"], "hi": "गला"},
@@ -45,10 +73,10 @@
       "back": {"forms": ["peeche", "peechhe", "peeche se", "at the back", "पीछे"], "hi": "पीछे"}
     },
     "FIT": {
-      "fitted": {"forms": ["fitted", "fit", "fitting", "tight", "snug", "body hugging", "bodyhugging", "body-hugging", "chust", "tailored", "structured", "फिट"], "hi": "फिट"},
+      "fitted": {"forms": ["fitted", "fit", "fitting", "tight", "snug", "body hugging", "bodyhugging", "body-hugging", "chust", "tailored", "structured", "फिट", "slim fit", "skinny", "snug fit"], "hi": "फिट"},
       "semi-fitted": {"forms": ["semi fitted", "semi-fitted", "semifitted", "slightly fitted", "regular fit"], "hi": "हल्का फिट"},
       "relaxed": {"forms": ["relaxed", "comfortable", "comfy", "easy", "not tight", "breathable fit"], "hi": "आरामदायक"},
-      "loose": {"forms": ["loose", "loosely", "dheela", "dhila", "dheeli", "dhili", "dheele", "baggy", "oversized", "flowy", "flowing", "flow", "airy", "free flowing", "ढीला", "ढीली"], "hi": "ढीला"}
+      "loose": {"forms": ["loose", "loosely", "dheela", "dhila", "dheeli", "dhili", "dheele", "baggy", "oversized", "flowy", "flowing", "flow", "airy", "free flowing", "ढीला", "ढीली", "oversize", "boxy", "relaxed fit", "slouchy"], "hi": "ढीला"}
     },
     "SILHOUETTE": {
       "a-line": {"forms": ["a-line", "a line", "aline"], "hi": "ए-लाइन"},
@@ -60,7 +88,11 @@
       "mermaid": {"forms": ["mermaid", "fishtail"], "hi": "मरमेड"},
       "empire": {"forms": ["empire", "empire waist", "high waist", "high-waist", "high waisted"], "hi": "एम्पायर"},
       "peplum": {"forms": ["peplum"], "hi": "पेप्लम"},
-      "angrakha": {"forms": ["angrakha", "overlap", "wrap", "wrap style"], "hi": "अंगरखा"}
+      "angrakha": {"forms": ["angrakha", "overlap", "wrap", "wrap style"], "hi": "अंगरखा"},
+      "wide-leg": {"forms": ["wide leg", "wide-leg", "wide legged", "palazzo style", "flared pants", "bell bottom", "bell bottoms", "baggy pants"], "hi": "चौड़ी मोहरी"},
+      "jogger": {"forms": ["jogger style", "cuffed", "elastic ankle", "ribbed cuffs"], "hi": "जॉगर"},
+      "tapered": {"forms": ["tapered", "slim leg", "narrow leg"], "hi": "पतली मोहरी"},
+      "cropped": {"forms": ["cropped pants", "ankle length pants"], "hi": "क्रॉप्ड"}
     },
     "LENGTH": {
       "crop": {"forms": ["crop", "cropped"], "hi": "क्रॉप"},
@@ -79,19 +111,22 @@
     "NECKLINE": {
       "v": {"forms": ["v neck", "v-neck", "vneck", "v neckline", "v", "v shape", "v-shaped", "v gala"], "hi": "वी आकार"},
       "deep v": {"forms": ["deep v", "deep v neck", "plunging", "plunge", "plunging neckline"], "hi": "गहरा वी"},
-      "round": {"forms": ["round neck", "round", "crew neck", "crew", "gol gala", "gol"], "hi": "गोल"},
+      "round": {"forms": ["round neck", "round", "gol gala", "gol"], "hi": "गोल"},
       "boat": {"forms": ["boat neck", "boat", "bateau", "boatneck"], "hi": "बोट"},
       "square": {"forms": ["square neck", "square", "square neckline", "chaukor"], "hi": "चौकोर"},
       "sweetheart": {"forms": ["sweetheart", "sweetheart neckline", "sweet heart"], "hi": "स्वीटहार्ट"},
       "halter": {"forms": ["halter", "halter neck"], "hi": "हॉल्टर"},
-      "high": {"forms": ["high neck", "turtle neck", "turtleneck", "mock neck"], "hi": "ऊँचा गला"},
+      "high": {"forms": ["high neck"], "hi": "ऊँचा गला"},
       "mandarin": {"forms": ["mandarin", "mandarin collar", "chinese collar", "band collar", "band neck", "nehru collar"], "hi": "चाइनीज़ कॉलर"},
       "keyhole": {"forms": ["keyhole", "key hole"], "hi": "कीहोल"},
       "off-shoulder": {"forms": ["off shoulder", "off-shoulder", "bardot", "one shoulder", "one-shoulder"], "hi": "ऑफ-शोल्डर"},
       "u": {"forms": ["u neck", "u-neck", "u shape", "u-shaped", "scoop", "scoop neck"], "hi": "यू आकार"},
       "collar": {"forms": ["collar", "shirt collar", "collared", "peter pan collar"], "hi": "कॉलर"},
       "cowl": {"forms": ["cowl", "cowl neck"], "hi": "काउल"},
-      "potli": {"forms": ["potli button neck", "potli"], "hi": "पोटली"}
+      "potli": {"forms": ["potli button neck", "potli"], "hi": "पोटली"},
+      "crew": {"forms": ["crew neck", "crewneck", "crew"], "hi": "क्रू नेक"},
+      "hooded": {"forms": ["hooded", "with hood", "hood"], "hi": "हुड"},
+      "turtle": {"forms": ["turtle neck", "turtleneck", "polo neck", "mock neck"], "hi": "टर्टल नेक"}
     },
     "SLEEVE": {
       "puff": {"forms": ["puff", "puffy", "puffed", "phuli"], "hi": "पफ"},
@@ -120,19 +155,19 @@
       "mustard": {"forms": ["mustard", "ochre"], "hi": "सरसों"},
       "green": {"forms": ["green", "hara", "hari", "emerald", "bottle green", "mehendi green", "mehndi green", "parrot green", "हरा"], "hi": "हरा"},
       "mint": {"forms": ["mint", "pista", "pistachio", "sage"], "hi": "पिस्ता"},
-      "olive": {"forms": ["olive", "khaki"], "hi": "ऑलिव"},
+      "olive": {"forms": ["olive", "khaki", "olive green", "army green", "military green"], "hi": "ऑलिव"},
       "teal": {"forms": ["teal", "turquoise", "aqua", "firozi", "peacock blue", "peacock"], "hi": "फ़िरोज़ी"},
       "blue": {"forms": ["blue", "neela", "neeli", "cobalt", "royal blue", "sky blue", "aasmani", "नीला"], "hi": "नीला"},
       "powder blue": {"forms": ["powder blue", "baby blue", "pastel blue", "ice blue", "light blue"], "hi": "हल्का नीला"},
-      "navy": {"forms": ["navy", "navy blue", "dark blue", "midnight blue"], "hi": "गहरा नीला"},
+      "navy": {"forms": ["navy", "navy blue", "dark blue", "midnight blue", "dark navy", "deep blue", "ink blue"], "hi": "गहरा नीला"},
       "purple": {"forms": ["purple", "baingani", "jamuni", "violet", "plum"], "hi": "बैंगनी"},
       "lavender": {"forms": ["lavender", "lilac", "mauve", "onion pink"], "hi": "लैवेंडर"},
       "black": {"forms": ["black", "kaala", "kala", "kaali", "kali colour", "jet black", "काला"], "hi": "काला"},
       "white": {"forms": ["white", "safed", "sufed", "snow white", "सफ़ेद"], "hi": "सफ़ेद"},
-      "ivory": {"forms": ["ivory", "off white", "off-white", "cream", "ecru"], "hi": "क्रीम"},
+      "ivory": {"forms": ["ivory", "off white", "off-white", "cream", "ecru", "cream white", "vanilla"], "hi": "क्रीम"},
       "beige": {"forms": ["beige", "nude", "sand", "champagne", "taupe"], "hi": "बेज"},
-      "brown": {"forms": ["brown", "bhura", "coffee", "chocolate", "tan", "camel"], "hi": "भूरा"},
-      "grey": {"forms": ["grey", "gray", "charcoal", "slate"], "hi": "सलेटी"},
+      "brown": {"forms": ["brown", "bhura", "coffee", "chocolate", "tan", "camel", "chocolate brown", "mocha", "espresso"], "hi": "भूरा"},
+      "grey": {"forms": ["grey", "gray", "charcoal", "slate", "heather grey", "melange", "ash", "dark grey", "light grey"], "hi": "सलेटी"},
       "gold": {"forms": ["gold", "golden", "sunehra", "antique gold"], "hi": "सुनहरा"},
       "silver": {"forms": ["silver", "chandi", "metallic silver"], "hi": "चांदी"},
       "multicolour": {"forms": ["multicolour", "multicolor", "multi colour", "multi color", "colourful", "colorful", "rangeen"], "hi": "रंगीन"}
@@ -160,13 +195,22 @@
       "net": {"forms": ["net", "tulle", "lace fabric"], "hi": "नेट"},
       "denim": {"forms": ["denim"], "hi": "डेनिम"},
       "khadi": {"forms": ["khadi", "handloom"], "hi": "खादी"},
-      "wool": {"forms": ["wool", "woollen", "pashmina"], "hi": "ऊन"},
-      "lycra": {"forms": ["lycra", "stretchable", "jersey", "knit"], "hi": "लाइक्रा"}
+      "wool": {"forms": ["wool", "woollen", "pashmina", "woolen", "merino", "knitted", "knit", "acrylic wool", "angora"], "hi": "ऊन"},
+      "lycra": {"forms": ["lycra", "stretchable", "jersey", "spandex", "elastane", "stretch"], "hi": "लाइक्रा"},
+      "fleece": {"forms": ["fleece", "polar fleece", "sherpa", "brushed fleece"], "hi": "फ़्लीस"},
+      "terry": {"forms": ["terry", "french terry", "loopback", "cotton fleece", "sweatshirt fabric"], "hi": "टेरी"},
+      "cashmere": {"forms": ["cashmere"], "hi": "कश्मीरी"},
+      "corduroy": {"forms": ["corduroy", "cord fabric", "cords", "cordroy"], "hi": "कॉरडरॉय"},
+      "flannel": {"forms": ["flannel", "brushed cotton"], "hi": "फ़लालैन"},
+      "tweed": {"forms": ["tweed", "boucle"], "hi": "ट्वीड"},
+      "leather": {"forms": ["leather", "faux leather", "vegan leather", "pu leather", "suede"], "hi": "चमड़ा"},
+      "faux fur": {"forms": ["faux fur", "fur", "teddy"], "hi": "फ़र"},
+      "polyester": {"forms": ["polyester", "poly", "nylon", "spandex blend"], "hi": "पॉलिएस्टर"}
     },
     "PATTERN": {
-      "solid": {"forms": ["solid", "plain", "sada", "simple colour"], "hi": "सादा"},
+      "solid": {"forms": ["solid", "plain", "sada", "simple colour", "no print", "no prints"], "hi": "सादा"},
       "floral": {"forms": ["floral", "flowers", "flower print", "phool", "phoolon wala"], "hi": "फूलदार"},
-      "printed": {"forms": ["printed", "print", "prints"], "hi": "प्रिंटेड"},
+      "printed": {"forms": ["printed", "print", "prints", "graphic", "graphic print", "logo", "text print"], "hi": "प्रिंटेड"},
       "striped": {"forms": ["striped", "stripes", "dhaari", "lines"], "hi": "धारीदार"},
       "checked": {"forms": ["checked", "checks", "checkered", "plaid"], "hi": "चेक"},
       "polka": {"forms": ["polka", "polka dots", "dots", "bindi print"], "hi": "पोल्का"},
@@ -201,18 +245,29 @@
       "farewell": {"forms": ["farewell", "fresher", "freshers", "graduation", "convocation"], "hi": "फेयरवेल"},
       "party": {"forms": ["party", "birthday", "date", "date night", "night out", "club"], "hi": "पार्टी"},
       "office": {"forms": ["office", "work wear", "workwear", "formal", "interview", "meeting"], "hi": "ऑफिस"},
-      "casual": {"forms": ["casual", "daily", "daily wear", "everyday", "college", "ghar", "regular wear"], "hi": "रोज़ाना"}
+      "casual": {"forms": ["casual", "daily", "daily wear", "everyday", "college", "ghar", "regular wear"], "hi": "रोज़ाना"},
+      "winter": {"forms": ["winter", "winters", "cold", "the cold", "chilly", "freezing", "snow", "hills", "mountains", "manali", "shimla", "kashmir", "ladakh", "december", "january", "warm", "keep me warm", "cozy", "cosy", "sardi", "sardiyon", "thand", "thandi"], "hi": "सर्दी"},
+      "summer": {"forms": ["summer", "summers", "hot weather", "heat", "humid", "beach", "goa", "vacation", "garmi", "garmiyon"], "hi": "गर्मी"},
+      "monsoon": {"forms": ["monsoon", "rain", "rainy", "barish", "baarish"], "hi": "बारिश"},
+      "travel": {"forms": ["travel", "trip", "airport", "flight", "road trip"], "hi": "यात्रा"},
+      "gym": {"forms": ["gym", "workout", "yoga", "running", "sports", "athleisure"], "hi": "जिम"},
+      "lounge": {"forms": ["home", "lounging", "sleep", "night", "wfh", "work from home"], "hi": "घर"}
     },
     "STYLE": {
       "elegant": {"forms": ["elegant", "graceful", "classy", "sophisticated", "regal", "royal"], "hi": "शालीन"},
-      "minimal": {"forms": ["minimal", "minimalist", "simple", "subtle", "understated", "clean"], "hi": "सादगी"},
+      "minimal": {"forms": ["minimal", "minimalist", "simple", "understated", "clean", "basic", "plain look", "clean look", "understated look"], "hi": "सादगी"},
       "traditional": {"forms": ["traditional", "ethnic", "desi", "classic"], "hi": "पारंपरिक"},
       "indo-western": {"forms": ["indo western", "indo-western", "fusion"], "hi": "इंडो-वेस्टर्न"},
       "western": {"forms": ["western", "modern", "contemporary", "trendy"], "hi": "वेस्टर्न"},
       "boho": {"forms": ["boho", "bohemian"], "hi": "बोहो"},
       "flashy": {"forms": ["flashy", "loud", "heavy", "blingy", "over the top", "bhadkila look"], "hi": "भड़कीला"},
       "feminine": {"forms": ["feminine", "dreamy", "romantic", "delicate", "pretty", "cute"], "hi": "नाज़ुक"},
-      "vintage": {"forms": ["vintage", "retro"], "hi": "विंटेज"}
+      "vintage": {"forms": ["vintage", "retro"], "hi": "विंटेज"},
+      "streetwear": {"forms": ["streetwear", "street style", "hip hop", "baggy look"], "hi": "स्ट्रीटवियर"},
+      "sporty": {"forms": ["sporty", "athletic", "athleisure look"], "hi": "स्पोर्टी"},
+      "korean": {"forms": ["korean", "k-style", "kdrama", "k-drama"], "hi": "कोरियन"},
+      "old money": {"forms": ["old money", "quiet luxury", "preppy"], "hi": "ओल्ड मनी"},
+      "edgy": {"forms": ["edgy", "grunge", "goth", "gothic", "punk"], "hi": "एजी"}
     },
     "INT": {
       "slight": {"forms": ["thoda", "thodi", "thode", "slightly", "a bit", "a little", "little", "bit", "somewhat", "halka sa", "zara", "kinda", "not too", "not very", "moderately"], "hi": "थोड़ा"},
@@ -234,17 +289,30 @@
     "inch": ["inch", "inches", "in", "\"", "inchi", "इंच"],
     "cm": ["cm", "cms", "centimetre", "centimeter"]
   },
-  "ease_in": {"fitted": 1.5, "semi-fitted": 2.5, "relaxed": 3.5, "loose": 5.0},
-  "depth_in": {"shallow": 4.5, "moderate": 6.0, "deep": 7.5, "plunging": 9.0},
+  "ease_in": {
+    "fitted": 1.5,
+    "semi-fitted": 2.5,
+    "relaxed": 3.5,
+    "loose": 5.0
+  },
+  "depth_in": {
+    "shallow": 4.5,
+    "moderate": 6.0,
+    "deep": 7.5,
+    "plunging": 9.0
+  },
   "depth_order": ["shallow", "moderate", "deep", "plunging"],
   "fit_order": ["fitted", "semi-fitted", "relaxed", "loose"],
   "length_order": ["crop", "hip", "short", "knee", "midi", "ankle", "floor"],
   "sleeve_length_order": ["sleeveless", "cap", "short", "elbow", "three-quarter", "full"],
   "garment_family": {
-    "top_long": ["kurti", "anarkali", "salwar suit", "sherwani", "dress", "gown"],
-    "top_short": ["saree blouse", "top", "shirt", "nehru jacket", "jacket"],
-    "bottom": ["skirt", "trousers", "palazzo", "churidar", "sharara", "lehenga"],
-    "set": ["co-ord set", "jumpsuit"]
+    "top_long": ["kurti", "anarkali", "salwar suit", "sherwani", "dress", "gown", "kurta set", "kaftan"],
+    "top_short": ["saree blouse", "top", "shirt", "crop top", "tank top", "corset", "bodysuit", "polo"],
+    "knit_top": ["sweatshirt", "hoodie", "sweater", "cardigan", "t-shirt"],
+    "outer": ["jacket", "blazer", "coat", "puffer jacket", "nehru jacket", "shrug", "cape"],
+    "bottom": ["skirt", "trousers", "palazzo", "churidar", "sharara", "lehenga", "jeans", "joggers", "cargo pants", "shorts", "leggings", "dhoti pants"],
+    "set": ["co-ord set", "jumpsuit", "tracksuit", "pyjama set", "dungarees"],
+    "drape": ["saree", "dupatta"]
   },
   "slots": {
     "garment": {"hi": "पोशाक", "critical": true, "cost": 10},
@@ -265,5 +333,21 @@
     "embellishment": {"hi": "सजावट", "critical": false, "cost": 3},
     "occasion": {"hi": "अवसर", "critical": false, "cost": 1},
     "style": {"hi": "स्टाइल", "critical": false, "cost": 1}
+  },
+  "family_questions": {
+    "top_long": ["neckline.shape", "neckline.depth", "sleeve.length", "garment.length", "bodice.fit", "fabric", "colour"],
+    "top_short": ["neckline.shape", "sleeve.length", "bodice.fit", "fabric", "colour"],
+    "knit_top": ["bodice.fit", "fabric", "colour", "neckline.shape"],
+    "outer": ["garment.length", "bodice.fit", "fabric", "colour"],
+    "bottom": ["lower.silhouette", "garment.length", "fabric", "colour"],
+    "set": ["bodice.fit", "lower.silhouette", "fabric", "colour"],
+    "drape": ["fabric", "colour", "embellishment"]
+  },
+  "fabric_by_season": {
+    "winter": ["fleece", "wool", "terry", "corduroy", "velvet", "flannel"],
+    "summer": ["cotton", "linen", "mulmul", "rayon", "chiffon"],
+    "monsoon": ["polyester", "rayon", "crepe", "denim"],
+    "gym": ["lycra", "polyester", "cotton"],
+    "lounge": ["cotton", "terry", "rayon", "flannel"]
   }
 }

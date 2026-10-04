@@ -2,9 +2,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
-import { Measurements, finished, links, phrase, sheetLines } from "../lib/engine/describe";
+import { Measurements, advice, finished, links, phrase, sheetLines } from "../lib/engine/describe";
 import { Question, Spec, Update, answer, apply, bind, depthInches, emptySpec, questions } from "../lib/engine/spec";
 import { isCommonWord, loadTagger, tag } from "../lib/models";
+import { understand } from "../lib/understand";
 
 const Board = dynamic(() => import("./Board"), { ssr: false });
 
@@ -22,17 +23,17 @@ const SLOT_TAG: Record<string, string> = {
   garment: "GARMENT", "neckline.shape": "NECKLINE", "neckline.depth": "DIM", "back.depth": "DIM", "sleeve.style": "SLEEVE",
   "sleeve.length": "LENGTH", "sleeve.fit": "FIT", "bodice.fit": "FIT", "lower.fit": "FIT", "lower.silhouette": "SILHOUETTE",
   "garment.length": "LENGTH", fabric: "FABRIC", colour: "COLOUR", shade: "SHADE", pattern: "PATTERN", embellishment: "EMBELL",
-  occasion: "OCCASION", style: "STYLE",
+  occasion: "OCCASION", style: "STYLE", components: "GARMENT",
 };
 const ROWS: [string, string][] = [
-  ["garment", "Garment"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["back.depth", "Back"],
+  ["garment", "Garment"], ["components", "Pieces"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["back.depth", "Back"],
   ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"], ["bodice.fit", "Bodice"], ["lower.fit", "Below the waist"],
   ["lower.silhouette", "Silhouette"], ["garment.length", "Length"], ["fabric", "Fabric"], ["colour", "Colour"], ["shade", "Shade"],
   ["pattern", "Print"], ["embellishment", "Finish"], ["occasion", "Occasion"], ["style", "Mood"],
 ];
-const SOURCE: Record<string, string> = { words: "your words", note: "a note on your board", image: "your pictures", answer: "your answer", edit: "your edit", profile: "your profile" };
-const LIST_SLOTS = ["colour", "embellishment", "style", "pattern", "occasion", "shade"];
-const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", "off-shoulder": "off-shoulder" };
+const SOURCE: Record<string, string> = { model: "your words", words: "your words", note: "a note on your board", image: "your pictures", answer: "your answer", edit: "your edit", profile: "your profile" };
+const LIST_SLOTS = ["colour", "embellishment", "style", "pattern", "occasion", "shade", "components"];
+const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", trousers: "pants", crew: "crew neck", hooded: "hooded", turtle: "turtle neck" };
 const nice = (v: string) => NICE[v] ?? v;
 
 function load<T>(k: string, d: T): T {
@@ -222,7 +223,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
                 ) : (
                   <>
                     {v && <button onClick={() => setEditing(slot)}>{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}<small>from {SOURCE[v.src] ?? v.src}</small></button>}
-                    {list.length > 0 && <button onClick={() => setEditing(slot)}>{list.map((x) => x.value).join(", ")}<small>from {[...new Set(list.map((x) => SOURCE[x.src] ?? x.src))].join(" and ")}</small></button>}
+                    {list.length > 0 && <button onClick={() => setEditing(slot)}>{list.map((x) => nice(x.value)).join(", ")}<small>from {[...new Set(list.map((x) => SOURCE[x.src] ?? x.src))].join(" and ")}</small></button>}
                     {ex.map((x) => <span key={x.value} className="no" title={x.evidence}>{x.value}</span>)}
                   </>
                 )}
@@ -230,6 +231,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
             </div>
           );
         })}
+        {(spec.notes?.length ?? 0) > 0 && (<><dt>Notes</dt><dd>{spec.notes!.join("; ")}<small>for your tailor</small></dd></>)}
         {spec.comparisons.length > 0 && (<><dt>Compared</dt><dd>{spec.comparisons.map((c) => `${c.slot.split(".")[0]} ${c.cmp === "more" ? "beyond" : c.cmp === "less" ? "within" : "like"} ${c.ref}`).join("; ")}<small>set it on the moodboard</small></dd></>)}
       </dl>
     </aside>
@@ -298,17 +300,22 @@ export default function App() {
     const got = ups.filter((u) => u.op !== "compare").length;
     const text = !next.slots.garment && !got ? "Tell me a little more. What should we make, and for which occasion?"
       : got ? `${phrase(next)[0].toUpperCase()}${phrase(next).slice(1)}.` : "Noted.";
-    setMsgs((x) => [...x, { role: "bot", text, questions: questions(next), note }]);
+    setMsgs((x) => [...x, { role: "bot", text, questions: questions(next), note: note ?? (advice(next) || undefined) }]);
   }, []);
 
   const send = useCallback(async (text: string) => {
     setThinking(true);
+    // the language model (when configured) and the on-device engine run together; the device answers alone if the model cannot
+    const second = understand(text, spec);
     const { tokens, spans } = await tag(text);
     const ups = bind(tokens, spans, "words");
     setMsgs((x) => [...x, { role: "me", text, tokens, spans }]);
-    const next = apply(spec, ups);
+    const model = await second;
+    const all = model?.length ? [...ups, ...model] : ups;
+    const next = apply(spec, all);
     setSpec(next);
-    setTimeout(() => { reply(next, ups); setThinking(false); }, 420);
+    reply(next, all);
+    setThinking(false);
   }, [spec, reply]);
 
   const voice = useVoice(useCallback((t: string) => { void send(correctTranscript(t, isCommonWord)); }, [send]));
@@ -377,7 +384,7 @@ export default function App() {
                 {x.questions.slice(0, 2).map((q) => (
                   <div className="ask" key={q.slot}>
                     <div className="q">{q.text}</div>
-                    <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{o}</button>)}</div>
+                    <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? o}</button>)}</div>
                   </div>
                 ))}
                 {i === msgs.length - 1 && spec.slots.garment && (

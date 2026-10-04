@@ -59,6 +59,9 @@ export const IMAGE_SLOTS: Record<string, Record<string, string>> = {
   embellishment: { embroidery: "a garment with embroidery", "mirror work": "a garment with mirror work", sequins: "a garment with sequins", "gota patti": "a garment with gold gota patti borders", none: "a plain garment without embellishment" },
 };
 const REGION_SLOTS = ["sleeve.style", "sleeve.length", "neckline.shape"];
+// A general image model reads garment type, colour and print reliably from a whole picture; finer details
+// (sleeve, neckline, silhouette, embellishment) only come from a part the customer circles.
+const WHOLE_SLOTS = ["garment", "colour", "pattern"];
 const DEPTH_PROMPTS: [string, number][] = [["a garment with a high closed neckline", 4.5], ["a garment with a modest neckline", 6.0], ["a garment with a deep neckline", 7.5], ["a garment with a plunging neckline", 9.0]];
 
 const SLOT_WORDS: [RegExp, string[]][] = [
@@ -114,8 +117,9 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
   const dists: Record<string, { n: number; d: number[] }[]> = {};
   for (const im of board.images) {
     perImage[im.n] = {};
-    for (const [slot, prompts] of Object.entries(IMAGE_SLOTS)) {
-      progress(`Reading #${im.n}: ${slot.replace(".", " ")}`);
+    for (const slot of WHOLE_SLOTS) {
+      const prompts = IMAGE_SLOTS[slot];
+      progress(`Reading picture ${im.n}`);
       const d = await score(im.dataURL, Object.values(prompts));
       (dists[slot] ??= []).push({ n: im.n, d });
       const j = d.indexOf(Math.max(...d));
@@ -153,9 +157,11 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
     const z = ex.reduce((a, b) => a + b, 0);
     const j = ex.indexOf(Math.max(...ex));
     const p = ex[j] / z;
-    if (p >= 0.45 && values[j] !== "none") {
+    const second = Math.max(...ex.filter((_, k) => k !== j)) / z;
+    // only a clear winner counts, and it stays a suggestion (p below the bar that stops a question)
+    if (p >= 0.55 && p - second >= 0.2 && values[j] !== "none") {
       const op = ["colour", "pattern", "embellishment"].includes(slot) ? "add" : "set";
-      updates.push({ op, slot, value: { value: values[j], p: Math.min(0.8, p), src: "image", evidence: `board, ${list.length} reference${list.length > 1 ? "s" : ""}` } } as Update);
+      updates.push({ op, slot, value: { value: values[j], p: Math.min(0.6, p), src: "image", evidence: `board, ${list.length} reference${list.length > 1 ? "s" : ""}` } } as Update);
     }
   }
   // depth per image for comparisons: expected inches under the zero-shot distribution

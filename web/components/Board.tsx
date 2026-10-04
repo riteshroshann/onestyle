@@ -58,8 +58,8 @@ export default function Board({ onEvidence, comparisons }: {
           notes.push(`${iv.slot.replace(".", " ")}: ${iv.note}; I proposed ${iv.proposal} in, toward the shallow end, since a neckline can be deepened at the trial but not raised.`);
         } else notes.push(`${iv.slot.replace(".", " ")}: ${iv.note}. Which reference should win?`);
       }
-      const seen = Object.entries(res.perImage).map(([n, s]) => `#${n} ${s["garment"]?.[0] ?? ""}, ${s["neckline.shape"]?.[0] ?? ""} neck, ${s["colour"]?.[0] ?? ""}`).join("; ");
-      onEvidence(ups, `From the board (${board.images.length} images, ${board.regions.length} circled, ${board.notes.length} notes): ${seen}. ${notes.join(" ")}`);
+      const seen = Object.entries(res.perImage).map(([n, s]) => `picture ${n} looks like ${[s["colour"]?.[0], s["pattern"]?.[0] === "solid" ? "" : s["pattern"]?.[0], s["garment"]?.[0]].filter(Boolean).join(" ")}`).join("; ");
+      onEvidence(ups, `From your board (${board.images.length} pictures, ${board.regions.length} circled, ${board.notes.length} notes): ${seen}. Your words always come first; pictures only suggest. ${notes.join(" ")}`);
       setBusy("");
     } catch (e: any) {
       setBusy(`The board could not be read: ${e?.message ?? e}`);

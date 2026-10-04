@@ -2,6 +2,7 @@
 # Written by the developers, independently of the synthetic templates. Lines 1-30 are dev, the rest test.
 # Conventions: the word "sleeves" or "neck" is PART unless it is part of a named neckline (v neck, boat neck).
 # LOC includes a following "se". INT covers softeners and intensifiers. This set will be replaced by BESPOKE-Spec.
+# Ontology 1.1 scope update: dupatta, kaftan, dhoti pants, corset and choli are garments and summer an occasion; seven O labels were relabelled to match.
 i want a [pastel|SHADE] [blue|COLOUR] [kurti|GARMENT] for my [farewell|OCCASION], [elegant|STYLE] not too flashy
 [kurti|GARMENT] chahiye, [waist|PART] pe [fitted|FIT], [neeche se|LOC] [thoda|INT] [loose|FIT]
 [v neck|NECKLINE] [thoda|INT] [deep|DIM] rakhna
@@ -35,16 +36,16 @@ something [minimal|STYLE] and [feminine|STYLE] for a [date|OCCASION], [lavender|
 mujhe [haldi|OCCASION] ke liye [peela|COLOUR] [sharara|GARMENT] chahiye with [gota|EMBELL] work
 [a-line|SILHOUETTE] [kurtee|GARMENT] in [pastel|SHADE] [green|COLOUR], [three quarter|LENGTH] [sleeves|PART]
 [boat neck|NECKLINE] [crop top|GARMENT] and [flared|SILHOUETTE] [skirt|GARMENT] for [navratri|OCCASION]
-[sleeveless|LENGTH] [anarkalli|GARMENT] with [deep v|NECKLINE] and [net|FABRIC] [dupatta|O]
+[sleeveless|LENGTH] [anarkalli|GARMENT] with [deep v|NECKLINE] and [net|FABRIC] [dupatta|GARMENT]
 i [dont|NEG] want [prints|PATTERN], [plain|PATTERN] [navy|COLOUR] [silk|FABRIC] only
 [waist|PART] par [tight|FIT] [nahi|NEG], [thoda|INT] [comfortable|FIT] rakho
 [georget|FABRIC] [salwar suit|GARMENT] with [chikenkari|EMBELL] on the [yoke|PART]
-[organza|FABRIC] [dupatta|O] with [pearl work|EMBELL] border, [ivory|COLOUR] [kurta|GARMENT]
+[organza|FABRIC] [dupatta|GARMENT] with [pearl work|EMBELL] border, [ivory|COLOUR] [kurta|GARMENT]
 [lehenga|GARMENT] [ghera|PART] [bahut|INT] [zyada|INT] chahiye, [heavy|STYLE] [zardozi|EMBELL]
 [shirt|GARMENT] in [linen|FABRIC], [half|LENGTH] [sleeves|PART], [regular fit|FIT] for [office|OCCASION]
 [sherwani|GARMENT] [ivory|COLOUR] with [gold|COLOUR] [thread work|EMBELL] for my [wedding|OCCASION]
-[kaftan|O] style [kurti|GARMENT] [loose|FIT] and [airy|FIT] for [summer|O]
-[dhoti|O] [pants|GARMENT] with a [short|LENGTH] [kurta|GARMENT] in [khadi|FABRIC]
+[kaftan|GARMENT] style [kurti|GARMENT] [loose|FIT] and [airy|FIT] for [summer|OCCASION]
+[dhoti pants|GARMENT] with a [short|LENGTH] [kurta|GARMENT] in [khadi|FABRIC]
 [neckline|PART] [same as|CMP] [#3|REF] but [shallower than|CMP] [#3|REF]
 [sleeves|PART] [pic 1|REF] [jaisi|CMP], colour [photo 2|REF] [jaisa|CMP]
 [skirt|GARMENT] [floor length|LENGTH] with [tassels|EMBELL] at the [hem|PART]
@@ -52,7 +53,7 @@ i [dont|NEG] want [prints|PATTERN], [plain|PATTERN] [navy|COLOUR] [silk|FABRIC] 
 a [classy|STYLE] [black|COLOUR] [gown|GARMENT] with [off shoulder|NECKLINE] neckline and [mermaid|SILHOUETTE] cut
 [maroon|COLOUR] [velvet|FABRIC] [blouse|GARMENT] [elbow|LENGTH] [sleeves|PART], [back|PART] [deep|DIM] with [potli|NECKLINE] buttons
 [kurti|GARMENT] [hip length|LENGTH] for [college|OCCASION], [checks|PATTERN] in [blue|COLOUR] and [white|COLOUR]
-[lehnga|GARMENT] [choli|O] for [mehndi|OCCASION] in [parrot green|COLOUR] with [mirror|EMBELL] and [tassels|EMBELL]
+[lehnga|GARMENT] [choli|GARMENT] for [mehndi|OCCASION] in [parrot green|COLOUR] with [mirror|EMBELL] and [tassels|EMBELL]
 [angrakha|SILHOUETTE] style [kurta|GARMENT] [cotton|FABRIC] [block print|PATTERN]
 [v neck|NECKLINE] [nahi|NEG], [round neck|NECKLINE] chahiye
 [sleeves|PART] [bahut|INT] [loose|FIT] [nahi|NEG], [semi fitted|FIT] theek hai
@@ -75,7 +76,7 @@ a [classy|STYLE] [black|COLOUR] [gown|GARMENT] with [off shoulder|NECKLINE] neck
 [ikat|PATTERN] [cotton|FABRIC] [dress|GARMENT] [knee length|LENGTH] [sleeveless|LENGTH]
 [tie dye|PATTERN] [co-ord|GARMENT] [oversized|FIT] for [daily|OCCASION]
 [stripes|PATTERN] [nahi|NEG] chahiye, [solid|PATTERN] [rakho|O]
-[sweatheart|NECKLINE] neckline [corset|O] style [blouse|GARMENT]
+[sweatheart|NECKLINE] neckline [corset|GARMENT] style [blouse|GARMENT]
 [very|INT] [fitted|FIT] [bodycon|SILHOUETTE] [dress|GARMENT] [black|COLOUR] [lycra|FABRIC]
 [kurti|GARMENT] like [#2|REF] but [longer than|CMP] [#2|REF]
 [sleeves|PART] [shorter than|CMP] [pic 3|REF]

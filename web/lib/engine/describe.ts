@@ -1,6 +1,6 @@
 // Human-facing text: the assistant's reply, the tailor sheet lines, and search links.
 import { ONTO, hindi } from "./lexicon.ts";
-import { depthInches, easeInches } from "./spec.ts";
+import { depthInches, easeInches, familyOf, seasonOf } from "./spec.ts";
 import type { Spec, Value } from "./spec.ts";
 
 const TAG_OF: Record<string, string> = {
@@ -8,28 +8,52 @@ const TAG_OF: Record<string, string> = {
   "bodice.fit": "FIT", "lower.fit": "FIT", "sleeve.fit": "FIT", "lower.silhouette": "SILHOUETTE", "neckline.depth": "DIM", "back.depth": "DIM",
   "neckline.width": "DIM", colour: "COLOUR", shade: "SHADE", fabric: "FABRIC", pattern: "PATTERN", embellishment: "EMBELL", occasion: "OCCASION", style: "STYLE",
 };
-const NICE: Record<string, string> = { v: "V", "a-line": "A-line", "three-quarter": "three-quarter", "co-ord set": "co-ord set" };
+const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", trousers: "pants", "wide-leg": "wide-leg", crew: "crew", turtle: "turtle" };
 const nice = (v: string) => NICE[v] ?? v;
 const soft = (v?: Value) => (v?.intensity === "slight" ? "slightly " : v?.intensity === "strong" ? "very " : "");
 
+const FOR: Record<string, string> = { winter: "for the cold", summer: "for the heat", monsoon: "for the rains", gym: "for workouts", lounge: "for home",
+  travel: "for travel", casual: "for everyday wear", office: "for work", festive: "for the festivities" };
+const an = (w: string) => (/^[aeiou]/i.test(w) && !/^(one|uni)/i.test(w) ? "an" : "a");
+
+/** The design in one sentence, as an atelier would read it back. */
 export function phrase(spec: Spec): string {
   const s = spec.slots, l = spec.lists;
-  const bits: string[] = [];
-  const colour = [l.shade?.[0]?.value, ...(l.colour ?? []).map((c) => c.value)].filter(Boolean).join(" ");
-  const g = s.garment ? nice(s.garment.value) : "garment";
-  bits.push([colour, s["lower.silhouette"] ? nice(s["lower.silhouette"].value) : "", s.fabric ? s.fabric.value : "", g].filter(Boolean).join(" "));
-  if (s["bodice.fit"]) bits.push(`${soft(s["bodice.fit"])}${s["bodice.fit"].value} at the bust and waist`);
-  if (s["lower.fit"]) bits.push(`${soft(s["lower.fit"])}${s["lower.fit"].value} below the waist`);
+  if (!s.garment) return "";
+  const colours = (l.colour ?? []).map((c) => c.value);
+  const shade = l.shade?.[0]?.value;
+  const colour = colours.length ? `${shade ? shade + " " : ""}${colours.join(" and ")}` : "";
+  const fam = familyOf(s.garment.value);
+  const sil = s["lower.silhouette"] && fam !== "bottom" && fam !== "set" ? nice(s["lower.silhouette"].value) : "";
+  const head = [colour, s.fabric?.value, sil, nice(s.garment.value)].filter(Boolean).join(" ");
+  const parts: string[] = [];
+  const comps = (l.components ?? []).map((c) => nice(c.value));
+  if (comps.length) parts.push(`${an(comps[0])} ${comps.join(" with ")}`);
+  if (s["bodice.fit"]) parts.push(`${soft(s["bodice.fit"])}${s["bodice.fit"].value === "loose" && fam !== "top_long" ? "oversized" : s["bodice.fit"].value}${fam === "top_long" || fam === "top_short" ? " at the bust and waist" : ""}`);
+  if (s["lower.fit"]) parts.push(`${soft(s["lower.fit"])}${s["lower.fit"].value} below the waist`);
+  if (s["lower.silhouette"] && !sil) parts.push(`${nice(s["lower.silhouette"].value)} ${comps.length || fam === "set" ? "bottoms" : "cut"}`);
   if (s["neckline.shape"] || s["neckline.depth"]) {
     const d = s["neckline.depth"] ? depthInches(s["neckline.depth"]) : undefined;
-    bits.push(`${s["neckline.shape"] ? nice(s["neckline.shape"].value) + " neckline" : "neckline"}${d ? `, about ${d} in deep` : ""}`);
+    parts.push(`${s["neckline.shape"] ? `${an(nice(s["neckline.shape"].value))} ${nice(s["neckline.shape"].value)} neckline` : "a neckline"}${d ? ` about ${d} in deep` : ""}`);
   }
-  if (s["sleeve.style"] || s["sleeve.length"]) bits.push([s["sleeve.length"]?.value, s["sleeve.style"]?.value, "sleeves"].filter(Boolean).join(" "));
-  if (s["garment.length"]) bits.push(`${s["garment.length"].inches ? s["garment.length"].value : s["garment.length"].value + " length"}`);
-  if (l.embellishment?.length) bits.push(l.embellishment.map((e) => e.value).join(" and "));
-  if (l.occasion?.length) bits.push(`for ${l.occasion.map((o) => o.value).join(", ")}`);
-  const not = spec.excluded.map((e) => e.value);
-  return bits.filter(Boolean).join(", ") + (not.length ? `; no ${not.join(", no ")}` : "");
+  if (s["sleeve.style"] || s["sleeve.length"]) parts.push([s["sleeve.length"]?.value, s["sleeve.style"]?.value, "sleeves"].filter(Boolean).join(" "));
+  if (s["garment.length"]) parts.push(s["garment.length"].inches ? `${s["garment.length"].value} long` : `${s["garment.length"].value} length`);
+  const finish = [...(l.pattern ?? []), ...(l.embellishment ?? [])].map((v) => v.value);
+  if (finish.length) parts.push(finish.join(" and "));
+  const occ = (l.occasion ?? []).map((o) => FOR[o.value] ?? `for ${an(o.value)} ${o.value}`);
+  if (occ.length) parts.push(occ.join(" and "));
+  const not = spec.excluded.filter((e) => e.slot !== "garment").map((e) => e.value);
+  const text = `${an(head)} ${head}${parts.length ? (comps.length ? ": " : ", ") + parts.join(", ") : ""}`;
+  return text + (not.length ? `; no ${not.join(", no ")}` : "");
+}
+
+/** One line of advice when the design implies something the customer may not have thought of. */
+export function advice(spec: Spec): string {
+  const season = seasonOf(spec);
+  if (season === "winter" && !spec.slots.fabric) return "For the cold, brushed fleece or a heavy cotton terry keeps you warm without bulk; wool is warmest but needs care.";
+  if (season === "summer" && !spec.slots.fabric) return "For the heat, cotton, linen or mulmul breathe best.";
+  if (spec.slots["neckline.depth"] && !spec.slots["neckline.depth"].inches) return "The neckline depth is a starting point; your tailor will confirm it at the trial.";
+  return "";
 }
 
 export interface SheetLine { part: string; en: string; hi: string; from: string }
@@ -61,6 +85,7 @@ export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
   }
   if (s["garment.length"] || m.length)
     out.push({ part: "Length", en: m.length ? `${m.length} in` : s["garment.length"]!.value, hi: m.length ? `${m.length} इंच` : hv("garment.length", s["garment.length"]), from: from(s["garment.length"]) || "measurements" });
+  if (l.components?.length) out.unshift({ part: "Pieces", en: l.components.map((c) => nice(c.value)).join(" and "), hi: l.components.map((c) => hindi("GARMENT", c.value)).join(" और "), from: from(...l.components) });
   if (s.fabric) out.push({ part: "Fabric", en: s.fabric.value, hi: hv("fabric", s.fabric), from: from(s.fabric) });
   const colour = [...(l.shade ?? []), ...(l.colour ?? [])];
   if (colour.length) out.push({ part: "Colour", en: colour.map((c) => c.value).join(" "), hi: colour.map((c) => hindi(c === l.shade?.[0] ? "SHADE" : "COLOUR", c.value)).join(" "), from: from(...colour) });
@@ -69,6 +94,7 @@ export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
       hi: [...(l.pattern ?? []).map((v) => hindi("PATTERN", v.value)), ...(l.embellishment ?? []).map((v) => hindi("EMBELL", v.value))].join(", "), from: from(...(l.embellishment ?? [])) });
   if (spec.excluded.length)
     out.push({ part: "Avoid", en: spec.excluded.map((e) => e.value).join(", "), hi: spec.excluded.map((e) => `${hindi(TAG_OF[e.slot] ?? "", e.value)} नहीं`).join(", "), from: spec.excluded.map((e) => `“${e.evidence}”`).join("; ") });
+  if (spec.notes?.length) out.push({ part: "Notes", en: spec.notes.join("; "), hi: spec.notes.join("; "), from: "details in the customer's words" });
   return out;
 }
 
@@ -84,7 +110,7 @@ export function query(spec: Spec, opts: { withParts?: boolean } = {}): string {
   const words = [
     ...(l.shade ?? []).slice(0, 1).map((v) => v.value), ...(l.colour ?? []).slice(0, 1).map((v) => v.value),
     s["lower.silhouette"] && s["lower.silhouette"].value !== "anarkali" ? nice(s["lower.silhouette"].value) : "",
-    s.fabric?.value, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value), s.garment ? nice(s.garment.value) : "outfit",
+    s.fabric?.value, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value), ...(l.components ?? []).map((c) => nice(c.value)), s.garment ? nice(s.garment.value) : "outfit", seasonOf(spec) === "winter" ? "winter" : "",
   ];
   if (opts.withParts) {
     if (s["neckline.shape"]) words.push(`${nice(s["neckline.shape"].value)} neck`);

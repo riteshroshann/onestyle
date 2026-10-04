@@ -13,7 +13,12 @@ Describe the garment you want made, by typing or speaking, in English or Hinglis
   asks next   sleeve length, fabric, colour   (ranked by the cost of a wrong guess)
 ```
 
-Everything runs in the browser: the tokenizer and gazetteer, a fine-tuned 33M-parameter BERT-family tagger (int8 ONNX, 33.8 MB), the binder that attaches values to garment parts, the state tracker, the question policy, and CLIP for the moodboard images. Nothing the customer types or uploads leaves the page.
+Understanding works in two layers, so it never depends on one point of failure:
+
+1. **On the device, always.** The tokenizer and gazetteer (1,212 forms across 47 garment types, seasons, fabrics and styles, in English, Hinglish and Devanagari), a fine-tuned 33M-parameter BERT-family tagger (int8 ONNX, 33.8 MB), the binder that attaches values to garment parts and resolves sets ("a sweatshirt and pants") and seasons ("for the cold"), the state tracker and a garment-aware question policy. It answers instantly with no network and no key. `tests/requests.test.ts` holds it to 18 realistic requests.
+2. **A language model, when configured.** `web/api/understand.js` is a Vercel function that sends the message and the current design to any OpenAI-compatible chat API and returns structured updates. Every value is checked against the ontology before use; details the ontology has no word for become notes for the tailor. If the function is not configured, times out or fails, the on-device answer stands and the customer never sees an error.
+
+Pictures on the moodboard are read with CLIP in the browser; from a whole picture only garment type, colour and print are used, and only when one reading clearly wins. Sleeve and neckline come only from a part the customer circles. Pictures suggest; they never override words.
 
 The research plan behind it (literature review, gap analysis, objectives, methodology, phases) is [docs/BESPOKE-research-plan.pdf](docs/BESPOKE-research-plan.pdf).
 
@@ -23,19 +28,20 @@ Every model in the syllabus ladder is trained on the same data and scored on the
 
 | rung | system | F1 | 95% CI |
 |---|---|---|---|
-| L0 | gazetteer, longest match | 0.945 | 0.907 to 0.974 |
-| L2a | HMM, Viterbi | 0.770 | 0.711 to 0.826 |
-| L2b | CRF | 0.869 | 0.810 to 0.916 |
-| L2b | CRF + gazetteer feature | 0.931 | 0.889 to 0.967 |
-| L3 | MiniLM-L12 (33M) + BIO-constrained Viterbi | 0.884 | 0.837 to 0.926 |
-| L3 | **MiniLM + gazetteer (deployed)** | **0.955** | 0.919 to 0.981 |
-| | same model, int8 ONNX in the browser | 0.878 | |
+| L0 | gazetteer, longest match | 0.936 | 0.898 to 0.967 |
+| L2a | HMM, Viterbi | 0.751 | 0.693 to 0.809 |
+| L2b | CRF | 0.832 | 0.789 to 0.876 |
+| L2b | CRF + gazetteer feature | 0.900 | 0.853 to 0.942 |
+| L3 | MiniLM-L12 (33M) + BIO-constrained Viterbi | 0.812 | 0.754 to 0.866 |
+| L3 | **MiniLM + gazetteer (deployed)** | **0.953** | 0.918 to 0.982 |
+| | same model, int8 ONNX in the browser | 0.792 | |
 
 What we learned, honestly:
 
 * The first BERT run scored 0.715, below the gazetteer. The errors showed positional bias: the templates had taught it that the second word of "{pattern} {fabric}" is a fabric. Fixing the *data* (attribute bags in random order, distractor words that must stay outside, three gold-label mistakes) took it to 0.884. The model was never the problem.
-* On its own the transformer does not beat a good gazetteer on in-vocabulary text. Its value is recall on what the gazetteer has never seen: typos ("georget", "organzaa", "anarkalli"), new spellings, unlisted words in context. Gazetteer first, transformer filling the gaps, is the best system (recall 0.967).
+* On its own the transformer does not beat a good gazetteer on in-vocabulary text, and with ontology 1.1 it has a third more forms to learn from the same 12,000 training sentences (0.884 before, 0.812 now). Its value is recall on what the gazetteer has never seen: typos ("georget", "organzaa", "anarkalli"), new spellings, unlisted words in context. Gazetteer first, transformer filling the gaps, is the best system (recall 0.967).
 * The test set is 52 requests written by the developers, separately from the templates. It is a seed set and is small; the intervals above say how small. The plan's BESPOKE-Spec benchmark (1,200 requests, 40% Hinglish, two annotators) replaces it.
+* Ontology 1.1 widened the vocabulary to everyday Western, winter and casual wear. Seven gold labels that had marked dupatta, kaftan, dhoti pants, corset, choli and summer as outside the vocabulary were relabelled to match the new scope; nothing else in the gold set changed.
 
 Reproduce from `engine/`:
 
@@ -84,7 +90,17 @@ npm test             # parity with Python + engine behaviour
 
 ## Deploy
 
-Import this repository on Vercel and set **Root Directory** to `web`. `vercel.json` builds a static export into `out/`; no environment variables are needed. Voice input uses the browser's speech recognition where it works (Chrome, Edge, Safari). In Brave and Firefox, or if that service fails, the site records locally and transcribes on the device with Whisper, then corrects garment words the recogniser mangles ("curty" to kurti, "pass del" to pastel) using the ontology and the tagger's vocabulary.
+Import this repository on Vercel and set **Root Directory** to `web`. `vercel.json` builds a static export into `out/` and deploys `api/understand.js` as a function. The site works with no environment variables.
+
+To switch on the language-model layer, add these in Vercel under Settings, Environment Variables, then redeploy:
+
+| variable | value |
+|---|---|
+| `LLM_API_KEY` | an API key for the provider |
+| `LLM_BASE_URL` | optional; default `https://generativelanguage.googleapis.com/v1beta/openai/` (Gemini, which has a free tier) |
+| `LLM_MODEL` | optional; default `gemini-3.8-flash` |
+
+Any OpenAI-compatible provider works: for OpenAI use `https://api.openai.com/v1/`, for Groq `https://api.groq.com/openai/v1/`, each with a model ID from the provider's current list. Voice input uses the browser's speech recognition where it works (Chrome, Edge, Safari). In Brave and Firefox, or if that service fails, the site records locally and transcribes on the device with Whisper, then corrects garment words the recogniser mangles ("curty" to kurti, "pass del" to pastel) using the ontology and the tagger's vocabulary.
 
 ## Not done yet
 
