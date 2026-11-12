@@ -47,7 +47,7 @@ for (const width of [1440, 390]) {
   });
 
   await page.goto(`${BASE}/studio/?new`);
-  await page.getByRole("button", { name: "Board", exact: true }).first().click();
+  await page.getByRole("link", { name: "Board", exact: true }).first().click();
   await page.locator("input[type=file]").first().setInputFiles(photos);
   await page.waitForTimeout(2500);
 
@@ -112,12 +112,12 @@ for (const width of [1440, 390]) {
   await page.getByText("Here is a direction.").waitFor({ timeout: 20000 });
   await page.getByRole("button", { name: "Use this direction" }).click();
   await page.getByText(/From your board/).first().waitFor({ timeout: 5000 });
-  assert.equal(await page.getByRole("button", { name: "Talk", exact: true }).first().getAttribute("aria-pressed"), "true");
+  assert.equal(await page.getByRole("link", { name: "Talk", exact: true }).first().getAttribute("aria-current"), "page");
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${SHOTS}/board-talk-${width}.png` });
 
   // the notes were saved with the board: open it again from the boards menu and they are still there
-  await page.getByRole("button", { name: "Board", exact: true }).first().click();
+  await page.getByRole("link", { name: "Board", exact: true }).first().click();
   await page.waitForTimeout(1500);
   await page.locator('button[aria-haspopup="dialog"]').first().click();
   await page.getByRole("dialog", { name: "Your boards" }).locator("li button").first().click();

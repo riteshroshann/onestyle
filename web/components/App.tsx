@@ -19,6 +19,7 @@ import { MAX_SECONDS, hasSpeech, transcribeRemote } from "../lib/voice";
 
 const Board = dynamic(() => import("./Board"), { ssr: false });
 import { SendToMaker } from "./market/SendToMaker";
+import { useRequireSignIn } from "./market/SignInGate";
 import { Mark } from "./site/Mark";
 import { Arrow, Dots, Reveal, SOFT, SPRING } from "./site/Motion";
 import { cn } from "@/lib/utils";
@@ -597,6 +598,11 @@ function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; set
   const [typed, setTyped] = useState<Partial<Record<keyof Measurements, string>>>({});
   const hi = lang === "hi";
   const [sending, setSending] = useState(false);
+  // sending needs a customer account; the gate explains why and brings them back to this sheet
+  const { requireSignIn, gate } = useRequireSignIn();
+  const send = async () => {
+    if (await requireSignIn("Your maker gets the design, the sheet and your measurements, and you talk it through in one thread.", { role: "customer", next: "/studio/sheet/" })) setSending(true);
+  };
   const garment = spec.slots.garment
     ? (hi ? hindi("GARMENT", spec.slots.garment.value) : cap(nice(garmentName(spec))))
     : (hi ? "पोशाक" : "Garment");
@@ -616,10 +622,11 @@ function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; set
             <span className="flex-1" />
             <button type="button" onClick={() => window.print()}
               className="press h-11 rounded-full px-5 text-[15px] font-medium ring-1 ring-brand-ink/15 transition-colors hover:bg-brand-ink/[.04] active:scale-[0.97]">Print or save as PDF</button>
-            <button type="button" onClick={() => setSending(true)}
+            <button type="button" onClick={send}
               className="press h-11 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white transition-colors hover:bg-[#232c3b] active:scale-[0.97]">Send to a maker</button>
           </motion.div>
           {sending && <SendToMaker spec={spec} m={m} onClose={() => setSending(false)} />}
+          {gate}
 
           <motion.article initial={{ opacity: 0, y: 24, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ ...SOFT, delay: 0.3 }}
             className="sheet mt-6 rounded-[32px] bg-white p-7 shadow-[0_0_0_1px_rgba(13,17,23,.06),0_40px_90px_-50px_rgba(13,17,23,.35)] md:p-14 print:p-0 print:shadow-none">
@@ -1027,7 +1034,7 @@ export default function App() {
   if (resuming) return (
     <>{header}<main className="hero"><motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[17px] text-brand-ink/50">Opening your last design</motion.p></main></>
   );
-  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
+  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} design={spec.slots.garment ? phrase(spec) : ""} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => go("talk")} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => go("talk")} /></>);
 

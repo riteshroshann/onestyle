@@ -159,7 +159,7 @@ assert.match(lastSent.url, /chat\/completions$/);
 assert.equal(lastSent.auth, "Bearer test-key");
 assert.equal(lastSent.body.temperature, 0.2);
 assert.equal(lastSent.body.max_tokens, 320);
-assert.deepEqual(res.body.links[0], { label: "Add measurements", href: "/studio/?view=sheet" });
+assert.deepEqual(res.body.links[0], { label: "Add measurements", href: "/studio/sheet/" });
 assert.ok(res.body.links.length <= 2);
 const sent = lastSent.body.messages;
 assert.equal(sent[0].role, "system");
@@ -222,7 +222,7 @@ await mod.default({ ...post("what colour palette suits this?"), body: { message:
 assert.equal(res.code, 200);
 assert.equal(res.body.mode, "styling");
 assert.match(res.body.answer, /gold zari/);
-assert.deepEqual(res.body.links, [{ label: "Open your design", href: "/studio/" }]);
+assert.deepEqual(res.body.links, [{ label: "Open your design", href: "/studio/talk/" }]);
 const styleSent = lastSent.body.messages;
 assert.ok(styleSent[0].content.includes(SYSTEM_MARKER) && /styling adviser/.test(styleSent[0].content));
 const styleLast = styleSent[styleSent.length - 1].content;
