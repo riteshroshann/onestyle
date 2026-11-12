@@ -17,6 +17,9 @@ TOPICS = {
     "morph": ("morph_eval", "run"),
     "colloc": ("colloc", "run"),
     "robust": ("robust", "run"),
+    "onehot": ("vectors_eval", "run_onehot"),
+    "bow": ("vectors_eval", "run_bow"),
+    "tfidf": ("vectors_eval", "run_tfidf"),
 }
 
 

@@ -1,0 +1,49 @@
+{
+ "topic": "bag-of-words dictionary",
+ "source": "catalogue titles (Myntra styles.csv)",
+ "seed": 13,
+ "split": "35533 fit / 8884 held-out titles",
+ "table": {
+  "unigram min_df=1": {
+   "vocab": 7616,
+   "oov_heldout_titles": 0.015,
+   "oov_gold_requests": 0.3174
+  },
+  "unigram min_df=2": {
+   "vocab": 4373,
+   "oov_heldout_titles": 0.0285,
+   "oov_gold_requests": 0.377
+  },
+  "unigram min_df=5": {
+   "vocab": 2066,
+   "oov_heldout_titles": 0.0499,
+   "oov_gold_requests": 0.4531
+  },
+  "unigram min_df=10": {
+   "vocab": 1279,
+   "oov_heldout_titles": 0.0717,
+   "oov_gold_requests": 0.532
+  },
+  "uni+bigram min_df=2 cap 30000, join multiword=False": {
+   "vocab": 16132,
+   "multiword_units": 4,
+   "avg_features_per_title": 9.72
+  },
+  "uni+bigram min_df=2 cap 30000, join multiword=True": {
+   "vocab": 16264,
+   "multiword_units": 456,
+   "avg_features_per_title": 9.59
+  }
+ },
+ "join_example": [
+  "a",
+  "puff",
+  "sleeve",
+  "kurti",
+  "with",
+  "v_neck",
+  "and",
+  "boat_neck"
+ ],
+ "caveat": "Held-out OOV is measured on English catalogue titles; the 82 gold requests include Hinglish that this text never contains, so their OOV rate is high by design. That is the argument for the morphology fallback and subword embeddings."
+}
