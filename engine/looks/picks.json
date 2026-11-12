@@ -1,0 +1,18 @@
+{
+ "bases": {
+  "top": 2,
+  "knit": 2,
+  "kurta": 2,
+  "trousers": 2,
+  "figure": 2,
+  "figure_bottom": 1
+ },
+ "pictures": {
+  "neckline.shape/boat": "text:0",
+  "neckline.shape/halter": "edit:1",
+  "neckline.shape/u": "text:0",
+  "neckline.depth/shallow": "edit:0",
+  "neckline.depth/plunging": "edit:0",
+  "lower.silhouette/cropped@bottom": "edit:0"
+ }
+}

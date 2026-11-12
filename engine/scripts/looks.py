@@ -33,7 +33,7 @@ PUBLIC = ROOT / "web" / "public" / "looks"
 MANIFEST = ROOT / "web" / "lib" / "looks.json"
 PHOTO = {"fabric", "print", "finish"}
 SIZE = {"line": (640, 640), "figure": (576, 960), "fabric": (640, 640), "print": (640, 640), "finish": (640, 640)}
-TEXT_SEEDS = {"line": [0, 1, 2], "figure": [0, 1, 2], "fabric": [0, 1], "print": [0, 1], "finish": [0, 1]}
+TEXT_SEEDS = {"line": [0, 1], "figure": [0, 1], "fabric": [0, 1], "print": [0, 1], "finish": [0, 1]}
 EDIT_SEEDS = [0, 1]
 
 
@@ -51,9 +51,11 @@ def embed_all(prompts: list[str]) -> None:
     if not todo:
         return
     pipe = Flux2KleinPipeline.from_pretrained(MODEL, transformer=None, vae=None, torch_dtype=torch.bfloat16)
-    # the encoder is 8 GB in bf16; stream it through the GPU a few layers at a time (unpinned: Windows will not pin it)
+    # the encoder is 8 GB in bf16; stream it through the GPU one layer at a time (unpinned: Windows will not pin it).
+    # Block-level grouping kept whole blocks resident and spilled past 6 GB (9 s a prompt); leaf level peaks at
+    # 2.6 GB and, in batches of 8, takes 0.6 s a prompt.
     apply_group_offloading(pipe.text_encoder, onload_device=torch.device("cuda"), offload_device=torch.device("cpu"),
-                           offload_type="block_level", num_blocks_per_group=6, use_stream=False)
+                           offload_type="leaf_level", use_stream=False)
     t0 = time.time()
     with torch.inference_mode():
         for k in range(0, len(todo), 8):
@@ -115,23 +117,41 @@ def cmd_bases(args):
         print(f"base {name}: {dt:.1f} s per image", flush=True)
 
 
-def variants(e: dict) -> list[tuple[str, int, Path]]:
-    out = [("text", s, RAW / "text" / f"{slug(e['key'])}_{s}.png") for s in TEXT_SEEDS[e["kind"]]]
+def variants(e: dict, text_too: bool = False) -> list[tuple[str, int, Path]]:
+    """Details with a base are edits of it, so the set stays consistent; everything else is drawn from text.
+    An edit cannot make a large change of shape (a boat neck from a round one), so review can ask for text
+    drawings of an edited option as well; those count as candidates whenever they exist."""
+    text = [("text", s, RAW / "text" / f"{slug(e['key'])}_{s}.png") for s in TEXT_SEEDS[e["kind"]]]
     if e.get("base"):
-        out += [("edit", s, RAW / "edit" / f"{slug(e['key'])}_{s}.png") for s in EDIT_SEEDS]
-    return out
+        edit = [("edit", s, RAW / "edit" / f"{slug(e['key'])}_{s}.png") for s in EDIT_SEEDS]
+        return edit + [t for t in text if text_too or t[2].exists()]
+    return text
+
+
+# what the assistant asks about, drawn first so the conversation gets its pictures soonest
+ASKED = {"garment": ["kurti", "anarkali", "lehenga", "saree blouse", "dress", "co-ord set", "shirt", "trousers"],
+         "fabric": ["cotton", "georgette", "silk", "chanderi", "rayon", "linen", "terry", "fleece", "wool", "denim", "polyester", "velvet"]}
+
+
+def first(e: dict) -> int:
+    if e.get("base"):
+        return 0
+    return 1 if e["value"] in ASKED.get(e["slot"], []) else 2
 
 
 def cmd_make(args):
     from PIL import Image
     chosen = picks()["bases"]
     E = [e for e in entries() if not args.only or e["group"] in args.only or e["key"] in args.only]
+    E.sort(key=first)
     embed_all([e["prompt"] for e in E] + [e["edit"] for e in E if e.get("edit")])
     pipe = load_pipe()
     times = []
     for i, e in enumerate(E):
-        v = variants(e)
+        v = variants(e, text_too=bool(args.text))
         size = SIZE[e["kind"]]
+        if args.seeds is not None:               # draw some seeds now, more later only where review asks for them
+            v = [(m, s, p) for m, s, p in v if s in args.seeds]
         text = [(s, p) for m, s, p in v if m == "text"]
         dt = draw(pipe, e["prompt"], size, [s for s, _ in text], [p for _, p in text])
         if dt: times.append(dt)
@@ -160,18 +180,22 @@ def cmd_rank(args):
     groups: dict[str, list[dict]] = {}
     for e in E:
         groups.setdefault(e["group"], []).append(e)
+
+    def unit(out):    # newer transformers return an output object whose pooler_output is the projected feature
+        return torch.nn.functional.normalize(getattr(out, "pooler_output", out), dim=-1)
+
     ranking = {}
     with torch.inference_mode():
         for g, items in groups.items():
             t = proc(text=[describe(e) for e in items], return_tensors="pt", padding=True, truncation=True)
-            T = torch.nn.functional.normalize(model.get_text_features(**t), dim=-1)
+            T = unit(model.get_text_features(**t))
             for j, e in enumerate(items):
                 rows = []
                 for mode, seed, p in variants(e):
                     if not p.exists():
                         continue
                     img = Image.open(p).convert("RGB")
-                    I = torch.nn.functional.normalize(model.get_image_features(**proc(images=img, return_tensors="pt")), dim=-1)
+                    I = unit(model.get_image_features(**proc(images=img, return_tensors="pt")))
                     prob = (100 * I @ T.T).softmax(-1)[0]
                     score = float(prob[j])
                     if e["kind"] not in PHOTO:          # line art must stay clear of the edges and mostly white
@@ -285,5 +309,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["bases", "make", "rank", "sheets", "publish"])
     ap.add_argument("--only", nargs="*", help="groups (e.g. neckline.shape, bodice.fit@knit) or keys")
+    ap.add_argument("--seeds", nargs="*", type=int, help="draw only these seeds (make)")
+    ap.add_argument("--text", action="store_true", help="also draw edited options from text (make, with --only)")
     a = ap.parse_args()
     {"bases": cmd_bases, "make": cmd_make, "rank": cmd_rank, "sheets": cmd_sheets, "publish": cmd_publish}[a.cmd](a)

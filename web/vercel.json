@@ -7,6 +7,14 @@
   "functions": {
     "api/understand.js": {
       "maxDuration": 15
+    },
+    "api/assistant.js": {
+      "maxDuration": 20
+    }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "visual-picker": false
     }
   }
 }

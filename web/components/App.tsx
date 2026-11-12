@@ -11,13 +11,13 @@ import { isCommonWord, loadTagger, tag } from "../lib/models";
 import { understand } from "../lib/understand";
 
 const Board = dynamic(() => import("./Board"), { ssr: false });
-import { Home } from "./Home";
-import { Orb } from "./Orb";
+import { Pleats } from "./Pleats";
+import { SendToMaker } from "./market/SendToMaker";
 
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
   | { role: "bot"; text: string; questions: Question[]; note?: string };
-type View = "home" | "talk" | "board" | "sheet" | "shop";
+type View = "talk" | "board" | "sheet" | "shop";
 
 const PLACEHOLDER = "A pastel blue kurti for my farewell";
 const SUGGESTIONS = [
@@ -378,17 +378,19 @@ function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: M
     return v && src ? [{ slot, part, value: v, src }] : [];
   });
   const [hi, setHi] = useState(false);
+  const [sending, setSending] = useState(false);
   const field = (k: keyof Measurements, label: string) => (
     <label>{label}<input inputMode="decimal" value={m[k] ?? ""} onChange={(e) => setM({ ...m, [k]: e.target.value ? parseFloat(e.target.value) : undefined })} /></label>
   );
   return (
     <main className="page">
       <h2 className="noprint">Tailor sheet</h2>
-      <p className="lede noprint">What your tailor cuts from. Each instruction shows where it came from, so the tailor can tell your words from a suggestion. Ease is a starting allowance; your tailor will confirm it at the fitting.</p>
       <div className="actions noprint">
         <button className="btn quiet" onClick={() => setHi(!hi)}>{hi ? "Show in English" : "हिंदी में दिखाएँ"}</button>
-        <button className="btn" onClick={() => window.print()}>Print or save as PDF</button>
+        <button className="btn quiet" onClick={() => window.print()}>Print or save as PDF</button>
+        {lines.length > 0 && <button className="btn" onClick={() => setSending(true)}>Send to a maker</button>}
       </div>
+      {sending && <SendToMaker spec={spec} m={m} onClose={() => setSending(false)} />}
       <div className="sheet">
         <h3 className={hi ? "hi" : ""}>{spec.slots.garment ? (hi ? hindi("GARMENT", spec.slots.garment.value) : nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1)) : (hi ? "पोशाक" : "Garment")}</h3>
         <div className={`meta ${hi ? "hi" : ""}`}>{hi ? `ड्राफ़्ट ${spec.version}, ${new Date().toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric" })}` : `Draft ${spec.version}, ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. ${phrase(spec)}.`}</div>
@@ -456,7 +458,7 @@ function ShopView({ spec, onWearer }: { spec: Spec; onWearer: (w: string) => voi
   );
 }
 
-function Finale({ spec, onSheet, onShop }: { spec: Spec; onSheet: () => void; onShop: () => void }) {
+function Finale({ spec, onSheet, onShop, backBtn }: { spec: Spec; onSheet: () => void; onShop: () => void; backBtn: React.ReactNode }) {
   const L = links(spec);
   return (
     <div className="finale">
@@ -474,6 +476,7 @@ function Finale({ spec, onSheet, onShop }: { spec: Spec; onSheet: () => void; on
         ))}
       </div>
       <div className="next">
+        {backBtn}
         <button className="primary" onClick={onSheet}>Open the tailor sheet</button>
         <button onClick={onShop}>All ideas and shopping</button>
       </div>
@@ -485,10 +488,22 @@ function Finale({ spec, onSheet, onShop }: { spec: Spec; onSheet: () => void; on
 export default function App() {
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
-  const [view, setView] = useState<View>(() => (msgs.length ? "talk" : "home"));
+  const [view, setView] = useState<View>("talk");
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
   const [thinking, setThinking] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  // every step can be taken back: the design and the conversation as they were before it
+  const [past, setPast] = useState<{ spec: Spec; msgs: Msg[] }[]>(() => load("bespoke.past", []));
+  const now = useRef({ spec, msgs });
+  now.current = { spec, msgs };
+  const remember = useCallback(() => setPast((p) => [...p.slice(-29), now.current]), []);
+  const back = () => {
+    const prev = past[past.length - 1];
+    if (!prev) return;
+    setSpec(prev.spec); setMsgs(prev.msgs); setPast(past.slice(0, -1));
+    if (!prev.msgs.length) setView("talk");
+  };
+  useEffect(() => { save("bespoke.past", past); }, [past]);
 
   useEffect(() => { loadTagger(() => {}); }, []);
   useEffect(() => { save("bespoke.spec", spec); save("bespoke.msgs", msgs); save("bespoke.meas", m); }, [spec, msgs, m]);
@@ -503,6 +518,7 @@ export default function App() {
   }, []);
 
   const send = useCallback(async (text: string) => {
+    remember();
     setThinking(true);
     // the language model (when configured) and the on-device engine run together; the device answers alone if the model cannot
     const second = understand(text, spec);
@@ -515,11 +531,12 @@ export default function App() {
     setSpec(next);
     reply(next, all);
     setThinking(false);
-  }, [spec, reply]);
+  }, [spec, reply, remember]);
 
   const voice = useVoice(useCallback((t: string) => { void send(t); }, [send]));
 
   const pick = (q: Question, v: string) => {
+    remember();
     const ups = answer(q.slot, v);
     const next = apply(spec, ups);
     setSpec(next);
@@ -529,31 +546,27 @@ export default function App() {
   const edit = (slot: string, value: string, note?: string) => {
     const ups: Update[] = [{ op: LIST_SLOTS.includes(slot) ? "replace" : "set", slot, value: { value, p: 1, src: "edit", evidence: "edited" } }];
     if (note) ups.push({ op: "note", slot: "notes", value: { value: note, p: 1, src: "edit", evidence: "edited" } });
+    remember();
     setSpec(apply(spec, ups));
   };
   const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
-  const fromBoard = (ups: Update[], note: string) => { const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
-  const reset = () => { setSpec(emptySpec()); setMsgs([]); setView("talk"); };
+  const fromBoard = (ups: Update[], note: string) => { remember(); const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
+  const reset = () => { if (msgs.length) remember(); setSpec(emptySpec()); setMsgs([]); setView("talk"); };
 
   const started = msgs.length > 0;
+  const backBtn = past.length > 0 && !thinking
+    ? <button className="back" onClick={back} aria-label="Go back one step"><span aria-hidden>‹</span> Back</button> : null;
   const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
-  const NAV: [View, string][] = [["home", "Home"], ["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 4);
-    on(); window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
-  }, [view]);
+  const NAV: [View, string][] = [["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
   const header = useMemo(() => (
-    <header className={`top ${scrolled ? "scrolled" : ""}`}><div className="inner">
-      <button className="mark" onClick={() => setView("home")} aria-label="Bespoke home">Bespoke</button>
+    <header className="top"><div className="inner">
+      <a className="mark" href="/" aria-label="Bespoke home">Bespoke</a>
       <nav className="seg" aria-label="Sections">{NAV.map(([v, l]) => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{l}</button>)}</nav>
       <div className="right">{started && <button className="ghost" onClick={reset}>New design</button>}</div>
     </div></header>
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [view, started, scrolled]);
+  ), [view, started]);
 
-  if (view === "home") return (<>{header}<Home onStart={() => setView("talk")} /></>);
   if (view === "board") return (<>{header}<Board onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} /></>);
@@ -565,8 +578,7 @@ export default function App() {
         <div className="row fade">
           <h1>Describe it.<em>Wear it.</em></h1>
           <div className="side">
-            <Orb size={170} state={state} level={voice.level} />
-            <p className="lede">Tell us the garment you have in mind, by typing or speaking, in English or Hinglish. Add pictures you love. You get a design your tailor can cut from, and where to buy something close.</p>
+            <Pleats size={170} state={state} level={voice.level} />
           </div>
         </div>
         <div className="brief">
@@ -599,12 +611,13 @@ export default function App() {
                       : <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? nice(o)}</button>)}</div>}
                   </div>
                 ))}
-                {i === msgs.length - 1 && spec.slots.garment && (questions(spec).length === 0
-                  ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} />
+                {i === msgs.length - 1 && (spec.slots.garment && questions(spec).length === 0
+                  ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} backBtn={backBtn} />
                   : (
                     <div className="next">
-                      <button onClick={() => setView("board")}>Add pictures</button>
-                      <button onClick={() => setView("shop")}>Ideas and shopping</button>
+                      {backBtn}
+                      {spec.slots.garment && <button onClick={() => setView("board")}>Add pictures</button>}
+                      {spec.slots.garment && <button onClick={() => setView("shop")}>Ideas and shopping</button>}
                     </div>
                   ))}
               </div>
@@ -614,7 +627,7 @@ export default function App() {
         </section>
         <Order spec={spec} onEdit={edit} />
       </div>
-      <div className="dock"><div className="wrap">{voice.live && <Orb size={52} state="listening" level={voice.level} />}<div className="grow"><Line onSend={send} voice={voice} /></div></div></div>
+      <div className="dock"><div className="wrap">{voice.live && <Pleats size={52} state="listening" level={voice.level} />}<div className="grow"><Line onSend={send} voice={voice} /></div></div></div>
     </>
   );
 }

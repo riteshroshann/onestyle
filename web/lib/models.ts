@@ -130,8 +130,27 @@ export async function toMono16k(blob: Blob): Promise<Float32Array> {
 
 // ------------------------------------------------------------------ vision
 let clip: Promise<any> | null = null;
-export function loadVision() {
-  if (!clip) clip = hf().then((t) => t.pipeline("zero-shot-image-classification", "Xenova/clip-vit-base-patch32", { dtype: "q8" }));
+let clipReady = false;
+const loadListeners = new Set<(fraction: number) => void>();
+
+/** Load CLIP once. Every caller's onProgress hears the download, 0 to 1, weighted by file size. */
+export function loadVision(onProgress?: (fraction: number) => void) {
+  if (onProgress && !clipReady) loadListeners.add(onProgress);
+  if (!clip) {
+    const files = new Map<string, [number, number]>();
+    const progress_callback = (e: any) => {
+      if (e.status !== "progress" || !e.total) return;
+      files.set(e.file, [e.loaded, e.total]);
+      let loaded = 0, total = 0;
+      for (const [l, t] of files.values()) { loaded += l; total += t; }
+      loadListeners.forEach((cb) => cb(loaded / total));
+    };
+    clip = hf()
+      .then((t) => t.pipeline("zero-shot-image-classification", "Xenova/clip-vit-base-patch32", { dtype: "q8", progress_callback }))
+      .then((pipe) => { clipReady = true; return pipe; })
+      .catch((e) => { clip = null; throw e; }) // a failed download must not poison the next attempt
+      .finally(() => loadListeners.clear());
+  }
   return clip;
 }
 

@@ -1,0 +1,1532 @@
+{
+ "garment/kurti": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0253,
+   "top": "dress"
+  }
+ ],
+ "garment/anarkali": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0123,
+   "top": "dress"
+  }
+ ],
+ "garment/salwar suit": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.2422,
+   "top": "kurta set"
+  }
+ ],
+ "garment/lehenga": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0099,
+   "top": "dress"
+  }
+ ],
+ "garment/saree blouse": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0014,
+   "top": "t-shirt"
+  }
+ ],
+ "garment/sherwani": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.6717,
+   "top": "sherwani"
+  }
+ ],
+ "garment/nehru jacket": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9992,
+   "top": "nehru jacket"
+  }
+ ],
+ "garment/dress": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9513,
+   "top": "dress"
+  }
+ ],
+ "garment/gown": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.3958,
+   "top": "dress"
+  }
+ ],
+ "garment/top": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0174,
+   "top": "t-shirt"
+  }
+ ],
+ "garment/shirt": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.8552,
+   "top": "shirt"
+  }
+ ],
+ "garment/skirt": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9907,
+   "top": "skirt"
+  }
+ ],
+ "garment/trousers": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.5602,
+   "top": "trousers"
+  }
+ ],
+ "garment/palazzo": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.2069,
+   "top": "joggers"
+  }
+ ],
+ "garment/churidar": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0006,
+   "top": "joggers"
+  }
+ ],
+ "garment/sharara": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9177,
+   "top": "sharara"
+  }
+ ],
+ "garment/jumpsuit": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.6092,
+   "top": "jumpsuit"
+  }
+ ],
+ "garment/co-ord set": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.45,
+   "top": "co-ord set"
+  }
+ ],
+ "garment/jacket": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1436,
+   "top": "tracksuit"
+  }
+ ],
+ "garment/sweatshirt": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.6889,
+   "top": "sweatshirt"
+  }
+ ],
+ "garment/hoodie": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9989,
+   "top": "hoodie"
+  }
+ ],
+ "garment/sweater": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.3966,
+   "top": "sweatshirt"
+  }
+ ],
+ "garment/cardigan": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9772,
+   "top": "cardigan"
+  }
+ ],
+ "garment/t-shirt": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9826,
+   "top": "t-shirt"
+  }
+ ],
+ "garment/polo": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.986,
+   "top": "polo"
+  }
+ ],
+ "garment/tank top": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9904,
+   "top": "tank top"
+  }
+ ],
+ "garment/crop top": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0523,
+   "top": "t-shirt"
+  }
+ ],
+ "garment/corset": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9995,
+   "top": "corset"
+  }
+ ],
+ "garment/bodysuit": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9841,
+   "top": "bodysuit"
+  }
+ ],
+ "garment/blazer": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7683,
+   "top": "blazer"
+  }
+ ],
+ "garment/coat": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.8866,
+   "top": "coat"
+  }
+ ],
+ "garment/puffer jacket": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9866,
+   "top": "puffer jacket"
+  }
+ ],
+ "garment/shrug": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7582,
+   "top": "shrug"
+  }
+ ],
+ "garment/kaftan": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.599,
+   "top": "kaftan"
+  }
+ ],
+ "garment/cape": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0016,
+   "top": "tank top"
+  }
+ ],
+ "garment/jeans": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7313,
+   "top": "jeans"
+  }
+ ],
+ "garment/joggers": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9846,
+   "top": "joggers"
+  }
+ ],
+ "garment/cargo pants": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.8579,
+   "top": "cargo pants"
+  }
+ ],
+ "garment/shorts": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9947,
+   "top": "shorts"
+  }
+ ],
+ "garment/leggings": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9896,
+   "top": "leggings"
+  }
+ ],
+ "garment/pyjama set": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9063,
+   "top": "pyjama set"
+  }
+ ],
+ "garment/tracksuit": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9961,
+   "top": "tracksuit"
+  }
+ ],
+ "garment/dungarees": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9985,
+   "top": "dungarees"
+  }
+ ],
+ "garment/dupatta": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9082,
+   "top": "dupatta"
+  }
+ ],
+ "garment/kurta set": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9168,
+   "top": "kurta set"
+  }
+ ],
+ "garment/dhoti pants": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1985,
+   "top": "joggers"
+  }
+ ],
+ "garment/saree": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.3614,
+   "top": "dhoti pants"
+  }
+ ],
+ "neckline.shape/v": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.019,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.012,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/deep v": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.1453,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.079,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/round": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0781,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0658,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/boat": [
+  {
+   "mode": "text",
+   "seed": 1,
+   "score": 0.0002,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0001,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0001,
+   "top": "crew"
+  },
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0001,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/square": [
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.035,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0316,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/sweetheart": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0023,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0019,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/halter": [
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.3286,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.2399,
+   "top": "crew"
+  },
+  {
+   "mode": "text",
+   "seed": 1,
+   "score": 0.0113,
+   "top": "crew"
+  },
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.008,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/high": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0129,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0094,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/mandarin": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0073,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0031,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/keyhole": [
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0068,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0063,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/off-shoulder": [
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0303,
+   "top": "halter"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.022,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/u": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0067,
+   "top": "crew"
+  },
+  {
+   "mode": "text",
+   "seed": 1,
+   "score": 0.0043,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0012,
+   "top": "crew"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.0007,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/collar": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.3634,
+   "top": "collar"
+  }
+ ],
+ "neckline.shape/cowl": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.2689,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/potli": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0935,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/crew": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.9898,
+   "top": "crew"
+  }
+ ],
+ "neckline.shape/hooded": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.5735,
+   "top": "hooded"
+  }
+ ],
+ "neckline.shape/turtle": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.3444,
+   "top": "crew"
+  }
+ ],
+ "neckline.depth/shallow": [
+  {
+   "mode": "text",
+   "seed": 1,
+   "score": 0.5401,
+   "top": "shallow"
+  },
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.527,
+   "top": "shallow"
+  },
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.4835,
+   "top": "shallow"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.4269,
+   "top": "shallow"
+  }
+ ],
+ "neckline.depth/moderate": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0943,
+   "top": "shallow"
+  }
+ ],
+ "neckline.depth/deep": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.2572,
+   "top": "shallow"
+  }
+ ],
+ "neckline.depth/plunging": [
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.3896,
+   "top": "plunging"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.3598,
+   "top": "plunging"
+  },
+  {
+   "mode": "text",
+   "seed": 1,
+   "score": 0.2939,
+   "top": "shallow"
+  },
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.2643,
+   "top": "shallow"
+  }
+ ],
+ "sleeve.style/puff": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.4978,
+   "top": "puff"
+  }
+ ],
+ "sleeve.style/bell": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.027,
+   "top": "raglan"
+  }
+ ],
+ "sleeve.style/bishop": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0193,
+   "top": "straight"
+  }
+ ],
+ "sleeve.style/flutter": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0271,
+   "top": "puff"
+  }
+ ],
+ "sleeve.style/cold shoulder": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0539,
+   "top": "straight"
+  }
+ ],
+ "sleeve.style/kimono": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0006,
+   "top": "straight"
+  }
+ ],
+ "sleeve.style/raglan": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.7405,
+   "top": "raglan"
+  }
+ ],
+ "sleeve.style/straight": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.4584,
+   "top": "straight"
+  }
+ ],
+ "sleeve.style/sheer": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0736,
+   "top": "puff"
+  }
+ ],
+ "sleeve.length/sleeveless": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.4073,
+   "top": "short"
+  }
+ ],
+ "sleeve.length/cap": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0314,
+   "top": "short"
+  }
+ ],
+ "sleeve.length/short": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.8006,
+   "top": "short"
+  }
+ ],
+ "sleeve.length/elbow": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0144,
+   "top": "short"
+  }
+ ],
+ "sleeve.length/three-quarter": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0478,
+   "top": "short"
+  }
+ ],
+ "sleeve.length/full": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.1432,
+   "top": "short"
+  }
+ ],
+ "bodice.fit/fitted": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0821,
+   "top": "relaxed"
+  }
+ ],
+ "bodice.fit/semi-fitted": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0761,
+   "top": "relaxed"
+  }
+ ],
+ "bodice.fit/relaxed": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.9072,
+   "top": "relaxed"
+  }
+ ],
+ "bodice.fit/loose": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.3752,
+   "top": "relaxed"
+  }
+ ],
+ "bodice.fit/fitted@knit": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.1454,
+   "top": "loose"
+  }
+ ],
+ "bodice.fit/semi-fitted@knit": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.1758,
+   "top": "loose"
+  }
+ ],
+ "bodice.fit/relaxed@knit": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.2143,
+   "top": "loose"
+  }
+ ],
+ "bodice.fit/loose@knit": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.5908,
+   "top": "loose"
+  }
+ ],
+ "lower.silhouette/a-line": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.2296,
+   "top": "straight"
+  }
+ ],
+ "lower.silhouette/straight": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.3306,
+   "top": "bodycon"
+  }
+ ],
+ "lower.silhouette/flared": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0444,
+   "top": "a-line"
+  }
+ ],
+ "lower.silhouette/anarkali": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0029,
+   "top": "empire"
+  }
+ ],
+ "lower.silhouette/angrakha": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0035,
+   "top": "empire"
+  }
+ ],
+ "lower.silhouette/bodycon": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.992,
+   "top": "bodycon"
+  }
+ ],
+ "lower.silhouette/fit and flare": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1055,
+   "top": "bodycon"
+  }
+ ],
+ "lower.silhouette/mermaid": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0077,
+   "top": "fit and flare"
+  }
+ ],
+ "lower.silhouette/empire": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0508,
+   "top": "bodycon"
+  }
+ ],
+ "lower.silhouette/peplum": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7377,
+   "top": "peplum"
+  }
+ ],
+ "lower.silhouette/straight@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0845,
+   "top": "wide-leg"
+  }
+ ],
+ "lower.silhouette/wide-leg@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.8724,
+   "top": "wide-leg"
+  }
+ ],
+ "lower.silhouette/jogger@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.4429,
+   "top": "jogger"
+  }
+ ],
+ "lower.silhouette/tapered@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0832,
+   "top": "wide-leg"
+  }
+ ],
+ "lower.silhouette/cropped@bottom": [
+  {
+   "mode": "edit",
+   "seed": 1,
+   "score": 0.2799,
+   "top": "wide-leg"
+  },
+  {
+   "mode": "text",
+   "seed": 1,
+   "score": 0.2186,
+   "top": "wide-leg"
+  },
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.2001,
+   "top": "wide-leg"
+  },
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0755,
+   "top": "wide-leg"
+  }
+ ],
+ "garment.length/crop": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.8098,
+   "top": "crop"
+  }
+ ],
+ "garment.length/hip": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0747,
+   "top": "knee"
+  }
+ ],
+ "garment.length/short": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0,
+   "top": "knee"
+  }
+ ],
+ "garment.length/knee": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.4469,
+   "top": "knee"
+  }
+ ],
+ "garment.length/midi": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.2984,
+   "top": "knee"
+  }
+ ],
+ "garment.length/ankle": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.1632,
+   "top": "knee"
+  }
+ ],
+ "garment.length/floor": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0368,
+   "top": "knee"
+  }
+ ],
+ "garment.length/short@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.4378,
+   "top": "knee"
+  }
+ ],
+ "garment.length/knee@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.5085,
+   "top": "knee"
+  }
+ ],
+ "garment.length/midi@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.0956,
+   "top": "ankle"
+  }
+ ],
+ "garment.length/ankle@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.6105,
+   "top": "ankle"
+  }
+ ],
+ "garment.length/floor@bottom": [
+  {
+   "mode": "edit",
+   "seed": 0,
+   "score": 0.3518,
+   "top": "ankle"
+  }
+ ],
+ "fabric/cotton": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1013,
+   "top": "silk"
+  }
+ ],
+ "fabric/mulmul": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1406,
+   "top": "silk"
+  }
+ ],
+ "fabric/linen": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.2272,
+   "top": "mulmul"
+  }
+ ],
+ "fabric/silk": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.8393,
+   "top": "silk"
+  }
+ ],
+ "fabric/banarasi": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9999,
+   "top": "banarasi"
+  }
+ ],
+ "fabric/chanderi": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9969,
+   "top": "chanderi"
+  }
+ ],
+ "fabric/georgette": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0655,
+   "top": "silk"
+  }
+ ],
+ "fabric/chiffon": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1294,
+   "top": "silk"
+  }
+ ],
+ "fabric/organza": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0219,
+   "top": "silk"
+  }
+ ],
+ "fabric/crepe": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0031,
+   "top": "cotton"
+  }
+ ],
+ "fabric/rayon": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.174,
+   "top": "silk"
+  }
+ ],
+ "fabric/satin": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.003,
+   "top": "silk"
+  }
+ ],
+ "fabric/velvet": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.002,
+   "top": "fleece"
+  }
+ ],
+ "fabric/net": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.6324,
+   "top": "net"
+  }
+ ],
+ "fabric/denim": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.4319,
+   "top": "denim"
+  }
+ ],
+ "fabric/khadi": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0394,
+   "top": "cotton"
+  }
+ ],
+ "fabric/wool": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1297,
+   "top": "fleece"
+  }
+ ],
+ "fabric/lycra": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0009,
+   "top": "silk"
+  }
+ ],
+ "fabric/fleece": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7536,
+   "top": "fleece"
+  }
+ ],
+ "fabric/terry": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.8684,
+   "top": "terry"
+  }
+ ],
+ "fabric/cashmere": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.8939,
+   "top": "cashmere"
+  }
+ ],
+ "fabric/corduroy": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9664,
+   "top": "corduroy"
+  }
+ ],
+ "fabric/flannel": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.1081,
+   "top": "fleece"
+  }
+ ],
+ "fabric/tweed": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.5896,
+   "top": "tweed"
+  }
+ ],
+ "fabric/leather": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.6674,
+   "top": "leather"
+  }
+ ],
+ "fabric/faux fur": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7168,
+   "top": "faux fur"
+  }
+ ],
+ "fabric/polyester": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0481,
+   "top": "silk"
+  }
+ ],
+ "pattern/solid": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.931,
+   "top": "solid"
+  }
+ ],
+ "pattern/floral": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.653,
+   "top": "floral"
+  }
+ ],
+ "pattern/printed": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0771,
+   "top": "solid"
+  }
+ ],
+ "pattern/striped": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.5037,
+   "top": "striped"
+  }
+ ],
+ "pattern/checked": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9999,
+   "top": "checked"
+  }
+ ],
+ "pattern/polka": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.932,
+   "top": "polka"
+  }
+ ],
+ "pattern/paisley": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9958,
+   "top": "paisley"
+  }
+ ],
+ "pattern/bandhani": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.293,
+   "top": "bandhani"
+  }
+ ],
+ "pattern/leheriya": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.821,
+   "top": "leheriya"
+  }
+ ],
+ "pattern/block print": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9056,
+   "top": "block print"
+  }
+ ],
+ "pattern/ikat": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.894,
+   "top": "ikat"
+  }
+ ],
+ "pattern/geometric": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.8249,
+   "top": "geometric"
+  }
+ ],
+ "pattern/ombre": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.998,
+   "top": "ombre"
+  }
+ ],
+ "embellishment/embroidery": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7528,
+   "top": "embroidery"
+  }
+ ],
+ "embellishment/zari": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.4915,
+   "top": "embroidery"
+  }
+ ],
+ "embellishment/gota patti": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0156,
+   "top": "zari"
+  }
+ ],
+ "embellishment/mirror work": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 1.0,
+   "top": "mirror work"
+  }
+ ],
+ "embellishment/chikankari": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.372,
+   "top": "embroidery"
+  }
+ ],
+ "embellishment/sequins": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.895,
+   "top": "sequins"
+  }
+ ],
+ "embellishment/pearl work": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.994,
+   "top": "pearl work"
+  }
+ ],
+ "embellishment/zardozi": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.7314,
+   "top": "zardozi"
+  }
+ ],
+ "embellishment/thread work": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9632,
+   "top": "thread work"
+  }
+ ],
+ "embellishment/lace": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.9954,
+   "top": "lace"
+  }
+ ],
+ "embellishment/tassels": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.983,
+   "top": "tassels"
+  }
+ ],
+ "embellishment/beadwork": [
+  {
+   "mode": "text",
+   "seed": 0,
+   "score": 0.0002,
+   "top": "pearl work"
+  }
+ ]
+}

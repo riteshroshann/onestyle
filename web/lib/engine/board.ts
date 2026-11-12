@@ -83,11 +83,17 @@ async function crop(dataURL: string, box: [number, number, number, number]): Pro
   return c.toDataURL("image/jpeg", 0.9);
 }
 
+/** What the reader is looking at right now, for the interface to show as it happens. */
+export type BoardEvent =
+  | { type: "picture"; n: number; box?: [number, number, number, number] }
+  | { type: "slot"; n: number; slot: string; value: string; p: number; circled: boolean }
+  | { type: "depth"; n: number; inches: number };
+
 export interface BoardResult { updates: Update[]; perImage: Record<number, Record<string, [string, number]>>; depth: Record<number, number>; notes: { text: string; target: string }[] }
 
 /** Score every element, pool per slot with salience weights and polarity, and turn note comparisons into intervals. */
 export async function analyseBoard(board: Board, score: (img: string, prompts: string[]) => Promise<number[]>,
-  tagText: (t: string) => Promise<{ tokens: string[]; spans: any[] }>, progress: (s: string) => void): Promise<BoardResult> {
+  tagText: (t: string) => Promise<{ tokens: string[]; spans: any[] }>, progress: (s: string) => void, emit: (e: BoardEvent) => void = () => {}): Promise<BoardResult> {
   const updates: Update[] = [];
   const weight = new Map<number, number>();
   const polarity = new Map<number, Map<string, number>>();
@@ -117,6 +123,7 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
   const dists: Record<string, { n: number; d: number[] }[]> = {};
   for (const im of board.images) {
     perImage[im.n] = {};
+    emit({ type: "picture", n: im.n });
     for (const slot of WHOLE_SLOTS) {
       const prompts = IMAGE_SLOTS[slot];
       progress(`Reading picture ${im.n}`);
@@ -124,15 +131,19 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
       (dists[slot] ??= []).push({ n: im.n, d });
       const j = d.indexOf(Math.max(...d));
       perImage[im.n][slot] = [Object.keys(prompts)[j], d[j]];
+      emit({ type: "slot", n: im.n, slot, value: Object.keys(prompts)[j], p: d[j], circled: false });
     }
   }
   // circled regions: part-level slots on the crop, full weight
   for (const r of board.regions) {
     const c = await crop(r.image.dataURL, r.box);
+    emit({ type: "picture", n: r.image.n, box: r.box });
     for (const slot of REGION_SLOTS) {
       progress(`Reading the circle on #${r.image.n}`);
       const d = await score(c, Object.values(IMAGE_SLOTS[slot]));
       (dists[slot] ??= []).push({ n: r.image.n, d: d.map((x) => x) });
+      const j = d.indexOf(Math.max(...d));
+      emit({ type: "slot", n: r.image.n, slot, value: Object.keys(IMAGE_SLOTS[slot])[j], p: d[j], circled: true });
       weight.set(r.image.n, 1);
     }
   }
@@ -170,6 +181,7 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
     const d = await score(im.dataURL, DEPTH_PROMPTS.map(([p]) => p));
     const z = d.reduce((a, b) => a + b, 0) || 1;
     depth[im.n] = Math.round((DEPTH_PROMPTS.reduce((s, [, v], j) => s + v * d[j], 0) / z) * 4) / 4;
+    emit({ type: "depth", n: im.n, inches: depth[im.n] });
   }
   return { updates, perImage, depth, notes: board.notes.map((n) => ({ text: n.text, target: label(n.target) })) };
 }

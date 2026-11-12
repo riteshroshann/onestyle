@@ -30,3 +30,19 @@ Whisper (speech to text), MIT License, OpenAI; ONNX conversion by Xenova.
 CLIP ViT-B/32 (moodboard pictures), MIT License, OpenAI; ONNX conversion by Xenova.
 Next.js and React, MIT License.
 Bodoni Moda and Jost typefaces, SIL Open Font License 1.1.
+
+
+Photographs
+Public domain (CC0), found through Openverse (openverse.org) and hosted by rawpixel.
+Fashion photographs: Library of Congress, Prints and Photographs Division.
+Other photographs: The J. Paul Getty Museum; The Art Institute of Chicago.
+
+Illustrations
+Open Peeps by Pablo Stanley (openpeeps.com). CC0.
+
+Interface components
+Skiper UI (skiper-ui.com) by Gurvinder Singh: components 31, 39, 52 and 66. Free licence, attribution required.
+Halo Dropzone from Cult UI (cult-ui.com). MIT License.
+Dot Matrix loader (dotmatrix). MIT License.
+metal-fx by Jakub Antalik, built on Paper Shaders liquidMetal. Apache-2.0.
+Motion, GSAP and Lenis. See each project for its licence.

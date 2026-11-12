@@ -61,8 +61,8 @@ def page(browser, site, request):
 
 def open_home(page, wait_tagger=False):
     """Open the site and go to Talk, where the brief is."""
-    page.goto(page.site + "/")
-    page.wait_for_selector(".home-hero h1, .hero h1")
+    page.goto(page.site + "/studio/")
+    page.wait_for_selector(".hero h1")
     if page.locator(".home-hero").count():
         page.click('.seg >> text="Talk"')
     page.wait_for_selector(".hero h1")
