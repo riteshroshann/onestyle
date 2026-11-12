@@ -35,6 +35,7 @@ const ASKED = [
   [/measur|naap|bust|waist|hip|size/i, "measuring"],
   [/maker|tailor|darzi|designer|request|send/i, "makers"],
   [/shop|buy|price|ready.?made/i, "limits"],
+  [/\b(app|about|bespoke|start)\b/i, "describing"],
   [/b(app|about|bespoke|start)b/i, "describing"],
 ];
 
