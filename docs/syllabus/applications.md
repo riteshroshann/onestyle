@@ -6,6 +6,7 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 |---|---|---|---|---|
 | Syntax (attachment of values to garment parts) | `web/scripts/eval-binding.mjs`, gold `data/gold/binding.jsonl` | Scores `bind()` in `web/lib/engine/spec.ts`: which value attaches to which part ("sleeve par loose" is a sleeve fit) | `results/binding.json` | Used in the product (the binder is deployed); study of it |
 | Named entity recognition | `engine/bespoke/apps/ner.py` | Per-type report of the tagger that feeds the binder, for the gazetteer, the int8 ONNX model alone and the browser path | `results/ner.json` | Used in the product (the browser path is what ships) |
+| Semantics (grounding unseen phrases to ontology values) | `engine/bespoke/apps/grounding.py`, gold `data/gold/grounding.jsonl` | Measures `groundFuzzy` (spelling variants the tagger finds) against edit distance and an embedding, with an abstention threshold | `results/grounding.json` | Study of a deployed function; a better rule is proposed, not shipped |
 
 ## Syntax: attachment of values to parts
 
@@ -33,3 +34,18 @@ Not fixed by it, and visible in the `misses` list of the result: a clause keeps 
 `python scripts/apps.py ner`, about 12 s. Held-out gold: 52 test requests with 245 entities (the 30 dev requests, 133 entities, are in the file too). Exact-match span F1 over 21 entity types, bootstrap interval over requests. The ONNX file is the one the browser loads (int8 MiniLM, constrained Viterbi, then the merge rule of `web/lib/models.ts`: gazetteer spans win, model spans fill gaps), run here with onnxruntime on CPU, so the browser path is reproduced, not re-timed in a browser.
 
 Test split micro F1: gazetteer 0.936 (0.898 to 0.967), model alone 0.792 (0.735 to 0.845), browser path 0.951 (0.916 to 0.980). The merge helps by 1.5 points, within the noise of 52 requests. Per-type F1, support and the confusion table are in `results/ner.json`. The weak types on test are SILHOUETTE (0.78, 10 entities), LOC (0.80, 2), NEG (0.86, 7) and PART (0.88, 23); the main confusions are part words missed (O for PART, 4 tokens) and silhouette words read as garments (2). The gazetteer was tuned while the gold was written (ontology 1.1 relabelled gold lines), so its score is optimistic; the model never saw gold.
+
+## Semantics: grounding unseen phrases
+
+`python scripts/apps.py grounding`, about 45 s (downloads nothing; the embedding model is read from the local Hugging Face cache). Gold: 199 phrases the gazetteer does not contain, written by one annotator: 143 misspellings and respellings with their ontology value, and 56 real garment words the ontology lacks (null: the right answer is to abstain). Even-numbered phrases pick each system's threshold, odd-numbered ones (99) report it. The Python trigram Dice reproduces the shipped TypeScript `groundFuzzy` on all 199 phrases (checked every run).
+
+Each system takes the best-scoring ontology form of the tag and answers only above its threshold. Precision is correct answers over answers given; recall is correct answers over the 143 groundable phrases.
+
+| System | Threshold | Precision | Recall | F1 on held-out half | False grounds on out-of-ontology words (all 56) |
+|---|---|---|---|---|---|
+| Trigram Dice (shipped, at 0.5, all 199) | 0.50 | 0.932 | 0.965 | 0.949 | 9 |
+| Trigram Dice, tuned | 0.40 | 0.896 | 0.972 | 0.932 (0.882 to 0.973) | 10 |
+| Edit-distance similarity | 0.66 | 0.971 | 0.944 | 0.957 (0.917 to 0.986) | 3 |
+| Embedding cosine (bge-small-en-v1.5) | 0.72 | 0.828 | 0.747 | 0.785 (0.695 to 0.861) | 17 |
+
+Edit distance matches the shipped trigram rule on F1 (the intervals overlap widely at n = 99) and abstains on out-of-ontology words about three times as often (3 false grounds against 9). The embedding does worst: it is English-only and cannot see that "kurthi" is a spelling of "kurti". Proposal for the owner of `lexicon.ts`: keep trigram Dice, add an edit-similarity check of at least 0.66 before answering. The shipped errors (`deployed_errors` in the result) are mostly near words a tailor would also flag, such as "maximalist" read as minimal and "skintight" read as fitted. A few "false grounds" are arguable ("graduation ball" to farewell). The typos are synthetic, so real typing noise could behave differently.

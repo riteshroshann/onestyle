@@ -1,0 +1,199 @@
+{"id": "gr-001", "phrase": "kurtee", "tag": "GARMENT", "value": "kurti"}
+{"id": "gr-002", "phrase": "kurthi", "tag": "GARMENT", "value": "kurti"}
+{"id": "gr-003", "phrase": "anarkalli", "tag": "GARMENT", "value": "anarkali"}
+{"id": "gr-004", "phrase": "anarkli", "tag": "GARMENT", "value": "anarkali"}
+{"id": "gr-005", "phrase": "lengha", "tag": "GARMENT", "value": "lehenga"}
+{"id": "gr-006", "phrase": "sherwaani", "tag": "GARMENT", "value": "sherwani"}
+{"id": "gr-007", "phrase": "shervani", "tag": "GARMENT", "value": "sherwani"}
+{"id": "gr-008", "phrase": "palazo", "tag": "GARMENT", "value": "palazzo"}
+{"id": "gr-009", "phrase": "plazzo", "tag": "GARMENT", "value": "palazzo"}
+{"id": "gr-010", "phrase": "jumpsute", "tag": "GARMENT", "value": "jumpsuit"}
+{"id": "gr-011", "phrase": "hoddie", "tag": "GARMENT", "value": "hoodie"}
+{"id": "gr-012", "phrase": "blazar", "tag": "GARMENT", "value": "blazer"}
+{"id": "gr-013", "phrase": "cardigaan", "tag": "GARMENT", "value": "cardigan"}
+{"id": "gr-014", "phrase": "shararra", "tag": "GARMENT", "value": "sharara"}
+{"id": "gr-015", "phrase": "saaree", "tag": "GARMENT", "value": "saree"}
+{"id": "gr-016", "phrase": "dupata", "tag": "GARMENT", "value": "dupatta"}
+{"id": "gr-017", "phrase": "kaftaan", "tag": "GARMENT", "value": "kaftan"}
+{"id": "gr-018", "phrase": "bodysute", "tag": "GARMENT", "value": "bodysuit"}
+{"id": "gr-019", "phrase": "tshrit", "tag": "GARMENT", "value": "t-shirt"}
+{"id": "gr-020", "phrase": "trouser", "tag": "GARMENT", "value": "trousers"}
+{"id": "gr-021", "phrase": "salwar kamiz", "tag": "GARMENT", "value": "salwar suit"}
+{"id": "gr-022", "phrase": "gowne", "tag": "GARMENT", "value": "gown"}
+{"id": "gr-023", "phrase": "dungrees", "tag": "GARMENT", "value": "dungarees"}
+{"id": "gr-024", "phrase": "marron", "tag": "COLOUR", "value": "maroon"}
+{"id": "gr-025", "phrase": "maroone", "tag": "COLOUR", "value": "maroon"}
+{"id": "gr-026", "phrase": "lavendar", "tag": "COLOUR", "value": "lavender"}
+{"id": "gr-027", "phrase": "lavander", "tag": "COLOUR", "value": "lavender"}
+{"id": "gr-028", "phrase": "turqoise", "tag": "COLOUR", "value": "teal"}
+{"id": "gr-029", "phrase": "mustrad", "tag": "COLOUR", "value": "mustard"}
+{"id": "gr-030", "phrase": "burgandy", "tag": "COLOUR", "value": "maroon"}
+{"id": "gr-031", "phrase": "ivary", "tag": "COLOUR", "value": "ivory"}
+{"id": "gr-032", "phrase": "baige", "tag": "COLOUR", "value": "beige"}
+{"id": "gr-033", "phrase": "olives", "tag": "COLOUR", "value": "olive"}
+{"id": "gr-034", "phrase": "naavy", "tag": "COLOUR", "value": "navy"}
+{"id": "gr-035", "phrase": "purpel", "tag": "COLOUR", "value": "purple"}
+{"id": "gr-036", "phrase": "pinkish", "tag": "COLOUR", "value": "pink"}
+{"id": "gr-037", "phrase": "orenge", "tag": "COLOUR", "value": "orange"}
+{"id": "gr-038", "phrase": "golde", "tag": "COLOUR", "value": "gold"}
+{"id": "gr-039", "phrase": "silvr", "tag": "COLOUR", "value": "silver"}
+{"id": "gr-040", "phrase": "grayy", "tag": "COLOUR", "value": "grey"}
+{"id": "gr-041", "phrase": "mehroon", "tag": "COLOUR", "value": "maroon"}
+{"id": "gr-042", "phrase": "peacch", "tag": "COLOUR", "value": "peach"}
+{"id": "gr-043", "phrase": "yelow", "tag": "COLOUR", "value": "yellow"}
+{"id": "gr-044", "phrase": "lalll", "tag": "COLOUR", "value": "red"}
+{"id": "gr-045", "phrase": "nila", "tag": "COLOUR", "value": "blue"}
+{"id": "gr-046", "phrase": "kaalaa", "tag": "COLOUR", "value": "black"}
+{"id": "gr-047", "phrase": "georget", "tag": "FABRIC", "value": "georgette"}
+{"id": "gr-048", "phrase": "chifon", "tag": "FABRIC", "value": "chiffon"}
+{"id": "gr-049", "phrase": "organzaa", "tag": "FABRIC", "value": "organza"}
+{"id": "gr-050", "phrase": "velvett", "tag": "FABRIC", "value": "velvet"}
+{"id": "gr-051", "phrase": "chanderii", "tag": "FABRIC", "value": "chanderi"}
+{"id": "gr-052", "phrase": "banarsi", "tag": "FABRIC", "value": "banarasi"}
+{"id": "gr-053", "phrase": "mulmull", "tag": "FABRIC", "value": "mulmul"}
+{"id": "gr-054", "phrase": "sattin", "tag": "FABRIC", "value": "satin"}
+{"id": "gr-055", "phrase": "cotten", "tag": "FABRIC", "value": "cotton"}
+{"id": "gr-056", "phrase": "lenin", "tag": "FABRIC", "value": "linen"}
+{"id": "gr-057", "phrase": "denimm", "tag": "FABRIC", "value": "denim"}
+{"id": "gr-058", "phrase": "fleese", "tag": "FABRIC", "value": "fleece"}
+{"id": "gr-059", "phrase": "cashmeer", "tag": "FABRIC", "value": "cashmere"}
+{"id": "gr-060", "phrase": "polyestar", "tag": "FABRIC", "value": "polyester"}
+{"id": "gr-061", "phrase": "corduroi", "tag": "FABRIC", "value": "corduroy"}
+{"id": "gr-062", "phrase": "flanel", "tag": "FABRIC", "value": "flannel"}
+{"id": "gr-063", "phrase": "khadhi", "tag": "FABRIC", "value": "khadi"}
+{"id": "gr-064", "phrase": "rayonn", "tag": "FABRIC", "value": "rayon"}
+{"id": "gr-065", "phrase": "woolen blend", "tag": "FABRIC", "value": "wool"}
+{"id": "gr-066", "phrase": "florals", "tag": "PATTERN", "value": "floral"}
+{"id": "gr-067", "phrase": "flowral", "tag": "PATTERN", "value": "floral"}
+{"id": "gr-068", "phrase": "stripped", "tag": "PATTERN", "value": "striped"}
+{"id": "gr-069", "phrase": "checkd", "tag": "PATTERN", "value": "checked"}
+{"id": "gr-070", "phrase": "polka dot", "tag": "PATTERN", "value": "polka"}
+{"id": "gr-071", "phrase": "paisly", "tag": "PATTERN", "value": "paisley"}
+{"id": "gr-072", "phrase": "bandhni", "tag": "PATTERN", "value": "bandhani"}
+{"id": "gr-073", "phrase": "leheriyaa", "tag": "PATTERN", "value": "leheriya"}
+{"id": "gr-074", "phrase": "ikatt", "tag": "PATTERN", "value": "ikat"}
+{"id": "gr-075", "phrase": "ombrey", "tag": "PATTERN", "value": "ombre"}
+{"id": "gr-076", "phrase": "geometrical", "tag": "PATTERN", "value": "geometric"}
+{"id": "gr-077", "phrase": "blockprint", "tag": "PATTERN", "value": "block print"}
+{"id": "gr-078", "phrase": "embroidry", "tag": "EMBELL", "value": "embroidery"}
+{"id": "gr-079", "phrase": "embrodiery", "tag": "EMBELL", "value": "embroidery"}
+{"id": "gr-080", "phrase": "chikenkari", "tag": "EMBELL", "value": "chikankari"}
+{"id": "gr-081", "phrase": "chikankri", "tag": "EMBELL", "value": "chikankari"}
+{"id": "gr-082", "phrase": "zardosy", "tag": "EMBELL", "value": "zardozi"}
+{"id": "gr-083", "phrase": "gotapatti", "tag": "EMBELL", "value": "gota patti"}
+{"id": "gr-084", "phrase": "mirrorwork", "tag": "EMBELL", "value": "mirror work"}
+{"id": "gr-085", "phrase": "sequence", "tag": "EMBELL", "value": "sequins"}
+{"id": "gr-086", "phrase": "sequinz", "tag": "EMBELL", "value": "sequins"}
+{"id": "gr-087", "phrase": "pearls work", "tag": "EMBELL", "value": "pearl work"}
+{"id": "gr-088", "phrase": "tassles", "tag": "EMBELL", "value": "tassels"}
+{"id": "gr-089", "phrase": "zaari", "tag": "EMBELL", "value": "zari"}
+{"id": "gr-090", "phrase": "v-necked", "tag": "NECKLINE", "value": "v"}
+{"id": "gr-091", "phrase": "boatneck line", "tag": "NECKLINE", "value": "boat"}
+{"id": "gr-092", "phrase": "sweetheat", "tag": "NECKLINE", "value": "sweetheart"}
+{"id": "gr-093", "phrase": "halterneck", "tag": "NECKLINE", "value": "halter"}
+{"id": "gr-094", "phrase": "mandrin collar", "tag": "NECKLINE", "value": "mandarin"}
+{"id": "gr-095", "phrase": "keyholl", "tag": "NECKLINE", "value": "keyhole"}
+{"id": "gr-096", "phrase": "cowll neck", "tag": "NECKLINE", "value": "cowl"}
+{"id": "gr-097", "phrase": "turtelneck", "tag": "NECKLINE", "value": "turtle"}
+{"id": "gr-098", "phrase": "crew-neck", "tag": "NECKLINE", "value": "crew"}
+{"id": "gr-099", "phrase": "offshoulder", "tag": "NECKLINE", "value": "off-shoulder"}
+{"id": "gr-100", "phrase": "puffed up", "tag": "SLEEVE", "value": "puff"}
+{"id": "gr-101", "phrase": "flutterr", "tag": "SLEEVE", "value": "flutter"}
+{"id": "gr-102", "phrase": "raglanr", "tag": "SLEEVE", "value": "raglan"}
+{"id": "gr-103", "phrase": "bishopp", "tag": "SLEEVE", "value": "bishop"}
+{"id": "gr-104", "phrase": "kimono sleeve", "tag": "SLEEVE", "value": "kimono"}
+{"id": "gr-105", "phrase": "aaline", "tag": "SILHOUETTE", "value": "a-line"}
+{"id": "gr-106", "phrase": "flaired", "tag": "SILHOUETTE", "value": "flared"}
+{"id": "gr-107", "phrase": "bodycone", "tag": "SILHOUETTE", "value": "bodycon"}
+{"id": "gr-108", "phrase": "mermaidd", "tag": "SILHOUETTE", "value": "mermaid"}
+{"id": "gr-109", "phrase": "peplm", "tag": "SILHOUETTE", "value": "peplum"}
+{"id": "gr-110", "phrase": "angarkha", "tag": "SILHOUETTE", "value": "angrakha"}
+{"id": "gr-111", "phrase": "tappered", "tag": "SILHOUETTE", "value": "tapered"}
+{"id": "gr-112", "phrase": "fitnflare", "tag": "SILHOUETTE", "value": "fit and flare"}
+{"id": "gr-113", "phrase": "shaadii", "tag": "OCCASION", "value": "wedding"}
+{"id": "gr-114", "phrase": "mehndii", "tag": "OCCASION", "value": "mehendi"}
+{"id": "gr-115", "phrase": "sangeeth", "tag": "OCCASION", "value": "sangeet"}
+{"id": "gr-116", "phrase": "recepton", "tag": "OCCASION", "value": "reception"}
+{"id": "gr-117", "phrase": "farewel", "tag": "OCCASION", "value": "farewell"}
+{"id": "gr-118", "phrase": "diwalii", "tag": "OCCASION", "value": "festive"}
+{"id": "gr-119", "phrase": "birthdy", "tag": "OCCASION", "value": "party"}
+{"id": "gr-120", "phrase": "officee", "tag": "OCCASION", "value": "office"}
+{"id": "gr-121", "phrase": "monsoonn", "tag": "OCCASION", "value": "monsoon"}
+{"id": "gr-122", "phrase": "traveling", "tag": "OCCASION", "value": "travel"}
+{"id": "gr-123", "phrase": "elegent", "tag": "STYLE", "value": "elegant"}
+{"id": "gr-124", "phrase": "minimall", "tag": "STYLE", "value": "minimal"}
+{"id": "gr-125", "phrase": "tradional", "tag": "STYLE", "value": "traditional"}
+{"id": "gr-126", "phrase": "bohemain", "tag": "STYLE", "value": "boho"}
+{"id": "gr-127", "phrase": "feminin", "tag": "STYLE", "value": "feminine"}
+{"id": "gr-128", "phrase": "flashee", "tag": "STYLE", "value": "flashy"}
+{"id": "gr-129", "phrase": "vintge", "tag": "STYLE", "value": "vintage"}
+{"id": "gr-130", "phrase": "sportty", "tag": "STYLE", "value": "sporty"}
+{"id": "gr-131", "phrase": "fiited", "tag": "FIT", "value": "fitted"}
+{"id": "gr-132", "phrase": "loosee", "tag": "FIT", "value": "loose"}
+{"id": "gr-133", "phrase": "relax", "tag": "FIT", "value": "relaxed"}
+{"id": "gr-134", "phrase": "semi fited", "tag": "FIT", "value": "semi-fitted"}
+{"id": "gr-135", "phrase": "kneelength", "tag": "LENGTH", "value": "knee"}
+{"id": "gr-136", "phrase": "floorlength", "tag": "LENGTH", "value": "floor"}
+{"id": "gr-137", "phrase": "midii", "tag": "LENGTH", "value": "midi"}
+{"id": "gr-138", "phrase": "elbo", "tag": "LENGTH", "value": "elbow"}
+{"id": "gr-139", "phrase": "sleevless", "tag": "LENGTH", "value": "sleeveless"}
+{"id": "gr-140", "phrase": "ankel length", "tag": "LENGTH", "value": "ankle"}
+{"id": "gr-141", "phrase": "pastle", "tag": "SHADE", "value": "pastel"}
+{"id": "gr-142", "phrase": "brightt", "tag": "SHADE", "value": "bright"}
+{"id": "gr-143", "phrase": "darkk", "tag": "SHADE", "value": "dark"}
+{"id": "gr-144", "phrase": "periwinkle", "tag": "COLOUR", "value": null}
+{"id": "gr-145", "phrase": "cerulean", "tag": "COLOUR", "value": null}
+{"id": "gr-146", "phrase": "rainbow", "tag": "COLOUR", "value": null}
+{"id": "gr-147", "phrase": "vermilion", "tag": "COLOUR", "value": null}
+{"id": "gr-148", "phrase": "amber", "tag": "COLOUR", "value": null}
+{"id": "gr-149", "phrase": "bamboo", "tag": "FABRIC", "value": null}
+{"id": "gr-150", "phrase": "hemp", "tag": "FABRIC", "value": null}
+{"id": "gr-151", "phrase": "taffeta", "tag": "FABRIC", "value": null}
+{"id": "gr-152", "phrase": "poplin", "tag": "FABRIC", "value": null}
+{"id": "gr-153", "phrase": "chambray", "tag": "FABRIC", "value": null}
+{"id": "gr-154", "phrase": "seersucker", "tag": "FABRIC", "value": null}
+{"id": "gr-155", "phrase": "neoprene", "tag": "FABRIC", "value": null}
+{"id": "gr-156", "phrase": "tencel", "tag": "FABRIC", "value": null}
+{"id": "gr-157", "phrase": "dupioni", "tag": "FABRIC", "value": null}
+{"id": "gr-158", "phrase": "gabardine", "tag": "FABRIC", "value": null}
+{"id": "gr-159", "phrase": "poncho shawl", "tag": "GARMENT", "value": null}
+{"id": "gr-160", "phrase": "overshirt", "tag": "GARMENT", "value": null}
+{"id": "gr-161", "phrase": "tuxedo", "tag": "GARMENT", "value": null}
+{"id": "gr-162", "phrase": "apron", "tag": "GARMENT", "value": null}
+{"id": "gr-163", "phrase": "swimsuit", "tag": "GARMENT", "value": null}
+{"id": "gr-164", "phrase": "bralette", "tag": "GARMENT", "value": null}
+{"id": "gr-165", "phrase": "lungi", "tag": "GARMENT", "value": null}
+{"id": "gr-166", "phrase": "kilt", "tag": "GARMENT", "value": null}
+{"id": "gr-167", "phrase": "camouflage", "tag": "PATTERN", "value": null}
+{"id": "gr-168", "phrase": "houndstooth", "tag": "PATTERN", "value": null}
+{"id": "gr-169", "phrase": "tartan", "tag": "PATTERN", "value": null}
+{"id": "gr-170", "phrase": "chevron", "tag": "PATTERN", "value": null}
+{"id": "gr-171", "phrase": "colourblock", "tag": "PATTERN", "value": null}
+{"id": "gr-172", "phrase": "rhinestones", "tag": "EMBELL", "value": null}
+{"id": "gr-173", "phrase": "appliques", "tag": "EMBELL", "value": null}
+{"id": "gr-174", "phrase": "smocking", "tag": "EMBELL", "value": null}
+{"id": "gr-175", "phrase": "quilting", "tag": "EMBELL", "value": null}
+{"id": "gr-176", "phrase": "fringes", "tag": "EMBELL", "value": null}
+{"id": "gr-177", "phrase": "asymmetric", "tag": "NECKLINE", "value": null}
+{"id": "gr-178", "phrase": "jewel", "tag": "NECKLINE", "value": null}
+{"id": "gr-179", "phrase": "portrait", "tag": "NECKLINE", "value": null}
+{"id": "gr-180", "phrase": "surplice", "tag": "NECKLINE", "value": null}
+{"id": "gr-181", "phrase": "lantern", "tag": "SLEEVE", "value": null}
+{"id": "gr-182", "phrase": "petal", "tag": "SLEEVE", "value": null}
+{"id": "gr-183", "phrase": "leg of mutton", "tag": "SLEEVE", "value": null}
+{"id": "gr-184", "phrase": "juliet", "tag": "SLEEVE", "value": null}
+{"id": "gr-185", "phrase": "cape sleeve", "tag": "SLEEVE", "value": null}
+{"id": "gr-186", "phrase": "trapeze", "tag": "SILHOUETTE", "value": null}
+{"id": "gr-187", "phrase": "tent", "tag": "SILHOUETTE", "value": null}
+{"id": "gr-188", "phrase": "princess seam", "tag": "SILHOUETTE", "value": null}
+{"id": "gr-189", "phrase": "dropwaist", "tag": "SILHOUETTE", "value": null}
+{"id": "gr-190", "phrase": "tulip", "tag": "SILHOUETTE", "value": null}
+{"id": "gr-191", "phrase": "funeral", "tag": "OCCASION", "value": null}
+{"id": "gr-192", "phrase": "graduation ball", "tag": "OCCASION", "value": null}
+{"id": "gr-193", "phrase": "picnic", "tag": "OCCASION", "value": null}
+{"id": "gr-194", "phrase": "gothic lolita", "tag": "STYLE", "value": null}
+{"id": "gr-195", "phrase": "cottagecore", "tag": "STYLE", "value": null}
+{"id": "gr-196", "phrase": "maximalist", "tag": "STYLE", "value": null}
+{"id": "gr-197", "phrase": "y2k", "tag": "STYLE", "value": null}
+{"id": "gr-198", "phrase": "minimalistic chic", "tag": "STYLE", "value": null}
+{"id": "gr-199", "phrase": "skintight", "tag": "FIT", "value": null}

@@ -1,0 +1,502 @@
+{
+ "task": "fuzzy grounding of unseen phrases to ontology values, with abstention",
+ "n_phrases": 199,
+ "n_groundable": 143,
+ "n_out_of_ontology": 56,
+ "split": "threshold chosen on even-numbered phrases, reported on odd-numbered",
+ "seed": 13,
+ "gold_note": "typos and respellings written by one annotator; out-of-ontology words are real garment vocabulary the ontology lacks",
+ "embedding_model": "BAAI/bge-small-en-v1.5",
+ "parity_with_typescript": "199/199 phrases",
+ "systems": {
+  "trigram_dice": {
+   "chosen_threshold": 0.4,
+   "held_out": {
+    "threshold": 0.4,
+    "fire_rate": 0.7778,
+    "precision": 0.8961,
+    "recall": 0.9718,
+    "f1": 0.9324,
+    "false_grounds_on_out_of_ontology": 7,
+    "out_of_ontology": 28,
+    "f1_ci95": [
+     0.8816,
+     0.973
+    ]
+   },
+   "all_phrases_at_chosen": {
+    "threshold": 0.4,
+    "fire_rate": 0.7588,
+    "precision": 0.9272,
+    "recall": 0.979,
+    "f1": 0.9524,
+    "false_grounds_on_out_of_ontology": 10,
+    "out_of_ontology": 56
+   },
+   "sweep_all_phrases": [
+    {
+     "threshold": 0.3,
+     "fire_rate": 0.799,
+     "precision": 0.8868,
+     "recall": 0.986,
+     "f1": 0.9338,
+     "false_grounds_on_out_of_ontology": 17,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.36,
+     "fire_rate": 0.7739,
+     "precision": 0.9156,
+     "recall": 0.986,
+     "f1": 0.9495,
+     "false_grounds_on_out_of_ontology": 12,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.42,
+     "fire_rate": 0.7487,
+     "precision": 0.9329,
+     "recall": 0.972,
+     "f1": 0.9521,
+     "false_grounds_on_out_of_ontology": 9,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.48,
+     "fire_rate": 0.7437,
+     "precision": 0.9324,
+     "recall": 0.965,
+     "f1": 0.9485,
+     "false_grounds_on_out_of_ontology": 9,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.54,
+     "fire_rate": 0.7035,
+     "precision": 0.9429,
+     "recall": 0.9231,
+     "f1": 0.9329,
+     "false_grounds_on_out_of_ontology": 7,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.6,
+     "fire_rate": 0.6382,
+     "precision": 0.9528,
+     "recall": 0.8462,
+     "f1": 0.8963,
+     "false_grounds_on_out_of_ontology": 5,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.66,
+     "fire_rate": 0.5829,
+     "precision": 0.9655,
+     "recall": 0.7832,
+     "f1": 0.8649,
+     "false_grounds_on_out_of_ontology": 4,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.72,
+     "fire_rate": 0.4472,
+     "precision": 0.9888,
+     "recall": 0.6154,
+     "f1": 0.7586,
+     "false_grounds_on_out_of_ontology": 1,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.78,
+     "fire_rate": 0.2613,
+     "precision": 0.9808,
+     "recall": 0.3566,
+     "f1": 0.5231,
+     "false_grounds_on_out_of_ontology": 1,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.84,
+     "fire_rate": 0.0452,
+     "precision": 1.0,
+     "recall": 0.0629,
+     "f1": 0.1184,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.9,
+     "fire_rate": 0.0,
+     "precision": 1.0,
+     "recall": 0.0,
+     "f1": 0.0,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.96,
+     "fire_rate": 0.0,
+     "precision": 1.0,
+     "recall": 0.0,
+     "f1": 0.0,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    }
+   ]
+  },
+  "edit_similarity": {
+   "chosen_threshold": 0.66,
+   "held_out": {
+    "threshold": 0.66,
+    "fire_rate": 0.697,
+    "precision": 0.971,
+    "recall": 0.9437,
+    "f1": 0.9571,
+    "false_grounds_on_out_of_ontology": 2,
+    "out_of_ontology": 28,
+    "f1_ci95": [
+     0.9167,
+     0.9861
+    ]
+   },
+   "all_phrases_at_chosen": {
+    "threshold": 0.66,
+    "fire_rate": 0.7035,
+    "precision": 0.9714,
+    "recall": 0.951,
+    "f1": 0.9611,
+    "false_grounds_on_out_of_ontology": 3,
+    "out_of_ontology": 56
+   },
+   "sweep_all_phrases": [
+    {
+     "threshold": 0.3,
+     "fire_rate": 0.9648,
+     "precision": 0.7344,
+     "recall": 0.986,
+     "f1": 0.8418,
+     "false_grounds_on_out_of_ontology": 49,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.36,
+     "fire_rate": 0.9296,
+     "precision": 0.7622,
+     "recall": 0.986,
+     "f1": 0.8598,
+     "false_grounds_on_out_of_ontology": 42,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.42,
+     "fire_rate": 0.8593,
+     "precision": 0.8246,
+     "recall": 0.986,
+     "f1": 0.8981,
+     "false_grounds_on_out_of_ontology": 28,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.48,
+     "fire_rate": 0.804,
+     "precision": 0.875,
+     "recall": 0.979,
+     "f1": 0.9241,
+     "false_grounds_on_out_of_ontology": 18,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.54,
+     "fire_rate": 0.7638,
+     "precision": 0.9211,
+     "recall": 0.979,
+     "f1": 0.9492,
+     "false_grounds_on_out_of_ontology": 10,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.6,
+     "fire_rate": 0.7387,
+     "precision": 0.9456,
+     "recall": 0.972,
+     "f1": 0.9586,
+     "false_grounds_on_out_of_ontology": 6,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.66,
+     "fire_rate": 0.7035,
+     "precision": 0.9714,
+     "recall": 0.951,
+     "f1": 0.9611,
+     "false_grounds_on_out_of_ontology": 3,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.72,
+     "fire_rate": 0.6181,
+     "precision": 0.9919,
+     "recall": 0.8531,
+     "f1": 0.9173,
+     "false_grounds_on_out_of_ontology": 1,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.78,
+     "fire_rate": 0.5879,
+     "precision": 0.9915,
+     "recall": 0.8112,
+     "f1": 0.8923,
+     "false_grounds_on_out_of_ontology": 1,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.84,
+     "fire_rate": 0.392,
+     "precision": 1.0,
+     "recall": 0.5455,
+     "f1": 0.7059,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.9,
+     "fire_rate": 0.0854,
+     "precision": 1.0,
+     "recall": 0.1189,
+     "f1": 0.2125,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.96,
+     "fire_rate": 0.0,
+     "precision": 1.0,
+     "recall": 0.0,
+     "f1": 0.0,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    }
+   ]
+  },
+  "embedding_cosine": {
+   "chosen_threshold": 0.72,
+   "held_out": {
+    "threshold": 0.72,
+    "fire_rate": 0.6465,
+    "precision": 0.8281,
+    "recall": 0.7465,
+    "f1": 0.7852,
+    "false_grounds_on_out_of_ontology": 8,
+    "out_of_ontology": 28,
+    "f1_ci95": [
+     0.6948,
+     0.8611
+    ]
+   },
+   "all_phrases_at_chosen": {
+    "threshold": 0.72,
+    "fire_rate": 0.593,
+    "precision": 0.8305,
+    "recall": 0.6853,
+    "f1": 0.751,
+    "false_grounds_on_out_of_ontology": 17,
+    "out_of_ontology": 56
+   },
+   "sweep_all_phrases": [
+    {
+     "threshold": 0.3,
+     "fire_rate": 1.0,
+     "precision": 0.5327,
+     "recall": 0.7413,
+     "f1": 0.6199,
+     "false_grounds_on_out_of_ontology": 56,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.36,
+     "fire_rate": 1.0,
+     "precision": 0.5327,
+     "recall": 0.7413,
+     "f1": 0.6199,
+     "false_grounds_on_out_of_ontology": 56,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.42,
+     "fire_rate": 1.0,
+     "precision": 0.5327,
+     "recall": 0.7413,
+     "f1": 0.6199,
+     "false_grounds_on_out_of_ontology": 56,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.48,
+     "fire_rate": 1.0,
+     "precision": 0.5327,
+     "recall": 0.7413,
+     "f1": 0.6199,
+     "false_grounds_on_out_of_ontology": 56,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.54,
+     "fire_rate": 0.995,
+     "precision": 0.5354,
+     "recall": 0.7413,
+     "f1": 0.6217,
+     "false_grounds_on_out_of_ontology": 56,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.6,
+     "fire_rate": 0.9648,
+     "precision": 0.5469,
+     "recall": 0.7343,
+     "f1": 0.6269,
+     "false_grounds_on_out_of_ontology": 55,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.66,
+     "fire_rate": 0.7236,
+     "precision": 0.7083,
+     "recall": 0.7133,
+     "f1": 0.7108,
+     "false_grounds_on_out_of_ontology": 31,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.72,
+     "fire_rate": 0.593,
+     "precision": 0.8305,
+     "recall": 0.6853,
+     "f1": 0.751,
+     "false_grounds_on_out_of_ontology": 17,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.78,
+     "fire_rate": 0.4523,
+     "precision": 0.8889,
+     "recall": 0.5594,
+     "f1": 0.6867,
+     "false_grounds_on_out_of_ontology": 8,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.84,
+     "fire_rate": 0.2965,
+     "precision": 0.9661,
+     "recall": 0.3986,
+     "f1": 0.5644,
+     "false_grounds_on_out_of_ontology": 2,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.9,
+     "fire_rate": 0.1307,
+     "precision": 1.0,
+     "recall": 0.1818,
+     "f1": 0.3077,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    },
+    {
+     "threshold": 0.96,
+     "fire_rate": 0.0151,
+     "precision": 1.0,
+     "recall": 0.021,
+     "f1": 0.0411,
+     "false_grounds_on_out_of_ontology": 0,
+     "out_of_ontology": 56
+    }
+   ]
+  }
+ },
+ "deployed": {
+  "system": "trigram_dice at 0.5, as shipped",
+  "all_phrases": {
+   "threshold": 0.5,
+   "fire_rate": 0.7437,
+   "precision": 0.9324,
+   "recall": 0.965,
+   "f1": 0.9485,
+   "false_grounds_on_out_of_ontology": 9,
+   "out_of_ontology": 56
+  }
+ },
+ "deployed_errors": [
+  {
+   "phrase": "fitnflare",
+   "tag": "SILHOUETTE",
+   "gold": "fit and flare",
+   "answered": "flared",
+   "score": 0.625
+  },
+  {
+   "phrase": "poncho shawl",
+   "tag": "GARMENT",
+   "gold": null,
+   "answered": "cape",
+   "score": 0.7
+  },
+  {
+   "phrase": "overshirt",
+   "tag": "GARMENT",
+   "gold": null,
+   "answered": "shirt",
+   "score": 0.5
+  },
+  {
+   "phrase": "swimsuit",
+   "tag": "GARMENT",
+   "gold": null,
+   "answered": "salwar suit",
+   "score": 0.571
+  },
+  {
+   "phrase": "rhinestones",
+   "tag": "EMBELL",
+   "gold": null,
+   "answered": "beadwork",
+   "score": 0.556
+  },
+  {
+   "phrase": "graduation ball",
+   "tag": "OCCASION",
+   "gold": null,
+   "answered": "farewell",
+   "score": 0.815
+  },
+  {
+   "phrase": "gothic lolita",
+   "tag": "STYLE",
+   "gold": null,
+   "answered": "edgy",
+   "score": 0.667
+  },
+  {
+   "phrase": "maximalist",
+   "tag": "STYLE",
+   "gold": null,
+   "answered": "minimal",
+   "score": 0.636
+  },
+  {
+   "phrase": "minimalistic chic",
+   "tag": "STYLE",
+   "gold": null,
+   "answered": "minimal",
+   "score": 0.714
+  },
+  {
+   "phrase": "skintight",
+   "tag": "FIT",
+   "gold": null,
+   "answered": "fitted",
+   "score": 0.5
+  }
+ ]
+}
