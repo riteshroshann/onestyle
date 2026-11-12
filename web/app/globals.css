@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source not "../public";
 @import "tw-animate-css";
 /* The original hand-written stylesheet sits in the components layer: above the reset, below utilities. */
 @import "./legacy.css" layer(components);
