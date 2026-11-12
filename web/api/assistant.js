@@ -127,7 +127,8 @@ async function askOne(model, messages, ms) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.LLM_API_KEY}` },
       body: JSON.stringify({ model, temperature: 0.2, max_tokens: 320, messages }),
     });
-    if (!r.ok) return null;
+    // the status only, never the text, so a failing provider can be told apart from a slow one
+    if (!r.ok) { console.warn(`assistant: ${model} answered ${r.status}`); return null; }
     const data = await r.json();
     const text = String(data?.choices?.[0]?.message?.content ?? "").trim();
     return text || null;
