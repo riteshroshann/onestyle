@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 TOPICS = {
     "morph": ("morph_eval", "run"),
     "colloc": ("colloc", "run"),
+    "robust": ("robust", "run"),
 }
 
 
