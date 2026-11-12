@@ -9,6 +9,7 @@ import { Cta } from "./Cta";
 const LINKS = [
   { href: "/studio/", label: "Studio" },
   { href: "/makers/", label: "For makers" },
+  { href: "/about/", label: "About" },
 ];
 
 export const homeFor = (p: Profile) => (p.role === "maker" ? "/makers/" : "/orders/");
