@@ -59,7 +59,7 @@ const as = async (s: Store, who: { email: string; password: string; role: "custo
   assert.equal(await s.session(), null, "failed sign-ups leave no session");
   await s.signUp(customer);
   await s.signOut();
-  await refuses(s.signUp({ ...customer, email: " ASHA@example.com " }), "That email is already registered. Sign in instead.");
+  await refuses(s.signUp({ ...customer, email: " ASHA@example.com " }), "That email is already registered. Log in instead.");
 }
 
 // 3. sign in: same message for unknown email and wrong password; the wrong door is named

@@ -1,5 +1,6 @@
 // The marketplace kept in this browser's storage. It is the default when no cloud is configured, and what tests run against.
 // Every call reads storage fresh, so a second tab's writes are always seen; a BroadcastChannel tells other tabs to refresh.
+// Each tab remembers who signed in there, so a customer and a maker can try both sides in two tabs of one browser.
 import { MarketError } from "./types.ts";
 import type { DesignRequest, DesignSnapshot, Message, MessageKind, Profile, RequestStatus, Role, SignUp, Store } from "./types.ts";
 import { BAD_LOGIN, EMAIL_TAKEN, NOT_AVAILABLE, NOT_SIGNED_IN, NOT_YOUR_REQUEST, NO_MAKER, checkSignUp, checkStatus, cleanBody, cleanNote, cleanSlots,
@@ -28,8 +29,29 @@ function browserStorage(): StorageLike {
   try { return globalThis.localStorage ?? createMemoryStorage(); } catch { return createMemoryStorage(); }
 }
 
+function tabStorage(): StorageLike | null {
+  try { return globalThis.sessionStorage ?? null; } catch { return null; }
+}
+
 function browserChannel(): Channel | null {
-  return typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(CHANNEL_NAME);
+  if (typeof BroadcastChannel !== "undefined") return new BroadcastChannel(CHANNEL_NAME);
+  return typeof window === "undefined" ? null : storageChannel();
+}
+
+/** For browsers without BroadcastChannel: a write to localStorage fires "storage" in every other tab. */
+function storageChannel(): Channel {
+  const key = PREFIX + "ping";
+  const channel: Channel = {
+    onmessage: null,
+    postMessage(message) {
+      try { localStorage.setItem(key, JSON.stringify({ message, nonce: Math.random() })); } catch { /* storage blocked */ }
+    },
+  };
+  window.addEventListener("storage", (e) => {
+    if (e.key !== key || !e.newValue) return;
+    try { channel.onmessage?.({ data: JSON.parse(e.newValue).message } as MessageEvent); } catch { /* not ours */ }
+  });
+  return channel;
 }
 
 const toHex = (buf: ArrayBuffer) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -46,8 +68,11 @@ function publicProfile(a: Account): Profile {
   return p;
 }
 
-/** `channel` null turns cross-tab messaging off; omitted, it uses BroadcastChannel when the browser has one. */
-export function createLocalStore(storage: StorageLike = browserStorage(), channel: Channel | null = browserChannel()): LocalStore {
+/**
+ * `channel` null turns cross-tab messaging off; omitted, it uses BroadcastChannel when the browser has one.
+ * `tab` is this tab's own storage (sessionStorage); null shares one session across every tab.
+ */
+export function createLocalStore(storage: StorageLike = browserStorage(), channel: Channel | null = browserChannel(), tab: StorageLike | null = tabStorage()): LocalStore {
   const load = <T>(name: string, fallback: T): T => {
     try { const raw = storage.getItem(PREFIX + name); return raw === null ? fallback : (JSON.parse(raw) as T); } catch { return fallback; }
   };
@@ -65,9 +90,10 @@ export function createLocalStore(storage: StorageLike = browserStorage(), channe
 
   const changeListeners = new Set<() => void>();
   const sessionListeners = new Set<(p: Profile | null) => void>();
+  const typingListeners = new Map<string, Set<(userId: string) => void>>();
 
   const currentAccount = (): Account | null => {
-    const id = load<string | null>("session", null);
+    const id = tab?.getItem(PREFIX + "session") ?? load<string | null>("session", null);
     return id ? accounts().find((a) => a.id === id) ?? null : null;
   };
   const currentProfile = () => { const a = currentAccount(); return a ? publicProfile(a) : null; };
@@ -87,7 +113,15 @@ export function createLocalStore(storage: StorageLike = browserStorage(), channe
   };
   const announceChange = () => { changeListeners.forEach((cb) => cb()); channel?.postMessage({ type: "change" }); };
 
-  if (channel) channel.onmessage = () => { announceSession(); changeListeners.forEach((cb) => cb()); };
+  if (channel) channel.onmessage = (e) => {
+    const data = e.data as { type?: string; requestId?: string; from?: string } | null;
+    if (data?.type === "typing") {
+      if (data.from && data.from !== currentAccount()?.id) typingListeners.get(data.requestId ?? "")?.forEach((cb) => cb(data.from!));
+      return;
+    }
+    announceSession();
+    changeListeners.forEach((cb) => cb());
+  };
 
   const isParty = (r: StoredRequest, me: Account) => r.customerId === me.id || r.makerId === me.id;
 
@@ -123,6 +157,7 @@ export function createLocalStore(storage: StorageLike = browserStorage(), channe
 
   function open(account: Account) {
     save("session", account.id);
+    try { tab?.setItem(PREFIX + "session", account.id); } catch { /* tab storage blocked; the shared session still works */ }
     announceSession();
     announceChange();
     return publicProfile(account);
@@ -160,6 +195,7 @@ export function createLocalStore(storage: StorageLike = browserStorage(), channe
 
     async signOut() {
       storage.removeItem(PREFIX + "session");
+      tab?.removeItem(PREFIX + "session");
       announceSession();
       announceChange();
     },
@@ -269,6 +305,18 @@ export function createLocalStore(storage: StorageLike = browserStorage(), channe
     subscribe(cb) {
       changeListeners.add(cb);
       return () => void changeListeners.delete(cb);
+    },
+
+    typing(requestId: string) {
+      const me = currentAccount();
+      const r = me && allRequests().find((x) => x.id === requestId);
+      if (me && r && isParty(r, me)) channel?.postMessage({ type: "typing", requestId, from: me.id });
+    },
+
+    onTyping(requestId: string, cb: (userId: string) => void) {
+      const set = typingListeners.get(requestId) ?? new Set();
+      typingListeners.set(requestId, set.add(cb));
+      return () => { set.delete(cb); if (!set.size) typingListeners.delete(requestId); };
     },
 
     async seedDemo() {

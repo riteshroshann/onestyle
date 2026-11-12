@@ -21,6 +21,7 @@ export type RequestStatus = "new" | "needs-info" | "accepted" | "in-progress" | 
 export const STATUS_LABEL: Record<RequestStatus, string> = {
   new: "New", "needs-info": "Waiting on details", accepted: "Accepted", "in-progress": "Being made", ready: "Ready", declined: "Declined",
 };
+export const STATUSES = Object.keys(STATUS_LABEL) as RequestStatus[];
 
 /** A design frozen at the moment it was sent, so the maker always cuts from what the customer approved. */
 export interface DesignSnapshot { title: string; spec: Spec; lines: SheetLine[]; measurements: Measurements }
@@ -81,4 +82,8 @@ export interface Store {
   markRead(requestId: string): Promise<void>;
   /** Fires whenever anything the signed-in person can see changes: a new message, a status, a new request. */
   subscribe(cb: () => void): () => void;
+  /** Tells the other party of a thread that the signed-in person is typing. Best effort: it may go nowhere. */
+  typing(requestId: string): void;
+  /** Hears the other party typing in a thread; the callback gets their user id. */
+  onTyping(requestId: string, cb: (userId: string) => void): () => void;
 }

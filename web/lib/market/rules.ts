@@ -65,3 +65,25 @@ export function missingNote(slots: string[], note: string): string {
 
 /** What the request list shows as the latest line. */
 export const preview = (body: string) => (body.length > 140 ? `${body.slice(0, 139)}…` : body);
+
+/** Where to go after signing in. Only a path on this site is allowed, never another origin ("//x", "/\x", "https://x"). */
+export function safeNext(next: string | null | undefined, fallback: string): string {
+  // browsers read a backslash as a slash and drop tabs and newlines, so any of them could turn the path into "//host"
+  if (!next || next[0] !== "/" || next[1] === "/" || /[\\\s\u0000-\u001f\u007f]/.test(next)) return fallback;
+  return next;
+}
+
+/** Two letters for an avatar: "Kavya Rao" is "KR", "Asha" is "A". */
+export function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return (words.length > 1 ? words[0][0] + words[words.length - 1][0] : words[0]?.[0] ?? "?").toUpperCase();
+}
+
+/** One-tap replies for makers; they land in the composer to be edited before sending. */
+export const QUICK_REPLIES = [
+  "Can you share a reference photo?",
+  "What is your bust measurement?",
+  "When do you need it by?",
+  "What budget do you have in mind?",
+  "Thanks, I have everything I need.",
+];

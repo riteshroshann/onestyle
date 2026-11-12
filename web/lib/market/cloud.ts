@@ -1,7 +1,7 @@
 // The marketplace on Supabase: Auth for sign-in, Postgres for data, Realtime for live updates.
 // Row-level security in supabase/schema.sql is what enforces who may see and change what; the checks here only give clearer messages.
 import { supabase } from "../supabase";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { MarketError } from "./types.ts";
 import type { Craft, DesignRequest, DesignSnapshot, Message, MessageKind, Profile, RequestStatus, Role, SignUp, Store } from "./types.ts";
 import { BAD_LOGIN, CHECK_EMAIL, EMAIL_TAKEN, NOT_AVAILABLE, NOT_SIGNED_IN, NOT_YOUR_REQUEST, NO_MAKER, TRY_AGAIN, checkSignUp, checkStatus, cleanBody, cleanNote, cleanSlots,
@@ -58,8 +58,14 @@ function created<T>(result: { data: T | null; error: unknown }): T {
 // the confirmation link opens the right login page, which signs the person straight in
 const confirmedAt = (role: Role) => `${location.origin}${role === "maker" ? "/makers" : ""}/login/?confirmed=1`;
 
+/** A thread's typing channel, shared by every listener in this page. */
+interface TypingChannel { channel: RealtimeChannel; listeners: Set<(userId: string) => void>; joined: boolean }
+
 export function createCloudStore(url: string, anonKey: string): Store {
   const db: SupabaseClient = supabase(url, anonKey)!;
+  // Realtime has no event for this person's own reads, so marking a thread read tells this page's listeners directly.
+  const listeners = new Set<() => void>();
+  const typingChannels = new Map<string, TypingChannel>();
 
   async function profileOf(id: string): Promise<Profile | null> {
     const row = check(await db.from("profiles").select("*").eq("id", id).maybeSingle<ProfileRow>());
@@ -236,14 +242,51 @@ export function createCloudStore(url: string, anonKey: string): Store {
     async markRead(requestId: string) {
       await requireMe();
       check(await db.rpc("mark_read", { rid: requestId }));
+      listeners.forEach((cb) => cb());
     },
 
     subscribe(cb) {
+      listeners.add(cb);
       const channel = db.channel(`bespoke-${crypto.randomUUID()}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => cb())
         .on("postgres_changes", { event: "*", schema: "public", table: "requests" }, () => cb())
         .subscribe();
-      return () => void db.removeChannel(channel);
+      // Reads from this person's other devices arrive once supabase/inbox.sql publishes the table. Kept on a channel of its
+      // own, so a database without that change still delivers messages and requests.
+      const reads = db.channel(`bespoke-reads-${crypto.randomUUID()}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "reads" }, () => cb())
+        .subscribe();
+      return () => { listeners.delete(cb); void db.removeChannel(channel); void db.removeChannel(reads); };
+    },
+
+    // Typing goes over a private broadcast channel per thread. supabase/inbox.sql lets only the two parties join it;
+    // without that policy the join is refused and the indicator simply never shows.
+    typing(requestId: string) {
+      const t = typingChannels.get(requestId);
+      if (!t?.joined) return;
+      void db.auth.getSession().then(({ data }) => {
+        if (data.session) void t.channel.send({ type: "broadcast", event: "typing", payload: { from: data.session.user.id } });
+      });
+    },
+
+    onTyping(requestId: string, cb: (userId: string) => void) {
+      let t = typingChannels.get(requestId);
+      if (!t) {
+        const entry: TypingChannel = { channel: db.channel(`typing:${requestId}`, { config: { private: true, broadcast: { self: false } } }), listeners: new Set(), joined: false };
+        entry.channel
+          .on("broadcast", { event: "typing" }, ({ payload }) => { if (typeof payload?.from === "string") entry.listeners.forEach((l) => l(payload.from)); })
+          .subscribe((status) => { entry.joined = status === "SUBSCRIBED"; });
+        typingChannels.set(requestId, entry);
+        t = entry;
+      }
+      const own = t;
+      own.listeners.add(cb);
+      return () => {
+        own.listeners.delete(cb);
+        if (own.listeners.size) return;
+        typingChannels.delete(requestId);
+        void db.removeChannel(own.channel);
+      };
     },
   };
 }
