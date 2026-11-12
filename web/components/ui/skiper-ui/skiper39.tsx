@@ -39,7 +39,8 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7 }: CrowdCanvasProps) => {
     // TWEEN FACTORIES
     const resetPeep = ({ stage, peep }: { stage: any; peep: any }) => {
       const direction = Math.random() > 0.5 ? 1 : -1;
-      const offsetY = 100 - 250 * gsap.parseEase("power2.in")(Math.random());
+      // lift is scaled with the peep so the tallest walker still fits the stage
+      const offsetY = (100 - 250 * gsap.parseEase("power2.in")(Math.random())) * stage.scale;
       const startY = stage.height - peep.height + offsetY;
       let startX: number;
       let endX: number;
@@ -134,8 +135,8 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7 }: CrowdCanvasProps) => {
         walk: null,
         setRect: (rect: number[]) => {
           peep.rect = rect;
-          peep.width = rect[2];
-          peep.height = rect[3];
+          peep.width = rect[2] * stage.scale;
+          peep.height = rect[3] * stage.scale;
           peep.drawArgs = [peep.image, ...rect, 0, 0, peep.width, peep.height];
         },
         render: (ctx: CanvasRenderingContext2D) => {
@@ -166,6 +167,7 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7 }: CrowdCanvasProps) => {
     const stage = {
       width: 0,
       height: 0,
+      scale: 1,
     };
 
     const allPeeps: Peep[] = [];
@@ -243,6 +245,9 @@ const CrowdCanvas = ({ src, rows = 15, cols = 7 }: CrowdCanvasProps) => {
       if (!canvas) return;
       stage.width = canvas.clientWidth;
       stage.height = canvas.clientHeight;
+      // a peep at full lift is 1.46x its own height; shrink until that fits
+      stage.scale = Math.min(1, (stage.height * 0.96) / ((img.naturalHeight / config.cols) * 1.46));
+      allPeeps.forEach((peep) => peep.setRect(peep.rect));
       canvas.width = stage.width * devicePixelRatio;
       canvas.height = stage.height * devicePixelRatio;
 
