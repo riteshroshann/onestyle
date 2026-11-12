@@ -1,0 +1,69 @@
+{"id": "mt-01", "part": "Avoid", "en": "embroidery", "reference": "नहीं चाहिए: कढ़ाई"}
+{"id": "mt-02", "part": "Avoid", "en": "flashy", "reference": "नहीं चाहिए: भड़कीला"}
+{"id": "mt-03", "part": "Avoid", "en": "mustard", "reference": "नहीं चाहिए: सरसों रंग"}
+{"id": "mt-04", "part": "Avoid", "en": "printed", "reference": "नहीं चाहिए: छपाई वाला कपड़ा"}
+{"id": "mt-05", "part": "Avoid", "en": "sequins, net", "reference": "नहीं चाहिए: सितारे, जाली"}
+{"id": "mt-06", "part": "Avoid", "en": "yellow", "reference": "नहीं चाहिए: पीला रंग"}
+{"id": "mt-07", "part": "Back neck", "en": "deep", "reference": "पीछे का गला: गहरा"}
+{"id": "mt-08", "part": "Bodice", "en": "fitted, 1.5 in ease at bust and waist", "reference": "ऊपरी भाग: फिटेड, छाती और कमर पर 1.5 इंच ढील"}
+{"id": "mt-09", "part": "Bodice", "en": "loose, 5 in ease at bust and waist", "reference": "ऊपरी भाग: ढीला, छाती और कमर पर 5 इंच ढील"}
+{"id": "mt-10", "part": "Bodice", "en": "semi-fitted, 2.5 in ease at bust and waist", "reference": "ऊपरी भाग: हल्का फिटेड, छाती और कमर पर 2.5 इंच ढील"}
+{"id": "mt-11", "part": "Bodice", "en": "slightly relaxed, 3 in ease at bust and waist", "reference": "ऊपरी भाग: थोड़ा आरामदायक, छाती और कमर पर 3 इंच ढील"}
+{"id": "mt-12", "part": "Bodice", "en": "very fitted, 1 in ease at bust and waist", "reference": "ऊपरी भाग: बहुत फिटेड, छाती और कमर पर 1 इंच ढील"}
+{"id": "mt-13", "part": "Colour", "en": "bright pink", "reference": "रंग: चटक गुलाबी"}
+{"id": "mt-14", "part": "Colour", "en": "dark green", "reference": "रंग: गहरा हरा"}
+{"id": "mt-15", "part": "Colour", "en": "ivory gold", "reference": "रंग: आइवरी और सुनहरा"}
+{"id": "mt-16", "part": "Colour", "en": "maroon", "reference": "रंग: मैरून"}
+{"id": "mt-17", "part": "Colour", "en": "navy", "reference": "रंग: गहरा नीला"}
+{"id": "mt-18", "part": "Colour", "en": "peach mint", "reference": "रंग: आड़ू और पिस्ता"}
+{"id": "mt-19", "part": "Colour", "en": "powder blue", "reference": "रंग: हल्का नीला"}
+{"id": "mt-20", "part": "Fabric", "en": "cotton", "reference": "कपड़ा: सूती"}
+{"id": "mt-21", "part": "Fabric", "en": "georgette", "reference": "कपड़ा: जॉर्जेट"}
+{"id": "mt-22", "part": "Fabric", "en": "silk", "reference": "कपड़ा: रेशमी"}
+{"id": "mt-23", "part": "Fabric", "en": "velvet", "reference": "कपड़ा: मखमल"}
+{"id": "mt-24", "part": "Finish", "en": "bandhani", "reference": "सजावट: बांधनी"}
+{"id": "mt-25", "part": "Finish", "en": "chikankari", "reference": "सजावट: चिकनकारी"}
+{"id": "mt-26", "part": "Finish", "en": "floral", "reference": "सजावट: फूलों की छपाई"}
+{"id": "mt-27", "part": "Finish", "en": "gota patti", "reference": "सजावट: गोटा पट्टी"}
+{"id": "mt-28", "part": "Finish", "en": "gota patti, mirror work", "reference": "सजावट: गोटा पट्टी, शीशे का काम"}
+{"id": "mt-29", "part": "Finish", "en": "mirror work, tassels", "reference": "सजावट: शीशे का काम, लटकन"}
+{"id": "mt-30", "part": "Finish", "en": "sequins", "reference": "सजावट: सितारे"}
+{"id": "mt-31", "part": "Finish", "en": "zari", "reference": "सजावट: ज़री का काम"}
+{"id": "mt-32", "part": "Length", "en": "42 in", "reference": "लंबाई: 42 इंच"}
+{"id": "mt-33", "part": "Length", "en": "floor", "reference": "लंबाई: फर्श तक"}
+{"id": "mt-34", "part": "Length", "en": "hip", "reference": "लंबाई: कूल्हे तक"}
+{"id": "mt-35", "part": "Length", "en": "knee", "reference": "लंबाई: घुटने तक"}
+{"id": "mt-36", "part": "Length", "en": "midi", "reference": "लंबाई: घुटने के नीचे तक"}
+{"id": "mt-37", "part": "Lower body", "en": "A-line", "reference": "निचला भाग: ए-लाइन"}
+{"id": "mt-38", "part": "Lower body", "en": "anarkali", "reference": "निचला भाग: कलीदार"}
+{"id": "mt-39", "part": "Lower body", "en": "fit and flare", "reference": "निचला भाग: ऊपर से फिट, नीचे से घेरदार"}
+{"id": "mt-40", "part": "Lower body", "en": "fitted, 1.5 in ease at hip", "reference": "निचला भाग: फिटेड, कूल्हे पर 1.5 इंच ढील"}
+{"id": "mt-41", "part": "Lower body", "en": "flared", "reference": "निचला भाग: घेरदार"}
+{"id": "mt-42", "part": "Lower body", "en": "loose, 5 in ease at hip", "reference": "निचला भाग: ढीला, कूल्हे पर 5 इंच ढील"}
+{"id": "mt-43", "part": "Lower body", "en": "mermaid", "reference": "निचला भाग: मरमेड कट"}
+{"id": "mt-44", "part": "Lower body", "en": "slightly loose, 4.25 in ease at hip", "reference": "निचला भाग: थोड़ा ढीला, कूल्हे पर 4.25 इंच ढील"}
+{"id": "mt-45", "part": "Lower body", "en": "straight", "reference": "निचला भाग: सीधा कट"}
+{"id": "mt-46", "part": "Lower body", "en": "wide-leg", "reference": "निचला भाग: चौड़े पायंचे"}
+{"id": "mt-47", "part": "Neckline", "en": "U, front depth 7.5 in from the high shoulder point", "reference": "गला: यू आकार, कंधे के ऊपरी बिंदु से आगे 7.5 इंच गहरा"}
+{"id": "mt-48", "part": "Neckline", "en": "V, front depth 6.75 in from the high shoulder point", "reference": "गला: वी आकार, कंधे के ऊपरी बिंदु से आगे 6.75 इंच गहरा"}
+{"id": "mt-49", "part": "Neckline", "en": "boat", "reference": "गला: बोट नेक"}
+{"id": "mt-50", "part": "Neckline", "en": "front depth 4.5 in from the high shoulder point", "reference": "गला: कंधे के ऊपरी बिंदु से आगे 4.5 इंच गहरा"}
+{"id": "mt-51", "part": "Neckline", "en": "keyhole", "reference": "गला: की-होल"}
+{"id": "mt-52", "part": "Neckline", "en": "mandarin", "reference": "गला: मंदारिन कॉलर"}
+{"id": "mt-53", "part": "Neckline", "en": "off-shoulder", "reference": "गला: ऑफ-शोल्डर"}
+{"id": "mt-54", "part": "Neckline", "en": "round, front depth 7.5 in from the high shoulder point", "reference": "गला: गोल, कंधे के ऊपरी बिंदु से आगे 7.5 इंच गहरा"}
+{"id": "mt-55", "part": "Neckline", "en": "square", "reference": "गला: चौकोर"}
+{"id": "mt-56", "part": "Neckline", "en": "sweetheart", "reference": "गला: स्वीटहार्ट"}
+{"id": "mt-57", "part": "Neckline", "en": "turtle", "reference": "गला: टर्टल नेक"}
+{"id": "mt-58", "part": "Pieces", "en": "crop top and skirt", "reference": "हिस्से: क्रॉप टॉप और स्कर्ट"}
+{"id": "mt-59", "part": "Pieces", "en": "dhoti pants and kurti", "reference": "हिस्से: धोती पैंट और कुर्ती"}
+{"id": "mt-60", "part": "Pieces", "en": "kurti and palazzo", "reference": "हिस्से: कुर्ती और पलाज़ो"}
+{"id": "mt-61", "part": "Pieces", "en": "lehenga and saree blouse", "reference": "हिस्से: लहंगा और साड़ी का ब्लाउज"}
+{"id": "mt-62", "part": "Pieces", "en": "sweatshirt and pants", "reference": "हिस्से: स्वेटशर्ट और पैंट"}
+{"id": "mt-63", "part": "Sleeve", "en": "18 in", "reference": "आस्तीन: 18 इंच"}
+{"id": "mt-64", "part": "Sleeve", "en": "cold shoulder", "reference": "आस्तीन: कोल्ड शोल्डर"}
+{"id": "mt-65", "part": "Sleeve", "en": "elbow, puff", "reference": "आस्तीन: कोहनी तक, पफ"}
+{"id": "mt-66", "part": "Sleeve", "en": "full", "reference": "आस्तीन: पूरी आस्तीन"}
+{"id": "mt-67", "part": "Sleeve", "en": "sleeveless", "reference": "आस्तीन: बिना आस्तीन"}
+{"id": "mt-68", "part": "Sleeve", "en": "three-quarter", "reference": "आस्तीन: तीन-चौथाई"}
+{"id": "mt-69", "part": "Sleeve", "en": "three-quarter, flutter", "reference": "आस्तीन: तीन-चौथाई, फ्लटर"}

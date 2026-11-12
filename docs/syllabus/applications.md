@@ -94,5 +94,17 @@ MiniLM macro F1 over three seeds is 0.909, 0.909 and 0.843, so the learned model
 | All customer turns joined | 14.0 | 0.750 | 0.368 | 0.519 (0.478 to 0.561) |
 | Engine `phrase()` | 14.3 | 0.694 | 0.342 | 0.525 (0.471 to 0.578) |
 | Oracle: best 2 turns | 9.2 | 0.651 | 0.371 | 0.591 (0.550 to 0.634) |
+| Machine translation (English tailor sheet to Hindi) | `engine/bespoke/apps/translate.py`, gold `data/gold/translation.jsonl` | Scores the Hindi tailor sheet the product prints against hand-written Hindi, next to a free local MT model | `results/translation.json` | The template system is used in the product; the neural model is study only |
 
 TextRank beats the lead baseline on ROUGE-1 and ROUGE-L only within noise, and every extractive method that picks two turns stays below the oracle, because a design is spread over several turns. `phrase()` reads the whole thread into a state and writes a line from it; it matches the join of all customer turns on ROUGE-L (the intervals overlap) while being a normalised sentence rather than a transcript, and it handles a change of mind (thread 13) where extraction cannot. The references were written after reading the same turns, so every system that copies words from the customer scores high; ROUGE rewards that, and a structure-aware check of the slots would be the fairer measure. Not tested: an abstractive neural summariser.
+
+## Machine translation: English tailor sheet to Hindi
+
+`python scripts/apps.py translate`, about 25 s. Gold: 69 sheet rows as printed ("Neckline: V, front depth 6.75 in from the high shoulder point"), selected to cover every part of the sheet, each with a Hindi reference written by one annotator from the English alone. This is a small set of short rows, not a corpus: BLEU is corpus-level with effective order and is harsh on rows of two to ten words, so chrF++ is the better guide. The reference is one person's Hindi, not a panel's; "फिटेड" against the template's "फिट" counts as an error although both are in use.
+
+| System | BLEU | chrF++ (corpus) | chrF++ per row (95% interval) | Exact match |
+|---|---|---|---|---|
+| Template system (deployed) | 64.1 | 76.7 | 79.3 (74.1 to 84.4) | 0.42 |
+| opus-mt-en-hi (Helsinki-NLP, 75M parameters, beam 4) | 4.1 | 22.2 | 24.0 (20.0 to 28.6) | 0.00 |
+
+A generic MT model has no tailoring vocabulary: it reads "Avoid" as "stay away", "Neckline" as a name, "sweetheart" as "जानेमन" and mangles the numbers. The template system's remaining misses are register choices (for example "ज़री" against "ज़री का काम") and one real defect: the Avoid row prints "नहीं चाहिए: कढ़ाई नहीं", saying "not wanted" twice, because `sheetLines` in `web/lib/engine/describe.ts` appends "नहीं" to each value under a label that already means "not wanted". The fix for the owner of that file is to drop the `${...} नहीं` suffix (or change the label to "बिना"). Exact match by part is in the result; Avoid and Back neck are 0 for that reason and for wording. Not tested: IndicTrans2 or a larger model, which do not fit this machine's budget of time; a human fluency judgement.

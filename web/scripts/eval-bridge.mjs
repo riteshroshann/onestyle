@@ -16,7 +16,7 @@ function run(item) {
     triples.push(ups.map(triple));
     spec = apply(spec, ups);
   }
-  return { triples, phrase: phrase(spec), sheet: sheetLines(spec).map(({ part, en, hi }) => ({ part, en, hi })) };
+  return { triples, phrase: phrase(spec), sheet: sheetLines(spec).map(({ part, hiPart, en, hi }) => ({ part, hiPart, en, hi })) };
 }
 
 let input = "";

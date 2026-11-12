@@ -1,0 +1,76 @@
+{
+ "task": "English tailor-sheet rows to Hindi",
+ "gold": "data/gold/translation.jsonl",
+ "n_rows": 69,
+ "seed": 13,
+ "note": "rows are short (a few words); BLEU is corpus-level with effective order and is harsh on them, chrF++ is the better guide",
+ "neural_model": "Helsinki-NLP/opus-mt-en-hi",
+ "interval": "bootstrap over rows, 1000 resamples",
+ "systems": {
+  "template_system_deployed": {
+   "bleu": 64.05,
+   "chrf_pp": 76.66,
+   "chrf_pp_sentence_mean": 79.31,
+   "chrf_pp_sentence_ci95": [
+    74.1121,
+    84.3777
+   ],
+   "exact_match": 0.4203
+  },
+  "opus_mt_en_hi": {
+   "bleu": 4.05,
+   "chrf_pp": 22.19,
+   "chrf_pp_sentence_mean": 23.98,
+   "chrf_pp_sentence_ci95": [
+    19.9929,
+    28.6352
+   ],
+   "exact_match": 0.0
+  }
+ },
+ "examples": [
+  {
+   "source": "Avoid: embroidery",
+   "reference": "नहीं चाहिए: कढ़ाई",
+   "template_system_deployed": "नहीं चाहिए: कढ़ाई नहीं",
+   "opus_mt_en_hi": "दूर रहें: गॉफी"
+  },
+  {
+   "source": "Bodice: semi-fitted, 2.5 in ease at bust and waist",
+   "reference": "ऊपरी भाग: हल्का फिटेड, छाती और कमर पर 2.5 इंच ढील",
+   "template_system_deployed": "ऊपरी भाग: हल्का फिट, छाती और कमर पर 2.5 इंच ढील",
+   "opus_mt_en_hi": "नाव: अर्ध- उनपर, 2. 2 बसट और कमर पर आराम से"
+  },
+  {
+   "source": "Finish: zari",
+   "reference": "सजावट: ज़री का काम",
+   "template_system_deployed": "सजावट: ज़री",
+   "opus_mt_en_hi": "समाप्ति: zी"
+  },
+  {
+   "source": "Lower body: loose, 5 in ease at hip",
+   "reference": "निचला भाग: ढीला, कूल्हे पर 5 इंच ढील",
+   "template_system_deployed": "निचला भाग: ढीला, कूल्हे पर 5 इंच ढील",
+   "opus_mt_en_hi": "नीचे का शरीर: ढीले, कमर में 5"
+  },
+  {
+   "source": "Neckline: sweetheart",
+   "reference": "गला: स्वीटहार्ट",
+   "template_system_deployed": "गला: स्वीटहार्ट",
+   "opus_mt_en_hi": "नैटली: जानेमन"
+  }
+ ],
+ "rows_by_part_exact_match_template": {
+  "Avoid": 0.0,
+  "Back neck": 0.0,
+  "Bodice": 0.2,
+  "Colour": 0.571,
+  "Fabric": 0.75,
+  "Finish": 0.375,
+  "Length": 0.4,
+  "Lower body": 0.4,
+  "Neckline": 0.364,
+  "Pieces": 0.6,
+  "Sleeve": 0.714
+ }
+}
