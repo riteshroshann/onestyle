@@ -2,13 +2,14 @@
 // Flow: method, rate limit, input guard, redaction, BM25 retrieval, then the model only if the notes cover the question.
 // Message text is never logged.
 //
-// Environment: LLM_API_KEY (required for answers), LLM_BASE_URL, LLM_MODEL. Same provider setup as understand.js.
+// Environment: LLM_API_KEY (required for answers), LLM_BASE_URL, LLM_MODEL (comma-separated, tried in order). Same provider setup as understand.js.
 // Author: Ritesh Roshan
 import { FALLBACK, SYSTEM_MARKER, checkAnswer, redact, screen, trimHistory } from "../lib/assistant/guard.js";
 import { grounded, retrieve } from "../lib/assistant/retrieve.js";
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
-const MODEL = process.env.LLM_MODEL || "gemini-3.8-flash";
+// Tried in order: a busy or failing model hands the question to the next one.
+const MODELS = (process.env.LLM_MODEL || "gemini-flash-latest,gemini-flash-lite-latest").split(",").map((m) => m.trim()).filter(Boolean);
 const TIMEOUT_MS = 15000;
 
 const WINDOW_MS = 5 * 60 * 1000;
@@ -86,7 +87,7 @@ export function buildMessages(message, history, passages) {
   ];
 }
 
-async function askModel(messages) {
+async function askOne(model, messages) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
@@ -94,16 +95,26 @@ async function askModel(messages) {
       method: "POST",
       signal: ctl.signal,
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.LLM_API_KEY}` },
-      body: JSON.stringify({ model: MODEL, temperature: 0.2, max_tokens: 400, messages }),
+      body: JSON.stringify({ model, temperature: 0.2, max_tokens: 400, messages }),
     });
     if (!r.ok) return null;
     const data = await r.json();
-    return String(data?.choices?.[0]?.message?.content ?? "");
+    const text = String(data?.choices?.[0]?.message?.content ?? "").trim();
+    return text || null;
   } catch {
     return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** First answer from the model list; null only when every model failed. */
+export async function askModel(messages, models = MODELS) {
+  for (const model of models) {
+    const reply = await askOne(model, messages);
+    if (reply !== null) return reply;
+  }
+  return null;
 }
 
 export default async function handler(req, res) {

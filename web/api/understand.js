@@ -10,7 +10,8 @@ const require = createRequire(import.meta.url);
 const ONTO = require("../lib/ontology.json");
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
-const MODEL = process.env.LLM_MODEL || "gemini-3.8-flash";
+// LLM_MODEL may list fallbacks for the assistant; this endpoint uses the first.
+const MODEL = (process.env.LLM_MODEL || "gemini-flash-latest").split(",")[0].trim();
 const TIMEOUT_MS = 9000;
 
 const SLOT_TAG = {

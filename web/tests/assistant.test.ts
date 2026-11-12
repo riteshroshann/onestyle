@@ -189,6 +189,21 @@ res = mockRes();
 await mod.default(post(ON_TOPIC), res);
 assert.equal(res.code, 502);
 
+// 5f2. a busy first model hands over to the next one in the list
+{
+  const models: string[] = [];
+  globalThis.fetch = (async (_url: string, init: any) => {
+    models.push(JSON.parse(init.body).model);
+    if (models.length === 1) return new Response(JSON.stringify({ error: { code: 503 } }), { status: 503 });
+    return new Response(JSON.stringify({ choices: [{ message: { content: "Wrap the tape around the fullest part of your chest." } }] }), { status: 200 });
+  }) as any;
+  res = mockRes();
+  await mod.default(post(ON_TOPIC), res);
+  assert.equal(res.code, 200);
+  assert.match(res.body.answer, /fullest part of your chest/);
+  assert.deepEqual(models, ["gemini-flash-latest", "gemini-flash-lite-latest"]);
+}
+
 // 5g. a follow-up borrows context from the previous user turn
 mockProvider("It is shown in inches.");
 res = mockRes();

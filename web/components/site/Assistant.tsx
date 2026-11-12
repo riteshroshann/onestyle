@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { AskIcon } from "./AskIcon";
+import { CloseIcon } from "./CloseIcon";
 
 interface Turn { role: "user" | "assistant"; content: string }
 const STARTERS = ["How do I measure my bust?", "What is ease?", "How does the moodboard work?"];
@@ -84,8 +86,9 @@ export function Assistant() {
           </motion.div>
         )}
       </AnimatePresence>
-      <button onClick={() => setOpen(!open)} aria-expanded={open} className="press h-14 rounded-full bg-foreground px-7 text-[16px] font-semibold text-background shadow-[0_12px_40px_-12px_rgba(0,0,0,.6)] hover:bg-brand-ink">
-        {open ? "Close" : "Ask"}
+      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "Close Ask" : "Ask Bespoke"}
+        className="press grid size-14 place-items-center rounded-full bg-brand-ink text-white shadow-[0_12px_40px_-12px_rgba(0,0,0,.6)] transition-colors hover:bg-[#232c3b]">
+        {open ? <CloseIcon className="size-6" /> : <AskIcon className="size-7" />}
       </button>
     </div>
   );
