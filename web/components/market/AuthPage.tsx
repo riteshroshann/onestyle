@@ -28,7 +28,7 @@ export function Field({ label, hint, trailing, ...input }: { label: string; hint
     <div>
       <label htmlFor={id} className="text-[13px] font-medium text-brand-ink/55">{label}</label>
       <div className="mt-1.5 flex items-center rounded-[16px] bg-brand-ink/[.04] ring-1 ring-transparent transition-[background-color,box-shadow] duration-200 focus-within:bg-white focus-within:shadow-[0_8px_24px_-14px_rgba(13,17,23,.3)] focus-within:ring-brand-ink/20 hover:bg-brand-ink/[.06] focus-within:hover:bg-white">
-        <input id={id} {...input} className="h-[52px] min-w-0 flex-1 bg-transparent px-4 text-[16px] text-brand-ink outline-none placeholder:text-brand-ink/30" />
+        <input id={id} {...input} className="auth-input h-[52px] min-w-0 flex-1 rounded-[16px] bg-transparent px-4 text-[16px] text-brand-ink outline-none placeholder:text-brand-ink/30" />
         {trailing}
       </div>
       {hint}

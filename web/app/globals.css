@@ -111,3 +111,19 @@
 /* a phrase the engine understood: underlined like a row of stitches */
 .stitched { text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .14em; }
 
+
+/* autofill keeps the field's own curve and colour instead of the browser's square blue box */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #f5f5f6 inset;
+  -webkit-text-fill-color: #0d1117;
+  caret-color: #0d1117;
+  font-family: inherit;
+  border-radius: 16px;
+  transition: background-color 9999s ease-out;
+}
+.auth-input:autofill { box-shadow: 0 0 0 1000px #f5f5f6 inset; border-radius: 16px; }
+div:focus-within > .auth-input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px #fff inset; }
+/* our own show-password button is the only one: hide Edge's built-in reveal and clear buttons */
+.auth-input::-ms-reveal, .auth-input::-ms-clear { display: none; }
