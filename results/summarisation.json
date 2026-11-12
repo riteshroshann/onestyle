@@ -1,0 +1,174 @@
+{
+ "task": "one-line thread summaries",
+ "gold": "data/gold/summaries.jsonl",
+ "n_threads": 24,
+ "seed": 13,
+ "interval": "bootstrap over threads, 1000 resamples",
+ "mean_reference_words": 16.1,
+ "systems": {
+  "lead_1_turn": {
+   "mean_words": 5.2,
+   "rouge1": 0.3152,
+   "rouge1_ci95": [
+    0.2739,
+    0.3562
+   ],
+   "rouge2": 0.1282,
+   "rouge2_ci95": [
+    0.0753,
+    0.1847
+   ],
+   "rougeL": 0.2896,
+   "rougeL_ci95": [
+    0.2407,
+    0.3401
+   ]
+  },
+  "lead_2_turns": {
+   "mean_words": 7.1,
+   "rouge1": 0.2976,
+   "rouge1_ci95": [
+    0.257,
+    0.3394
+   ],
+   "rouge2": 0.1205,
+   "rouge2_ci95": [
+    0.0703,
+    0.1748
+   ],
+   "rougeL": 0.2748,
+   "rougeL_ci95": [
+    0.2265,
+    0.3228
+   ]
+  },
+  "last_customer_turn": {
+   "mean_words": 4.6,
+   "rouge1": 0.3917,
+   "rouge1_ci95": [
+    0.3428,
+    0.4381
+   ],
+   "rouge2": 0.21,
+   "rouge2_ci95": [
+    0.1619,
+    0.2566
+   ],
+   "rougeL": 0.3621,
+   "rougeL_ci95": [
+    0.3069,
+    0.414
+   ]
+  },
+  "all_customer_turns": {
+   "mean_words": 14.0,
+   "rouge1": 0.7503,
+   "rouge1_ci95": [
+    0.709,
+    0.7869
+   ],
+   "rouge2": 0.3676,
+   "rouge2_ci95": [
+    0.3048,
+    0.4281
+   ],
+   "rougeL": 0.5189,
+   "rougeL_ci95": [
+    0.4783,
+    0.5607
+   ]
+  },
+  "textrank_top_2_turns": {
+   "mean_words": 7.5,
+   "rouge1": 0.3717,
+   "rouge1_ci95": [
+    0.3183,
+    0.431
+   ],
+   "rouge2": 0.1713,
+   "rouge2_ci95": [
+    0.1191,
+    0.2268
+   ],
+   "rougeL": 0.317,
+   "rougeL_ci95": [
+    0.2688,
+    0.3659
+   ]
+  },
+  "textrank_top_2_customer_turns": {
+   "mean_words": 9.2,
+   "rouge1": 0.5561,
+   "rouge1_ci95": [
+    0.5046,
+    0.6034
+   ],
+   "rouge2": 0.2583,
+   "rouge2_ci95": [
+    0.1964,
+    0.3196
+   ],
+   "rougeL": 0.3638,
+   "rougeL_ci95": [
+    0.3201,
+    0.4081
+   ]
+  },
+  "oracle_best_2_turns": {
+   "mean_words": 9.2,
+   "rouge1": 0.6513,
+   "rouge1_ci95": [
+    0.6059,
+    0.6954
+   ],
+   "rouge2": 0.3707,
+   "rouge2_ci95": [
+    0.3121,
+    0.4326
+   ],
+   "rougeL": 0.5912,
+   "rougeL_ci95": [
+    0.55,
+    0.6338
+   ]
+  },
+  "engine_phrase": {
+   "mean_words": 14.3,
+   "rouge1": 0.6942,
+   "rouge1_ci95": [
+    0.6395,
+    0.7414
+   ],
+   "rouge2": 0.3421,
+   "rouge2_ci95": [
+    0.2868,
+    0.399
+   ],
+   "rougeL": 0.5251,
+   "rougeL_ci95": [
+    0.4705,
+    0.5776
+   ]
+  }
+ },
+ "examples": [
+  {
+   "id": "sum-01",
+   "reference": "A yellow cotton kurti with gota patti for a mehendi, fitted at the waist and loose below, with a V neck.",
+   "engine_phrase": "a yellow cotton kurti, fitted at the bust and waist, loose below the waist, a V neckline, gota patti, for a mehendi",
+   "textrank": "hi, i need a kurti for my sister's mehendi sure, which colour and fabric do you have in mind?"
+  },
+  {
+   "id": "sum-02",
+   "reference": "A maroon velvet wedding lehenga with zari work and no sequins, plus a blouse with a deep back and elbow sleeves.",
+   "engine_phrase": "a maroon velvet lehenga, elbow sleeves, zari, for a wedding; no sequins",
+   "textrank": "lehenga chahiye shaadi ke liye, maroon velvet, zari work chahiye, sequins nahi"
+  },
+  {
+   "id": "sum-13",
+   "reference": "A yellow cotton knee-length dress with puff sleeves (changed from a kurti).",
+   "engine_phrase": "a yellow cotton dress, puff sleeves, knee length",
+   "textrank": "length? knee length, puff sleeves"
+  }
+ ]
+}

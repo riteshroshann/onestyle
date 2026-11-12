@@ -77,5 +77,22 @@ Answerability: the deployed rule answers when the top BM25 score is at least 2.5
 | TF-IDF logistic regression, hand-written lines only | 0.867 | 0.865 (0.805 to 0.918) | 0.72 |
 | TF-IDF logistic regression plus synthetic lines | 0.875 | 0.874 (0.809 to 0.926) | 0.84 |
 | MiniLM fine-tuned plus synthetic lines (seed 13) | 0.908 | 0.909 (0.852 to 0.951) | 0.96 |
+| Text summarisation (thread to one line) | `engine/bespoke/apps/summarise.py`, gold `data/gold/summaries.jsonl` | Compares the engine's `phrase()` (the line on the order card) with lead and TextRank extraction | `results/summarisation.json` | `phrase()` is used in the product; TextRank is study only |
 
 MiniLM macro F1 over three seeds is 0.909, 0.909 and 0.843, so the learned model is the least stable. The intervals overlap throughout: the data cannot rank the lexicon, the logistic regression and MiniLM. What it does show is where each fails. The lexicon is perfect on neutral lines. Its 10 errors (listed in the result) are two kinds: negation scope, where Hindi puts the negator after the word ("pasand nahi aaya", "accha nahi lag raha") and a left-only window misses it, and "not too deep" or "not too flashy", where the lexicon flips an excess word to approval although the customer is asking for less; and approvals with no lexicon word ("this fit is just right"). The learned models do better on negator lines (0.84 and 0.96 against 0.80), but on 25 lines that gap is not significant. Not used in the product: `bind()` already turns "no" and "nahi" into `exclude` updates, and a stance model would only add value on free chat lines, which the maker chat could use to flag an unhappy customer.
+
+## Summarisation: thread to one line
+
+`python scripts/apps.py summarise`, about 2 s. Gold: 24 customer-maker threads of 5 to 6 turns (English and Hinglish, including one change of mind and two exclusions), each with a one-line reference summary written by one annotator, mean 16 words. The `phrase()` row runs the shipped TypeScript on the customer's turns. ROUGE is implemented in the module (lower-cased words, no stemming), so values are not comparable with other toolkits. Intervals are bootstrap over threads.
+
+| System | Words | ROUGE-1 | ROUGE-2 | ROUGE-L (95% interval) |
+|---|---|---|---|---|
+| Lead: first turn | 5.2 | 0.315 | 0.128 | 0.290 (0.241 to 0.340) |
+| Last customer turn | 4.6 | 0.392 | 0.210 | 0.362 (0.307 to 0.414) |
+| TextRank, top 2 turns | 7.5 | 0.372 | 0.171 | 0.317 (0.269 to 0.366) |
+| TextRank, top 2 customer turns | 9.2 | 0.556 | 0.258 | 0.364 (0.320 to 0.408) |
+| All customer turns joined | 14.0 | 0.750 | 0.368 | 0.519 (0.478 to 0.561) |
+| Engine `phrase()` | 14.3 | 0.694 | 0.342 | 0.525 (0.471 to 0.578) |
+| Oracle: best 2 turns | 9.2 | 0.651 | 0.371 | 0.591 (0.550 to 0.634) |
+
+TextRank beats the lead baseline on ROUGE-1 and ROUGE-L only within noise, and every extractive method that picks two turns stays below the oracle, because a design is spread over several turns. `phrase()` reads the whole thread into a state and writes a line from it; it matches the join of all customer turns on ROUGE-L (the intervals overlap) while being a normalised sentence rather than a transcript, and it handles a change of mind (thread 13) where extraction cannot. The references were written after reading the same turns, so every system that copies words from the customer scores high; ROUGE rewards that, and a structure-aware check of the slots would be the fairer measure. Not tested: an abstractive neural summariser.
