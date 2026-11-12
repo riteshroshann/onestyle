@@ -7,6 +7,7 @@ import type { Measurements } from "@/lib/engine/describe";
 import type { Spec } from "@/lib/engine/spec";
 import { getStore, MarketError } from "@/lib/market";
 import { SPRING } from "../site/Motion";
+import { SignInActions } from "./SignInGate";
 
 // after signing in, people come back to the sheet they were sending
 const BACK = "/studio/?view=sheet";
@@ -66,10 +67,7 @@ export function SendToMaker({ spec, m, onClose }: { spec: Spec; m: Measurements;
         {me !== undefined && <p className="px-7 pb-6 text-[16px] leading-[1.5] text-brand-ink/60 md:px-9">{lede}</p>}
 
         {me === null && (
-          <div className="flex flex-wrap gap-3 px-7 pb-9 md:px-9">
-            <a href={`/login/?next=${encodeURIComponent(BACK)}`} className="press inline-flex h-12 items-center rounded-full bg-brand-ink px-7 text-[15px] font-medium text-white no-underline transition-colors hover:bg-[#232c3b]">Log in</a>
-            <a href={`/signup/?next=${encodeURIComponent(BACK)}`} className="press inline-flex h-12 items-center rounded-full px-7 text-[15px] font-medium text-brand-ink no-underline ring-1 ring-brand-ink/15 transition-colors hover:bg-brand-ink/[.04]">Create an account</a>
-          </div>
+          <div className="px-7 pb-9 md:px-9"><SignInActions next={BACK} /></div>
         )}
 
         {me?.role === "customer" && (

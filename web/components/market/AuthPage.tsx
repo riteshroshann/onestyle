@@ -1,7 +1,7 @@
 "use client";
 import { AnimatePresence, motion, useAnimationControls } from "motion/react";
 import { useEffect, useId, useState } from "react";
-import { CHECK_EMAIL, LINK_EXPIRED, getStore, MarketError } from "@/lib/market";
+import { CHECK_EMAIL, LINK_EXPIRED, getStore, MarketError, safeNext } from "@/lib/market";
 import type { Craft, Role } from "@/lib/market";
 import { PHOTOS } from "@/lib/photos";
 import { cn } from "@/lib/utils";
@@ -81,10 +81,7 @@ export function AuthPage({ role, mode }: { role: Role; mode: Mode }) {
   const shake = useAnimationControls();
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
   // "next" may only point inside this site
-  const leave = (to: string) => {
-    const next = new URLSearchParams(window.location.search).get("next");
-    window.location.href = next && /^\/(?!\/)/.test(next) ? next : to;
-  };
+  const leave = (to: string) => { window.location.href = safeNext(new URLSearchParams(window.location.search).get("next"), to); };
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);

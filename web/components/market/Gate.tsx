@@ -3,7 +3,24 @@ import { useEffect } from "react";
 import type { Role } from "@/lib/market";
 import { PHOTOS } from "@/lib/photos";
 import { Header, homeFor, useSession } from "../site/Header";
+import { SignInGate } from "./SignInGate";
 import { Workspace } from "./Workspace";
+
+const ASK = { title: "Your requests live in your account.", reason: "Log in to see the designs you sent and talk them through with your makers." };
+const goHome = () => { window.location.href = "/"; };
+
+/** Signed out on the customer inbox: the page behind, and the sign-in pane over it. */
+function CustomerSignIn() {
+  return (
+    <>
+      <Header />
+      <main className="grid min-h-[100svh] place-items-center bg-[#f4f5f7] px-6 pt-[72px] text-center">
+        <p className="display text-[clamp(56px,10vw,160px)] text-brand-ink/10">Requests.</p>
+      </main>
+      <SignInGate ask={ASK} onClose={goHome} />
+    </>
+  );
+}
 
 function MakerLanding() {
   return (
@@ -28,11 +45,11 @@ export function Gate({ door }: { door: Role }) {
   const me = useSession();
   useEffect(() => {
     if (door !== "customer" || me === undefined) return;
-    if (me === null) window.location.href = "/login/?next=/orders/";
-    else if (me.role === "maker") window.location.href = homeFor(me);
+    if (me?.role === "maker") window.location.href = homeFor(me);
   }, [door, me]);
 
   if (me?.role === door) return <Workspace me={me} />;
+  if (door === "customer" && me === null) return <CustomerSignIn />;
   if (door === "maker" && me !== undefined) return <MakerLanding />;
   return null;
 }
