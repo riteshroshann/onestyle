@@ -23,8 +23,8 @@ html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(-
 button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
 button { cursor: pointer; background: none; border: 0; padding: 0; }
 a { color: inherit; }
-:focus-visible { outline: calc(3px * var(--s)) solid rgba(0, 113, 227, .55); outline-offset: calc(2px * var(--s)); border-radius: calc(8px * var(--s)); }
-::selection { background: rgba(0, 113, 227, .18); }
+:focus-visible { outline: calc(3px * var(--s)) solid rgba(56, 189, 248, .7); outline-offset: calc(2px * var(--s)); border-radius: calc(8px * var(--s)); }
+::selection { background: rgba(56, 189, 248, .28); }
 
 /* ---------------------------------------------------------------- header with a segmented control */
 .top { position: sticky; top: 0; z-index: 30; background: #fff; border-bottom: 1px solid rgba(0,0,0,.1); }
@@ -135,7 +135,7 @@ a { color: inherit; }
 .look:hover .pic img { transform: scale(1.04); }
 .look:active .pic { transform: scale(.97); }
 .look:focus-visible { outline: none; }
-.look:focus-visible .pic { box-shadow: 0 0 0 calc(3px * var(--s)) rgba(0,102,204,.55); }
+.look:focus-visible .pic { box-shadow: 0 0 0 calc(3px * var(--s)) rgba(56,189,248,.7); }
 .look[aria-pressed="true"] .pic { box-shadow: 0 0 0 calc(2px * var(--s)) var(--ink); }
 .look[aria-pressed="true"] .name { color: var(--ink); font-weight: 600; }
 .order dd .thumb { width: calc(30px * var(--s)); height: calc(30px * var(--s)); border-radius: calc(8px * var(--s)); background: #fff; object-fit: contain; padding: calc(2px * var(--s)); margin-right: calc(10px * var(--s)); flex: none; }

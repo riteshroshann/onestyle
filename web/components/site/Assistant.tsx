@@ -84,7 +84,7 @@ export function Assistant() {
           </motion.div>
         )}
       </AnimatePresence>
-      <button onClick={() => setOpen(!open)} aria-expanded={open} className="press h-14 rounded-full bg-foreground px-7 text-[16px] font-semibold text-background shadow-[0_12px_40px_-12px_rgba(0,0,0,.6)] hover:bg-black">
+      <button onClick={() => setOpen(!open)} aria-expanded={open} className="press h-14 rounded-full bg-foreground px-7 text-[16px] font-semibold text-background shadow-[0_12px_40px_-12px_rgba(0,0,0,.6)] hover:bg-brand-ink">
         {open ? "Close" : "Ask"}
       </button>
     </div>

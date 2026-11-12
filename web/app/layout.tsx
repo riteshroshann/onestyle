@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Bodoni_Moda, Inter } from "next/font/google";
 import { Assistant } from "../components/site/Assistant";
 import { Splash } from "../components/site/Splash";
+import { ToTop } from "../components/site/ToTop";
 
 // Self-hosted at build time: no request to a font service when the page loads.
 const display = Bodoni_Moda({ subsets: ["latin"], style: ["normal", "italic"], axes: ["opsz"], variable: "--font-display", display: "swap" });
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${ui.variable}`}>
-      <body><Splash />{children}<Assistant /></body>
+      <body><Splash />{children}<ToTop /><Assistant /></body>
     </html>
   );
 }

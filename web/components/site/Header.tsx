@@ -1,4 +1,5 @@
 "use client";
+import { Mark } from "./Mark";
 import { useEffect, useState } from "react";
 import { getStore } from "@/lib/market";
 import type { Profile } from "@/lib/market";
@@ -28,7 +29,7 @@ export function Header({ current, cta = true }: { current?: string; cta?: boolea
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-foreground/10 bg-white">
       <div className="mx-auto flex h-[72px] max-w-[1440px] items-center gap-4 px-5 md:px-10">
-        <a href="/" aria-label="Bespoke home" className="display text-[34px] text-foreground no-underline">Bespoke</a>
+        <a href="/" aria-label="Bespoke home" className="display inline-flex items-center gap-2 text-[34px] text-foreground no-underline"><Mark className="size-6" />Bespoke</a>
         <nav aria-label="Main" className="ml-auto flex items-center gap-1">
           {LINKS.map((l) => (
             <a key={l.href} href={l.href} aria-current={current === l.href ? "page" : undefined} className={cn(link, "hidden aria-[current=page]:bg-secondary sm:block")}>{l.label}</a>
