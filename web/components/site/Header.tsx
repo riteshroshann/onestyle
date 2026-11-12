@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/studio/", label: "Studio" },
   { href: "/makers/", label: "For makers" },
   { href: "/about/", label: "About" },
+  { href: "https://riteshroshann.github.io/onestyle/", label: "Docs" },
 ];
 
 /** "Log in" on customer pages asks which door: a customer or a maker. */

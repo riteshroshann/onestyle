@@ -17,6 +17,8 @@ function pill() {
   links.prepend(p);
   const place = (el) => { p.style.left = `${el.offsetLeft}px`; p.style.width = `${el.offsetWidth}px`; };
   place(here);
+  // measured again once the font is in, so the pill fits the word
+  document.fonts?.ready.then(() => place(here));
   links.querySelectorAll("a").forEach((a) => {
     a.addEventListener("mouseenter", () => { place(a); a.style.color = "#fff"; if (a !== here) here.style.color = "inherit"; });
     a.addEventListener("mouseleave", () => { place(here); a.style.color = ""; here.style.color = ""; });
@@ -40,7 +42,11 @@ function copies() {
       catch { b.textContent = "Select and copy"; }
       setTimeout(() => { b.textContent = "Copy"; b.classList.remove("done"); }, 1600);
     });
-    pre.append(b);
+    // the button lives in a wrapper, so it stays in the corner while the code scrolls
+    const box = document.createElement("div");
+    box.className = "code";
+    pre.replaceWith(box);
+    box.append(pre, b);
   });
 }
 

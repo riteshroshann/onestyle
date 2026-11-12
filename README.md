@@ -1,5 +1,7 @@
 # bespoke
 
+**Try it:** https://onestyle-tawny.vercel.app/ · **Docs:** https://riteshroshann.github.io/onestyle/
+
 Describe the garment you want made, by typing or speaking, in English or Hinglish. Pin inspiration on a moodboard. Bespoke turns the words and the board into a part-by-part garment specification a tailor can cut from, with a tailor sheet in English and Hindi, Pinterest ideas and shopping links.
 
 ```

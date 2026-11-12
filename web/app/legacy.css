@@ -205,3 +205,10 @@ body:has(main.hero) .top .seg .bg-brand-ink { background: #f2f3f5 !important; }
 body:has(main.hero) [data-ask-launcher] { color: #f2f3f5 !important; filter: drop-shadow(0 12px 28px rgba(56,189,248,.18)) !important; }
 body:has(main.hero) [data-ask-launcher] svg path[stroke="#fff"] { stroke: #0d1117 !important; }
 body:has(main.hero) ::selection { background: rgba(56, 189, 248, .35); }
+/* the brief, in the dark: a charcoal surface with a fine light edge instead of an inverted glow.
+   Colours here are written pre-inversion: #ededed renders as #121212, a black edge renders as a white one. */
+body:has(main.hero) main.hero form > div { background: #ededed !important; box-shadow: 0 0 0 1px rgba(0,0,0,.16) !important; transition: box-shadow .25s; }
+body:has(main.hero) main.hero form > div:focus-within { box-shadow: 0 0 0 1px rgba(0,0,0,.34), 0 0 0 6px rgba(0,0,0,.05) !important; }
+body:has(main.hero) main.hero form > div { transition: background-color .3s var(--spring), box-shadow .3s var(--spring) !important; }
+body:has(main.hero) main.hero form > div:hover { background: #e1e1e1 !important; box-shadow: 0 0 0 1px rgba(0,0,0,.3) !important; }
+body:has(main.hero) main.hero form > div:hover, body:has(main.hero) main.hero form > div:focus-within { filter: drop-shadow(0 0 28px rgba(0,0,0,.10)); }

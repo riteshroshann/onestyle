@@ -19,15 +19,7 @@
 </nav></header>
 <main>
   <div class="wrap hero"><h1 class="display reveal">How it<br>is built.</h1><p class="lede reveal">Small, explicit pieces, each with one job and a test that holds it to that job. The model is never the only thing between a customer and a correct sheet.</p></div>
-  <section id="map"><div class="wrap cols"><h2 class="reveal">The map</h2><div class="reveal"><pre><code>ontology/bespoke.json   one source of truth: 21 tags, forms in English, Hinglish and Devanagari, Hindi terms, ease and depth tables, slot costs
-engine/                 Python: lexicon, data generation, the training ladder, ONNX export
-web/lib/engine/         TypeScript mirror of the engine that runs in the browser
-web/components/         the studio (Talk, Board, Sheet, Shop), the market, the site
-web/api/                Vercel functions: assistant.js (Ask), understand.js (the language model reader)
-web/lib/assistant/      BM25 retrieval over the guides, and the guardrails
-web/supabase/           schema for accounts, requests, messages, boards and designs, all behind row-level security
-mcp/                    the MCP server
-site/                   these docs</code></pre></div></div></section>
+  <section id="map"><div class="wrap cols"><h2 class="reveal">The map</h2><div class="reveal"><dl class="map"><div><dt><code>ontology/bespoke.json</code></dt><dd>One source of truth: 21 tags, forms in English, Hinglish and Devanagari, Hindi terms, ease and depth tables, slot costs</dd></div><div><dt><code>engine/</code></dt><dd>Python: lexicon, data generation, the training ladder, ONNX export</dd></div><div><dt><code>web/lib/engine/</code></dt><dd>The TypeScript mirror of the engine that runs in the browser</dd></div><div><dt><code>web/components/</code></dt><dd>The studio (Talk, Board, Sheet, Shop), the market, the site</dd></div><div><dt><code>web/api/</code></dt><dd>Vercel functions: assistant.js (Ask) and understand.js (the language model reader)</dd></div><div><dt><code>web/lib/assistant/</code></dt><dd>BM25 retrieval over the guides, and the guardrails</dd></div><div><dt><code>web/supabase/</code></dt><dd>Schema for accounts, requests, messages, boards and designs, all behind row-level security</dd></div><div><dt><code>mcp/</code></dt><dd>The MCP server</dd></div><div><dt><code>site/</code></dt><dd>These docs</dd></div></dl></div></div></section>
   <section id="pipeline"><div class="wrap cols"><h2 class="reveal">From words to a specification</h2><div class="reveal"><ol class="steps">
 <li><b>Tokenize and tag.</b> One regex tokenizer and one ontology-driven gazetteer, identical in Python and TypeScript and held together by 352 parity fixtures. A fine-tuned MiniLM tags what the gazetteer misses; decoding is Viterbi with BIO constraints, so <code>I-FIT</code> can never follow <code>O</code>.</li>
 <li><b>Bind.</b> Clauses are cut at punctuation and conjunctions, including <code>aur</code> and <code>lekin</code>. Values attach to the nearest part cue (<code>waist</code>, <code>neeche se</code>), intensity (<code>thoda</code>, <code>bahut</code>) and negation (<code>no</code>, <code>nahi</code>, <code>mat</code>) to the nearest value. Numbers that describe the person, such as an age, are never read as lengths. Typos are grounded by character-trigram similarity.</li>
