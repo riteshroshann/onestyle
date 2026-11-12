@@ -28,10 +28,21 @@ const PAGES = {
   limits: { label: "Ideas and shopping", href: "/studio/?view=shop" },
 };
 
-/** Up to two pages for the guides an answer came from, best match first. */
-export function pagesFor(passages) {
+// what the question names wins over which guide happened to rank first
+const ASKED = [
+  [/mood ?board|picture|photo|image|circl/i, "moodboard"],
+  [/sheet|print|pdf|hindi/i, "sheet"],
+  [/measur|naap|bust|waist|hip|size/i, "measuring"],
+  [/maker|tailor|darzi|designer|request|send/i, "makers"],
+  [/shop|buy|price|ready.?made/i, "limits"],
+  [/b(app|about|bespoke|start)b/i, "describing"],
+];
+
+/** Up to two pages to go next: the ones the question names, then the guides the answer came from, then the studio. */
+export function pagesFor(passages, message = "") {
+  const keys = [...ASKED.filter(([re]) => re.test(message)).map(([, k]) => k), ...passages.map((p) => p.id.split("/")[0]), "describing"];
   const seen = new Set();
-  return passages.map((p) => PAGES[p.id.split("/")[0]]).filter((x) => x && !seen.has(x.href) && seen.add(x.href)).slice(0, 2);
+  return keys.map((k) => PAGES[k]).filter((x) => x && !seen.has(x.href) && seen.add(x.href)).slice(0, 2);
 }
 
 export const MESSAGES = {
@@ -154,5 +165,5 @@ export default async function handler(req, res) {
   if (reply === null) { res.status(502).json({ error: MESSAGES.busy }); return; }
 
   const checked = checkAnswer(reply, passages);
-  res.status(200).json({ answer: checked.answer, sources: checked.ok ? passages.map((p) => ({ title: p.title })) : [], links: checked.ok ? pagesFor(passages) : [] });
+  res.status(200).json({ answer: checked.answer, sources: checked.ok ? passages.map((p) => ({ title: p.title })) : [], links: checked.ok ? pagesFor(passages, message) : [] });
 }
