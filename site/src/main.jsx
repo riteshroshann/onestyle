@@ -21,6 +21,7 @@ if (mount) {
       label="Bespoke docs"
       sublabel={touch ? "Tap to open" : "Hover to open"}
       trigger={touch ? "click" : "hover"}
+      defaultOpen={touch}
       closeOnSelect
       physics
       drift={0.5}
