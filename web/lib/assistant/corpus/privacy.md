@@ -13,3 +13,9 @@ This help assistant works the same way: your question is checked for safety, per
 ## Customer and maker accounts
 
 Customers and makers use separate sign-ins. A maker only sees the requests that customers have sent to that maker. When you send a design, you share the specification and chat with that maker. If you do not want to share a design, do not send it; you can still use the tailor sheet on your own and print it for any tailor you choose.
+
+## Where your designs and boards are kept
+
+When you are logged in, your designs and moodboards are saved to your Bespoke account, so they open again on any device. Moodboard pictures are kept in private storage that only your account can read, and nobody else, makers included, can see your designs or boards unless you send a design to a maker.
+
+When you are not logged in, your design lasts only while the browser tab is open, and a new tab starts a fresh design. Moodboards are kept in this browser on this device. The next time you log in on that device, those boards move to your account. Nothing you make while logged out is sent to Bespoke's servers.
