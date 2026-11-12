@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
 import { Measurements, PART_HI, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines } from "../lib/engine/describe";
 import { hindi } from "../lib/engine/lexicon";
-import { Question, Spec, Update, answer, apply, bind, contextOf, depthInches, emptySpec, questions, wearerOf, wearerUpdates } from "../lib/engine/spec";
+import { Question, Spec, Update, answer, apply, bind, contextOf, depthInches, emptySpec, garmentName, questions, wearerOf, wearerUpdates } from "../lib/engine/spec";
 import { allHaveLooks, groupOf, isPhoto, isTall, lookOf } from "../lib/looks";
 import { isCommonWord, loadTagger, tag } from "../lib/models";
 import { understand } from "../lib/understand";
@@ -422,7 +422,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
   const rows = ROWS.filter(([slot]) => spec.slots[slot] || spec.lists[slot]?.length || spec.excluded.some((e) => e.slot === slot));
   return (
     <aside className="order" aria-label="Your design">
-      <AnimatePresence mode="wait" initial={false}><motion.h2 key={spec.slots.garment?.value ?? "none"} initial={{ opacity: 0, y: 10, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>{spec.slots.garment ? nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1) : "Your design"}</motion.h2></AnimatePresence>
+      <AnimatePresence mode="wait" initial={false}><motion.h2 key={spec.slots.garment?.value ?? "none"} initial={{ opacity: 0, y: 10, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>{spec.slots.garment ? nice(garmentName(spec))[0].toUpperCase() + nice(garmentName(spec)).slice(1) : "Your design"}</motion.h2></AnimatePresence>
       <div className="meta">{rows.length ? `Draft ${spec.version}. Select any detail to change it.` : ""}</div>
       {!rows.length && <div className="empty">Each detail you mention settles here, part by part, with where it came from.</div>}
       {rows.length > 0 && (
@@ -518,7 +518,7 @@ function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; set
   const hi = lang === "hi";
   const [sending, setSending] = useState(false);
   const garment = spec.slots.garment
-    ? (hi ? hindi("GARMENT", spec.slots.garment.value) : nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1))
+    ? (hi ? hindi("GARMENT", spec.slots.garment.value) : nice(garmentName(spec))[0].toUpperCase() + nice(garmentName(spec)).slice(1))
     : (hi ? "पोशाक" : "Garment");
   const date = new Date().toLocaleDateString(hi ? "hi-IN" : "en-IN", { day: "numeric", month: "long", year: "numeric" });
   const hiFont = hi ? "hi" : "";
@@ -760,7 +760,9 @@ export default function App() {
     const ups = [...bind(tokens, spans, "words"), ...wearerUpdates(text)];
     setMsgs((x) => [...x, { role: "me", text, tokens, spans }]);
     const model = await second;
-    const all = model?.length ? [...ups, ...model] : ups;
+    // an age is never a length, whichever reader thought so
+    const fromModel = (model ?? []).filter((u) => !(u.slot.endsWith("length") && /year|old|saal|age|umr/i.test(u.value?.evidence ?? "")));
+    const all = fromModel.length ? [...ups, ...fromModel] : ups;
     const next = apply(spec, all);
     setSpec(next);
     reply(next, all);

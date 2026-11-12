@@ -136,6 +136,9 @@ export function bind(tokens: string[], spans: Span[], src: Source, p = 0.9): Upd
           out.push(mk(`${part}.${attr}`, s)); break;
         }
         case "NUM": {
+          // "20 years old", "age 20", "size 32" describe the person, not the garment
+          const after = tokens.slice(s.end, s.end + 2).join(" "), before = tokens[s.start - 1] ?? "";
+          if (/^(years?|yrs?|yo|saal|sal|baras|old)\b/.test(after) || /^(age|aged|umar|umr|size)$/.test(before)) break;
           const inches = num(tokens, s);
           const slot = ctx === "neckline" ? "neckline.depth" : ctx === "back" ? "back.depth" : ctx === "sleeve" ? "sleeve.length"
             : ctx === "slit" ? "slit.length" : "garment.length";
@@ -328,7 +331,7 @@ export const words = (s: string) => tokenize(s);
 const MEN = /\b(men'?s|mens|male|gents?|husband|brother|father|dad|papa|son|boyfriend|groom|dulha|ladka|ladke|bhai|bhaiya|boys?|him)\b(?!['’]s)/i;
 const WOMEN = /\b(women'?s|womens|ladies|female|wife|sister|mother|mom|mummy|daughter|girlfriend|bride|dulhan|ladki|didi|behen|girls?|her)\b(?!['’]s)/i;
 const MEN_GARMENTS = new Set(["sherwani", "nehru jacket"]);
-const WOMEN_GARMENTS = new Set(["kurti", "anarkali", "salwar suit", "lehenga", "saree blouse", "saree", "dress", "gown", "skirt", "crop top", "corset", "bodysuit", "sharara", "palazzo", "churidar", "dupatta", "leggings"]);
+const WOMEN_GARMENTS = new Set(["anarkali", "salwar suit", "lehenga", "saree blouse", "saree", "dress", "gown", "skirt", "crop top", "corset", "bodysuit", "sharara", "palazzo", "churidar", "dupatta", "leggings"]);
 
 export function wearerUpdates(text: string): Update[] {
   const m = MEN.test(text), w = WOMEN.test(text);
@@ -344,3 +347,11 @@ export function wearerOf(spec: Spec): "men" | "women" | "anyone" {
   return "anyone";
 }
 export const isGendered = (g?: string) => !!g && (MEN_GARMENTS.has(g) || WOMEN_GARMENTS.has(g));
+
+/** The word to show for a garment: a kurti for a man, or one asked for as a kurta, is a kurta. */
+export function garmentName(spec: Spec): string {
+  const g = spec.slots.garment;
+  if (!g) return "";
+  if (g.value === "kurti" && (spec.slots.wearer?.value === "men" || /kurta|कुर्ता/i.test(g.evidence))) return "kurta";
+  return g.value;
+}

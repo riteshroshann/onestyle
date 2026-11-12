@@ -1,6 +1,6 @@
 // Human-facing text: the assistant's reply, the tailor sheet lines, and search links.
 import { ONTO, hindi } from "./lexicon.ts";
-import { depthInches, easeInches, familyOf, isGendered, seasonOf, wearerOf } from "./spec.ts";
+import { depthInches, easeInches, familyOf, garmentName, isGendered, seasonOf, wearerOf } from "./spec.ts";
 import type { Spec, Value } from "./spec.ts";
 
 const TAG_OF: Record<string, string> = {
@@ -25,7 +25,7 @@ export function phrase(spec: Spec): string {
   const colour = colours.length ? `${shade ? shade + " " : ""}${colours.join(" and ")}` : "";
   const fam = familyOf(s.garment.value);
   const sil = s["lower.silhouette"] && fam !== "bottom" && fam !== "set" ? nice(s["lower.silhouette"].value) : "";
-  const head = [colour, s.fabric?.value, sil, nice(s.garment.value)].filter(Boolean).join(" ");
+  const head = [colour, s.fabric?.value, sil, nice(garmentName(spec))].filter(Boolean).join(" ");
   const parts: string[] = [];
   const comps = (l.components ?? []).map((c) => nice(c.value));
   if (comps.length) parts.push(`${an(comps[0])} ${comps.join(" with ")}`);
@@ -117,7 +117,7 @@ export function query(spec: Spec, opts: { withParts?: boolean } = {}): string {
     who !== "anyone" && !isGendered(s.garment?.value) ? (who === "men" ? "men's" : "women's") : "",
     ...(l.shade ?? []).slice(0, 1).map((v) => v.value), ...(l.colour ?? []).slice(0, 1).map((v) => v.value),
     s["lower.silhouette"] && s["lower.silhouette"].value !== "anarkali" ? nice(s["lower.silhouette"].value) : "",
-    s.fabric?.value, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value), ...(l.components ?? []).map((c) => nice(c.value)), s.garment ? nice(s.garment.value) : "outfit", seasonOf(spec) === "winter" ? "winter" : "",
+    s.fabric?.value, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value), ...(l.components ?? []).map((c) => nice(c.value)), s.garment ? nice(garmentName(spec)) : "outfit", seasonOf(spec) === "winter" ? "winter" : "",
   ];
   if (opts.withParts) {
     if (s["neckline.shape"]) words.push(`${nice(s["neckline.shape"].value)} neck`);
