@@ -1,0 +1,180 @@
+{
+ "topic": "neural word embeddings",
+ "seed": 13,
+ "training_text": {
+  "sentences": 44540,
+  "tokens": 271531,
+  "note": "catalogue titles (English, no Hinglish) plus 70 assistant guide chunks; small for word2vec"
+ },
+ "ontology_forms": 785,
+ "typo_queries": 434,
+ "models": {
+  "word2vec (skip-gram)": {
+   "dim": 100,
+   "synonym_retrieval": {
+    "coverage": 0.511,
+    "hit@1_same_value": {
+     "value": 0.097,
+     "ci95": [
+      0.066,
+      0.1289
+     ],
+     "n": 318
+    },
+    "hit@1_same_tag": {
+     "value": 0.374,
+     "ci95": [
+      0.3208,
+      0.4277
+     ],
+     "n": 318
+    },
+    "chance_same_value": 0.0058
+   },
+   "typo_recovery": {
+    "value": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n": 434
+   }
+  },
+  "fastText (3-5 char n-grams)": {
+   "dim": 100,
+   "synonym_retrieval": {
+    "coverage": 1.0,
+    "hit@1_same_value": {
+     "value": 0.309,
+     "ci95": [
+      0.2769,
+      0.3427
+     ],
+     "n": 744
+    },
+    "hit@1_same_tag": {
+     "value": 0.445,
+     "ci95": [
+      0.4073,
+      0.4812
+     ],
+     "n": 744
+    },
+    "chance_same_value": 0.0059
+   },
+   "typo_recovery": {
+    "value": 0.779,
+    "ci95": [
+     0.7373,
+     0.818
+    ],
+    "n": 434
+   }
+  },
+  "character trigrams": {
+   "dim": 1743,
+   "synonym_retrieval": {
+    "coverage": 1.0,
+    "hit@1_same_value": {
+     "value": 0.371,
+     "ci95": [
+      0.3387,
+      0.4046
+     ],
+     "n": 744
+    },
+    "hit@1_same_tag": {
+     "value": 0.45,
+     "ci95": [
+      0.414,
+      0.4879
+     ],
+     "n": 744
+    },
+    "chance_same_value": 0.0059
+   },
+   "typo_recovery": {
+    "value": 0.929,
+    "ci95": [
+     0.9032,
+     0.9516
+    ],
+    "n": 434
+   }
+  },
+  "MiniLM-L12 static": {
+   "dim": 384,
+   "synonym_retrieval": {
+    "coverage": 1.0,
+    "hit@1_same_value": {
+     "value": 0.183,
+     "ci95": [
+      0.1546,
+      0.211
+     ],
+     "n": 744
+    },
+    "hit@1_same_tag": {
+     "value": 0.376,
+     "ci95": [
+      0.3427,
+      0.414
+     ],
+     "n": 744
+    },
+    "chance_same_value": 0.0059
+   },
+   "typo_recovery": {
+    "value": 0.196,
+    "ci95": [
+     0.1612,
+     0.2327
+    ],
+    "n": 434
+   }
+  },
+  "MiniLM-L12 static (mean-centred)": {
+   "dim": 384,
+   "synonym_retrieval": {
+    "coverage": 1.0,
+    "hit@1_same_value": {
+     "value": 0.19,
+     "ci95": [
+      0.1613,
+      0.2164
+     ],
+     "n": 744
+    },
+    "hit@1_same_tag": {
+     "value": 0.38,
+     "ci95": [
+      0.3468,
+      0.418
+     ],
+     "n": 744
+    },
+    "chance_same_value": 0.0059
+   },
+   "typo_recovery": {
+    "value": 0.191,
+    "ci95": [
+     0.1567,
+     0.2281
+    ],
+    "n": 434
+   }
+  },
+  "morphological fallback (bespoke/nlp/morph.py)": {
+   "typo_recovery": {
+    "value": 0.454,
+    "ci95": [
+     0.4078,
+     0.5046
+    ],
+    "n": 434
+   }
+  }
+ },
+ "minilm": "base checkpoint the product's tagger was fine-tuned from, used as a static encoder",
+ "caveat": "word2vec only embeds forms the catalogue contains, so its synonym retrieval covers few Hinglish forms (see coverage) and it cannot embed a typo at all. Typo queries are synthetic noise on the forms. Nothing here is a downstream product metric."
+}

@@ -21,6 +21,7 @@ TOPICS = {
     "bow": ("vectors_eval", "run_bow"),
     "tfidf": ("vectors_eval", "run_tfidf"),
     "ngram": ("ngram_eval", "run"),
+    "embed": ("embed_eval", "run"),
 }
 
 

@@ -62,7 +62,7 @@ def train_dicts() -> list[dict]:
     return corpus.to_dicts(corpus.train_rows())
 
 
-CACHE = ENGINE / "models" / "nlp_cache"  # engine/models is gitignored
+CACHE = corpus.CACHE
 
 
 def cached(name: str, build):

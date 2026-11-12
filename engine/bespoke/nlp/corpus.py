@@ -20,6 +20,7 @@ GOLD = ROOT / "data" / "gold" / "requests.txt"
 GUIDES = ROOT / "web" / "lib" / "assistant" / "corpus"
 RESULTS = ROOT / "results"
 FIGURES = RESULTS / "figures"
+CACHE = ROOT / "engine" / "models" / "nlp_cache"  # engine/models is gitignored
 
 Row = list[tuple[str, str]]
 
