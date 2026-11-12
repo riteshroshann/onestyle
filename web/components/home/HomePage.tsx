@@ -9,7 +9,7 @@ export function HomePage() {
       <Header />
       <main className="flex flex-1 items-center pb-24 pt-40 md:pb-32 md:pt-48">
         <div className="mx-auto w-full max-w-[1440px] px-5 md:px-10">
-          <h1 className="display text-[clamp(56px,8.5vw,148px)] font-black leading-[0.9] tracking-[-0.045em]">Made from<br />your words.</h1>
+          <h1 className="display text-[clamp(56px,9vw,160px)] leading-[0.92]">Made from<br />your words.</h1>
           <div className="mt-16 md:mt-24"><Cta href="/studio/" size="lg">Start a design</Cta></div>
         </div>
       </main>

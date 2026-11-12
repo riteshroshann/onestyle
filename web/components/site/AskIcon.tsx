@@ -1,5 +1,5 @@
 // Plump body, big radii, a soft rounded tail at the top left.
-const BUBBLE = "M9.5 7H46Q60 7 60 21V40Q60 58 42 58H33.5Q15.5 58 15.5 40V22.5Q15.5 16.8 11.2 14.2L7.4 11.9Q4.6 10.2 6 8.3Q7 7 9.5 7Z";
+const BUBBLE = "M10.5 7.5H42Q60 7.5 60 25.5V37.5Q60 58 39.5 58H36.5Q16 58 16 37.5V24.5Q16 18 11.6 15.2L8.2 13Q5.2 11 6.6 9.1Q7.7 7.5 10.5 7.5Z";
 const LINE = { stroke: "#fff", strokeWidth: 3.8, strokeLinecap: "round", strokeLinejoin: "round", fill: "none" } as const;
 
 /** The Ask launcher: an ink speech bubble with a white smile that ends in an arrow. */
