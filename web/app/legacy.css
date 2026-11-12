@@ -182,33 +182,3 @@ a { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 @media print { .top, .dock, .noprint { display: none !important; } }
-
-/* ---------------------------------------------------------------- the empty Talk page, in the dark
-   While the studio waits for its first words, the whole page goes black with white type: a quiet tunnel
-   with one light at the far end. The page is drawn light and inverted, so every state keeps its contrast;
-   colours that must stay true (the mark, the live mic) are inverted back. Leaving for the conversation fades to white. */
-body { transition: background-color .6s var(--spring); }
-body:has(main.hero) {
-  background: #000 radial-gradient(120% 70% at 50% -10%, #1b1f27 0%, #07080a 55%, #000 100%) fixed;
-  color-scheme: dark;
-}
-body:has(main.hero) main.hero { filter: invert(1) hue-rotate(180deg); }
-body:has(main.hero) main.hero .bg-\[\#b5121b\] { filter: invert(1) hue-rotate(180deg); }
-body:has(main.hero) .top .inner {
-  background: rgba(18, 20, 26, .62); color: #f2f3f5;
-  box-shadow: 0 8px 32px -12px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(255,255,255,.08);
-}
-body:has(main.hero) .top .mark, body:has(main.hero) .top .seg button, body:has(main.hero) .top .ghost { color: #f2f3f5 !important; }
-body:has(main.hero) .top .seg button:hover:not([aria-pressed="true"]) { background: rgba(255,255,255,.08); }
-body:has(main.hero) .top .seg button[aria-pressed="true"] { color: #0d1117 !important; }
-body:has(main.hero) .top .seg .bg-brand-ink { background: #f2f3f5 !important; }
-body:has(main.hero) [data-ask-launcher] { color: #f2f3f5 !important; filter: drop-shadow(0 12px 28px rgba(56,189,248,.18)) !important; }
-body:has(main.hero) [data-ask-launcher] svg path[stroke="#fff"] { stroke: #0d1117 !important; }
-body:has(main.hero) ::selection { background: rgba(56, 189, 248, .35); }
-/* the brief, in the dark: a charcoal surface with a fine light edge instead of an inverted glow.
-   Colours here are written pre-inversion: #ededed renders as #121212, a black edge renders as a white one. */
-body:has(main.hero) main.hero form > div { background: #ededed !important; box-shadow: 0 0 0 1px rgba(0,0,0,.16) !important; transition: box-shadow .25s; }
-body:has(main.hero) main.hero form > div:focus-within { box-shadow: 0 0 0 1px rgba(0,0,0,.34), 0 0 0 6px rgba(0,0,0,.05) !important; }
-body:has(main.hero) main.hero form > div { transition: background-color .3s var(--spring), box-shadow .3s var(--spring) !important; }
-body:has(main.hero) main.hero form > div:hover { background: #e1e1e1 !important; box-shadow: 0 0 0 1px rgba(0,0,0,.3) !important; }
-body:has(main.hero) main.hero form > div:hover, body:has(main.hero) main.hero form > div:focus-within { filter: drop-shadow(0 0 28px rgba(0,0,0,.10)); }

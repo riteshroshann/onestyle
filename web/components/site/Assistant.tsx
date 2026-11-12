@@ -210,7 +210,7 @@ export function Assistant() {
           </motion.div>
         )}
       </AnimatePresence>
-      <button ref={launcher} data-ask-launcher onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "Close Ask" : "Ask Bespoke"}
+      <button ref={launcher} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "Close Ask" : "Ask Bespoke"}
         className="press grid size-[68px] place-items-center text-brand-ink drop-shadow-[0_12px_20px_rgba(13,17,23,.32)] transition-[color,transform] duration-500 ease-[cubic-bezier(.34,1.56,.64,1)] hover:-translate-y-1 hover:scale-[1.07] hover:text-[#232c3b] active:scale-95">
         <AskIcon open={open} className="size-[68px]" />
       </button>

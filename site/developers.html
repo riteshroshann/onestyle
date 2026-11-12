@@ -52,9 +52,9 @@ bun run dev                          # http://localhost:3000
 bun run build                        # static export into out/
 bun tests/assistant.test.ts          # Ask: retrieval, guardrails, handler</code></pre>
 <p>Without keys the studio runs fully on the device and the marketplace keeps its data in the browser. To connect the services, set these in <code>web/.env.local</code> or on Vercel:</p>
-<pre><code>NEXT_PUBLIC_SUPABASE_URL=...         # accounts, requests, boards, designs
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...    # public by design; row-level security protects the data
-LLM_API_KEY=...                      # server only: Ask and the language model reader</code></pre>
+<pre><code>NEXT_PUBLIC_SUPABASE_URL=...        # accounts and data
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...   # public by design
+LLM_API_KEY=...                     # server only, for Ask</code></pre>
 <p>Apply <code>web/supabase/schema.sql</code>, then <code>boards.sql</code> and <code>designs.sql</code>. To retrain the tagger, see <code>engine/</code> and the ladder commands in the README.</p></div></div></section>
   <section id="principles"><div class="wrap cols"><h2 class="reveal">How we build</h2><div class="reveal"><p>Words first, pictures suggest. The device answer always stands. Every value from a model is checked against the ontology. Every number in these docs can be reproduced from the repository. Nothing about a person is logged.</p></div></div></section>
 </main>
