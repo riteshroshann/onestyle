@@ -29,7 +29,7 @@ export function ToTop() {
           type="button" onClick={up} aria-label="Back to top"
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}
           transition={{ type: "spring", duration: 0.35, bounce: 0 }}
-          className="press fixed bottom-4 left-4 z-50 grid size-14 place-items-center rounded-full ring-1 ring-white/15 bg-foreground text-background shadow-[0_12px_40px_-12px_rgba(0,0,0,.6)] hover:bg-brand-ink md:bottom-6 md:left-6"
+          className="press fixed bottom-4 left-4 z-50 grid size-14 place-items-center rounded-full bg-foreground text-background shadow-[0_12px_40px_-12px_rgba(0,0,0,.6)] hover:bg-brand-ink md:bottom-6 md:left-6"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 19V5M5 12l7-7 7 7" />

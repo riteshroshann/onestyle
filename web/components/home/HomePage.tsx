@@ -50,7 +50,7 @@ function Hero() {
       <div className="grid gap-3 md:h-[calc(100svh-96px)] md:min-h-[600px] md:grid-cols-12 md:gap-5">
         <div className="order-2 flex flex-col justify-end gap-8 px-3 pb-8 pt-6 md:order-1 md:col-span-7 md:px-5 md:pb-10">
           <motion.h1 {...rise(0.15)} className={`${DISPLAY} text-[clamp(64px,10vw,200px)]`}>Made<br />from your<br />words.</motion.h1>
-          <motion.div {...rise(0.3)}><Cta href="/studio/" tone="light" className="h-14 px-8 text-[17px] font-semibold">Start a design</Cta></motion.div>
+          <motion.div {...rise(0.3)}><Cta href="/studio/" className="h-14 px-8 text-[17px] font-semibold">Start a design</Cta></motion.div>
         </div>
         <motion.div {...rise(0)} className="order-1 aspect-[4/5] md:order-2 md:col-span-5 md:aspect-auto">
           <div className="relative h-full overflow-hidden rounded-[22px] bg-black">
@@ -78,13 +78,13 @@ function Brief() {
         <h2 id="brief-title" className="sr-only">You say it, your maker reads it</h2>
         <div className="relative h-[1.1em] w-full text-[clamp(40px,7.5vw,140px)]">
           <AnimatePresence mode="popLayout" initial={false}>
-            <motion.p key={b.said} {...swap} className="display absolute inset-x-0 font-medium italic leading-none tracking-[-0.03em] text-white/55">{b.said}</motion.p>
+            <motion.p key={b.said} {...swap} className="display absolute inset-x-0 font-medium italic leading-none tracking-[-0.03em] text-brand-ink/45">{b.said}</motion.p>
           </AnimatePresence>
         </div>
-        <Mark className="my-8 size-8 rotate-90 md:my-10 md:size-10" />
+        <Mark className="my-8 size-8 rotate-90 text-[#0284c7] md:my-10 md:size-10" />
         <div className="relative h-[1em] w-full text-[clamp(52px,10vw,190px)]">
           <AnimatePresence mode="popLayout" initial={false}>
-            <motion.p key={b.read} {...swap} transition={{ ...swap.transition, delay: 0.08 }} className={`${DISPLAY} absolute inset-x-0 leading-none text-white`}>{b.read}</motion.p>
+            <motion.p key={b.read} {...swap} transition={{ ...swap.transition, delay: 0.08 }} className={`${DISPLAY} absolute inset-x-0 leading-none text-brand-ink`}>{b.read}</motion.p>
           </AnimatePresence>
         </div>
       </div>
@@ -138,10 +138,10 @@ function Makers() {
 function End() {
   return (
     <section className="px-5 pb-16 pt-28 md:px-10 md:pb-24 md:pt-44">
-      <a href="/studio/" className="group relative inline-block pb-5 text-white no-underline outline-none">
+      <a href="/studio/" className="group relative inline-block pb-5 text-brand-ink no-underline outline-none">
         <span className={`${DISPLAY} flex items-center gap-[0.16em] text-[clamp(52px,11.5vw,236px)]`}>
           Start a design
-          <Mark className={`size-[0.4em] shrink-0 ${settle} group-hover:rotate-90 group-focus-visible:rotate-90`} />
+          <Mark className={`size-[0.4em] shrink-0 text-[#0284c7] ${settle} group-hover:rotate-90 group-focus-visible:rotate-90`} />
         </span>
         <span aria-hidden className={`absolute inset-x-0 bottom-0 block h-2 origin-left scale-x-0 bg-brand md:h-3 ${settle} group-hover:scale-x-100 group-focus-visible:scale-x-100`} />
       </a>
@@ -152,8 +152,8 @@ function End() {
 export function HomePage() {
   return (
     <ReactLenis root options={{ lerp: 0.12 }}>
-      <div className="bg-brand-ink text-white">
-        <Header tone="dark" />
+      <div className="bg-white text-brand-ink">
+        <Header />
         <main>
           <Hero />
           <Brief />

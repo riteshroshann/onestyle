@@ -7,14 +7,14 @@ const LINKS = [
 
 export function Footer() {
   return (
-    <footer className="bg-brand-ink text-white">
+    <footer className="border-t border-brand-ink/10 bg-white text-brand-ink">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-8 px-5 py-12 md:flex-row md:items-end md:justify-between md:px-10">
         <span className="display text-[56px]">Bespoke</span>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-7 gap-y-2 text-[15px] font-semibold">
-          {LINKS.map((l) => <a key={l.href} href={l.href} className="text-white no-underline decoration-brand underline-offset-4 hover:underline">{l.label}</a>)}
+          {LINKS.map((l) => <a key={l.href} href={l.href} className="text-brand-ink no-underline decoration-brand underline-offset-4 hover:underline">{l.label}</a>)}
         </nav>
       </div>
-      <p className="mx-auto max-w-[1440px] px-5 pb-28 text-[14px] font-medium text-white/55 md:px-10">Engineered by Ritesh Roshan</p>
+      <p className="mx-auto max-w-[1440px] px-5 pb-28 text-[14px] font-medium text-brand-ink/55 md:px-10">Engineered by Ritesh Roshan</p>
     </footer>
   );
 }
