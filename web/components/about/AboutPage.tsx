@@ -19,9 +19,9 @@ const SOCIAL = [
 ];
 
 const PARTS: { title: string; text: string; href: string; go: string }[] = [
-  { title: "Talk", text: "Say what you want in your own words, English or Hinglish, typed or spoken. The studio asks only for what is missing.", href: "/studio/?new", go: "Start a design" },
-  { title: "Board", text: "Pin pictures of what you love, circle the details, and the studio reads them into your design.", href: "/studio/?view=board", go: "Open a board" },
-  { title: "Sheet", text: "Every choice becomes a tailor sheet in English or Hindi, with drawings and your measurements.", href: "/studio/?view=sheet", go: "See the sheet" },
+  { title: "Talk", text: "Say what you want in your own words, English or Hinglish, typed or spoken. The studio asks only for what is missing.", href: "/studio/talk/?new", go: "Start a design" },
+  { title: "Board", text: "Pin pictures of what you love, circle the details, and the studio reads them into your design.", href: "/studio/board/", go: "Open a board" },
+  { title: "Sheet", text: "Every choice becomes a tailor sheet in English or Hindi, with drawings and your measurements.", href: "/studio/sheet/", go: "See the sheet" },
   { title: "Makers", text: "Send the sheet to a designer or tailor on Bespoke, and talk it through in one thread.", href: "/makers/", go: "For makers" },
 ];
 
@@ -109,7 +109,7 @@ export function AboutPage() {
                 <p>Bespoke is the bridge between the two. Say it however it comes to you, and get back something a maker can cut from, without a single word lost on the way.</p>
               </blockquote>
               <p className="mt-10 text-[15px] text-white/60">Ritesh Roshan, founder</p>
-              <div className="mt-14"><Cta href="/studio/?new" size="lg" tone="light">Start a design</Cta></div>
+              <div className="mt-14"><Cta href="/studio/talk/?new" size="lg" tone="light">Start a design</Cta></div>
             </motion.div>
           </div>
         </section>

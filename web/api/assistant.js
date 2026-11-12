@@ -19,14 +19,14 @@ const PASSAGES = 4;
 
 // Where each guide is put to use, shown under the answer as buttons.
 const PAGES = {
-  about: { label: "Start a design", href: "/studio/?new" },
-  describing: { label: "Start a design", href: "/studio/?new" },
-  glossary: { label: "Start a design", href: "/studio/?new" },
-  moodboard: { label: "Open the moodboard", href: "/studio/?view=board" },
-  sheet: { label: "Open the tailor sheet", href: "/studio/?view=sheet" },
-  measuring: { label: "Add measurements", href: "/studio/?view=sheet" },
+  about: { label: "Start a design", href: "/studio/talk/?new" },
+  describing: { label: "Start a design", href: "/studio/talk/?new" },
+  glossary: { label: "Start a design", href: "/studio/talk/?new" },
+  moodboard: { label: "Open the moodboard", href: "/studio/board/" },
+  sheet: { label: "Open the tailor sheet", href: "/studio/sheet/" },
+  measuring: { label: "Add measurements", href: "/studio/sheet/" },
   makers: { label: "My requests", href: "/orders/" },
-  limits: { label: "Ideas and shopping", href: "/studio/?view=shop" },
+  limits: { label: "Ideas and shopping", href: "/studio/shop/" },
 };
 
 // what the question names wins over which guide happened to rank first
@@ -207,6 +207,6 @@ export default async function handler(req, res) {
   if (reply === null) { res.status(502).json({ error: MESSAGES.busy }); return; }
 
   const checked = checkAnswer(reply, passages);
-  if (styling) { res.status(200).json({ answer: checked.answer, sources: [], links: checked.ok ? [{ label: "Open your design", href: "/studio/" }] : [], mode: "styling" }); return; }
+  if (styling) { res.status(200).json({ answer: checked.answer, sources: [], links: checked.ok ? [{ label: "Open your design", href: "/studio/talk/" }] : [], mode: "styling" }); return; }
   res.status(200).json({ answer: checked.answer, sources: checked.ok ? passages.map((p) => ({ title: p.title })) : [], links: checked.ok ? pagesFor(passages, message) : [] });
 }

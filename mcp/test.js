@@ -10,6 +10,6 @@ assert.deepEqual(tools.map((t) => t.name).sort(), ["ask_bespoke", "search_guides
 const found = await client.callTool({ name: "search_guides", arguments: { query: "how do I measure my bust" } });
 assert.match(found.content[0].text, /How to measure your bust/);
 const link = await client.callTool({ name: "studio_link", arguments: { view: "board" } });
-assert.match(link.content[0].text, /\/studio\/\?view=board$/);
+assert.match(link.content[0].text, /\/studio\/board\/$/);
 await client.close();
 console.log("ok: 3 tools, guide search, studio link");

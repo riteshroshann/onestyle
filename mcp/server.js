@@ -7,7 +7,7 @@ import { z } from "zod";
 import { retrieve } from "../web/lib/assistant/retrieve.js";
 
 const SITE = (process.env.BESPOKE_URL || "https://onestyle-tawny.vercel.app").replace(/\/$/, "");
-const VIEWS = { new: "/studio/?new", talk: "/studio/", board: "/studio/?view=board", sheet: "/studio/?view=sheet", shop: "/studio/?view=shop", makers: "/makers/" };
+const VIEWS = { new: "/studio/talk/?new", talk: "/studio/talk/", board: "/studio/board/", sheet: "/studio/sheet/", shop: "/studio/shop/", makers: "/makers/" };
 
 const server = new McpServer({ name: "bespoke", version: "1.0.0" });
 const text = (t) => ({ content: [{ type: "text", text: t }] });

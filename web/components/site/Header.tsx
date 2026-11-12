@@ -9,7 +9,7 @@ import { InboxLink, Notifier } from "../market/Notifier";
 import { SPRING } from "./Motion";
 
 const LINKS = [
-  { href: "/studio/", label: "Studio" },
+  { href: "/studio/talk/", label: "Studio" },
   { href: "/makers/", label: "For makers" },
   { href: "/about/", label: "About" },
   { href: "https://riteshroshann.github.io/onestyle/", label: "Docs" },
@@ -63,7 +63,7 @@ export function useSession() {
 
 export function Header({ current, tone = "light", audience = "customer" }: { current?: string; tone?: "light" | "dark"; audience?: "customer" | "maker" }) {
   // makers never need the customer studio in their nav, and log in at their own door
-  const links = audience === "maker" ? LINKS.filter((l) => l.href !== "/studio/") : LINKS;
+  const links = audience === "maker" ? LINKS.filter((l) => l.href !== "/studio/talk/") : LINKS;
   const signIn = audience === "maker" ? "/makers/login/" : "/login/";
   const me = useSession();
   const dark = tone === "dark";
