@@ -7,7 +7,7 @@
     "dev": "node node_modules/next/dist/bin/next dev",
     "build": "node node_modules/next/dist/bin/next build",
     "start": "npx serve out",
-    "test": "node --experimental-strip-types tests/engine.test.ts && node --experimental-strip-types tests/requests.test.ts && node --experimental-strip-types tests/api.test.ts && node --experimental-strip-types tests/unit.test.ts && node --experimental-strip-types tests/edge.test.ts && node --experimental-strip-types tests/looks.test.ts && node --experimental-strip-types tests/market.test.ts && node --experimental-strip-types tests/inbox.test.ts && node --experimental-strip-types tests/assistant.test.ts"
+    "test": "node --experimental-strip-types tests/engine.test.ts && node --experimental-strip-types tests/requests.test.ts && node --experimental-strip-types tests/api.test.ts && node --experimental-strip-types tests/unit.test.ts && node --experimental-strip-types tests/edge.test.ts && node --experimental-strip-types tests/looks.test.ts && node --experimental-strip-types tests/market.test.ts && node --experimental-strip-types tests/inbox.test.ts && node --experimental-strip-types tests/vision.test.ts && node --experimental-strip-types tests/board.test.ts && node --experimental-strip-types tests/assistant.test.ts"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "0.18.1",
