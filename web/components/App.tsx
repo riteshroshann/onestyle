@@ -458,7 +458,54 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
   );
 }
 
-function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: Measurements) => void }) {
+/** A two- or three-way switch whose ink slides to the chosen side. */
+function Switch<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label: string }) {
+  const id = useId();
+  return (
+    <div role="group" aria-label={label} className="relative flex h-11 items-center rounded-full bg-brand-ink/[.05] p-1 text-[14px] font-medium">
+      {options.map(([v, text]) => (
+        <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}
+          className={cn("relative h-9 rounded-full px-4 transition-colors", value === v ? "text-white" : "text-brand-ink/60 hover:text-brand-ink")}>
+          {value === v && <motion.span layoutId={id} transition={SPRING} className="absolute inset-0 rounded-full bg-brand-ink" />}
+          <span className="relative">{text}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** The opening of the sheet and shop pages: a big line, one sentence on what the page is for. */
+function PageHead({ title, lede }: { title: string; lede: string }) {
+  return (
+    <>
+      <h1 className="display overflow-hidden pb-[0.08em] text-[clamp(48px,7vw,112px)] leading-[0.95]">
+        <motion.span className="block" initial={{ y: "105%" }} animate={{ y: 0 }} transition={{ ...SOFT, delay: 0.05 }}>{title}</motion.span>
+      </h1>
+      <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.15 }}
+        className="mt-6 max-w-[54ch] text-[clamp(17px,1.4vw,20px)] leading-[1.5] text-brand-ink/60">{lede}</motion.p>
+    </>
+  );
+}
+
+/** Shown on a page that needs a design before it has anything to say. */
+function NeedsDesign({ text, onTalk }: { text: string; onTalk: () => void }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.25 }}
+      className="mt-12 rounded-[32px] bg-brand-ink/[.035] px-8 py-12 md:px-12">
+      <p className="max-w-[40ch] text-[22px] font-medium leading-[1.35] tracking-[-0.02em]">{text}</p>
+      <button type="button" onClick={onTalk} className="press mt-6 h-12 rounded-full bg-brand-ink px-6 text-[15px] font-medium text-white transition-colors hover:bg-[#232c3b] active:scale-[0.97]">
+        Describe a garment
+      </button>
+    </motion.div>
+  );
+}
+
+const MEAS: [keyof Measurements, string, string][] = [
+  ["bust", "Bust", "छाती"], ["waist", "Waist", "कमर"], ["hip", "Hip", "कूल्हा"],
+  ["shoulder", "Shoulder", "कंधा"], ["length", "Length", "लंबाई"], ["sleeve", "Sleeve", "आस्तीन"],
+];
+
+function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; setM: (m: Measurements) => void; onTalk: () => void }) {
   const lines = sheetLines(spec, m);
   const f = finished(spec, m);
   const drawings = DRAWN.flatMap(([slot, part]) => {
@@ -466,83 +513,164 @@ function SheetView({ spec, m, setM }: { spec: Spec; m: Measurements; setM: (m: M
     const src = v ? lookOf(slot, v, contextOf(slot, spec)) : undefined;
     return v && src ? [{ slot, part, value: v, src }] : [];
   });
-  const [hi, setHi] = useState(false);
+  const [lang, setLang] = useState<"en" | "hi">("en");
+  const hi = lang === "hi";
   const [sending, setSending] = useState(false);
-  const field = (k: keyof Measurements, label: string) => (
-    <label>{label}<input inputMode="decimal" value={m[k] ?? ""} onChange={(e) => setM({ ...m, [k]: e.target.value ? parseFloat(e.target.value) : undefined })} /></label>
-  );
+  const garment = spec.slots.garment
+    ? (hi ? hindi("GARMENT", spec.slots.garment.value) : nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1))
+    : (hi ? "पोशाक" : "Garment");
+  const date = new Date().toLocaleDateString(hi ? "hi-IN" : "en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const hiFont = hi ? "hi" : "";
+
   return (
-    <main className="page">
-      <h2 className="noprint">Tailor sheet</h2>
-      <div className="actions noprint">
-        <button className="btn quiet" onClick={() => setHi(!hi)}>{hi ? "Show in English" : "हिंदी में दिखाएँ"}</button>
-        <button className="btn quiet" onClick={() => window.print()}>Print or save as PDF</button>
-        {lines.length > 0 && <button className="btn" onClick={() => setSending(true)}>Send to a maker</button>}
+    <main className="mx-auto max-w-[1180px] px-5 pb-32 pt-14 md:px-10 md:pt-20 print:p-0">
+      <div className="noprint">
+        <PageHead title="Tailor sheet." lede="Everything your tailor needs, written from your design. Add your measurements, then print it or send it to a maker on Bespoke." />
       </div>
-      {sending && <SendToMaker spec={spec} m={m} onClose={() => setSending(false)} />}
-      <div className="sheet">
-        <h3 className={hi ? "hi" : ""}>{spec.slots.garment ? (hi ? hindi("GARMENT", spec.slots.garment.value) : nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1)) : (hi ? "पोशाक" : "Garment")}</h3>
-        <div className={`meta ${hi ? "hi" : ""}`}>{hi ? `ड्राफ़्ट ${spec.version}, ${new Date().toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric" })}` : `Draft ${spec.version}, ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. ${phrase(spec)}.`}</div>
-        {lines.length ? (
-          <table><tbody>{lines.map((l) => <tr key={l.part}><td className={hi ? "hi" : ""}>{hi ? l.hiPart : l.part}</td><td className={hi ? "hi" : ""}>{hi ? l.hi : l.en}</td><td className="from">{l.from}</td></tr>)}</tbody></table>
-        ) : <p style={{ color: "var(--ink-3)" }}>Describe the garment first; its instructions appear here.</p>}
-        {drawings.length > 0 && (<>
-          <h4 className={hi ? "hi" : ""}>{hi ? "चित्र" : "Drawings"}</h4>
-          <div className="drawings">{drawings.map((d) => (
-            <figure key={d.slot} className={`${isPhoto(d.slot) ? "photo" : ""}${isTall(d.slot) ? " tall" : ""}`}>
-              <img src={d.src} alt={`${d.part}: ${nice(d.value)}`} />
-              <figcaption className={hi ? "hi" : ""}><b>{hi ? (PART_HI[d.part] ?? d.part) : d.part}</b>{hi ? hindi(SLOT_TAG[d.slot] as never, d.value) : nice(d.value)}</figcaption>
-            </figure>
-          ))}</div>
-        </>)}
-        <h4 className={hi ? "hi" : ""}>{hi ? "माप (इंच में)" : "Measurements in inches"}</h4>
-        <div className={`meas ${hi ? "hi" : ""}`}>{field("bust", hi ? "छाती" : "Bust")}{field("waist", hi ? "कमर" : "Waist")}{field("hip", hi ? "कूल्हा" : "Hip")}{field("shoulder", hi ? "कंधा" : "Shoulder")}{field("length", hi ? "लंबाई" : "Length")}{field("sleeve", hi ? "आस्तीन" : "Sleeve")}</div>
-        {(f.bust || f.waist || f.hip) && <div className={`finished ${hi ? "hi" : ""}`}>{hi
-          ? `तैयार कपड़े का माप: ${[f.bust && `छाती ${f.bust} इंच`, f.waist && `कमर ${f.waist} इंच`, f.hip && `कूल्हा ${f.hip} इंच`].filter(Boolean).join(", ")}।`
-          : `Finished garment: ${[f.bust && `bust ${f.bust} in`, f.waist && `waist ${f.waist} in`, f.hip && `hip ${f.hip} in`].filter(Boolean).join(", ")}.`}</div>}
-      </div>
+      {!lines.length ? <NeedsDesign text="Your sheet fills in as you describe the garment. Start in Talk, then come back here." onTalk={onTalk} /> : (
+        <>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.25 }}
+            className="noprint mt-10 flex flex-wrap items-center gap-3">
+            <Switch label="Sheet language" value={lang} onChange={setLang} options={[["en", "English"], ["hi", "हिंदी"]]} />
+            <span className="flex-1" />
+            <button type="button" onClick={() => window.print()}
+              className="press h-11 rounded-full px-5 text-[15px] font-medium ring-1 ring-brand-ink/15 transition-colors hover:bg-brand-ink/[.04] active:scale-[0.97]">Print or save as PDF</button>
+            <button type="button" onClick={() => setSending(true)}
+              className="press h-11 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white transition-colors hover:bg-[#232c3b] active:scale-[0.97]">Send to a maker</button>
+          </motion.div>
+          {sending && <SendToMaker spec={spec} m={m} onClose={() => setSending(false)} />}
+
+          <motion.article initial={{ opacity: 0, y: 24, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ ...SOFT, delay: 0.3 }}
+            className="sheet mt-6 rounded-[32px] bg-white p-7 shadow-[0_0_0_1px_rgba(13,17,23,.06),0_40px_90px_-50px_rgba(13,17,23,.35)] md:p-14 print:p-0 print:shadow-none">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={lang} initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }} exit={{ opacity: 0, filter: "blur(4px)" }} transition={{ duration: 0.25 }}>
+                <h2 className={cn("display text-[clamp(40px,4.5vw,64px)] leading-none", hiFont)}>{garment}</h2>
+                <p className={cn("mt-4 max-w-[70ch] text-[16px] leading-[1.55] text-brand-ink/55", hiFont)}>
+                  {hi ? `ड्राफ़्ट ${spec.version}, ${date}` : `Draft ${spec.version}, ${date}. ${phrase(spec)}.`}
+                </p>
+
+                <dl className="mt-10">
+                  {lines.map((l, i) => (
+                    <motion.div key={l.part} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.35 + i * 0.03 }}
+                      className="grid gap-1 border-t border-brand-ink/[.08] py-4 md:grid-cols-[180px_1fr_220px] md:gap-6">
+                      <dt className={cn("text-[15px] font-medium text-brand-ink/50", hiFont)}>{hi ? l.hiPart : l.part}</dt>
+                      <dd className={cn("text-[18px] leading-[1.45]", hiFont)}>{hi ? l.hi : l.en}</dd>
+                      <dd className="text-[13px] leading-[1.5] text-brand-ink/40 md:text-right">{l.from}</dd>
+                    </motion.div>
+                  ))}
+                </dl>
+
+                {drawings.length > 0 && (
+                  <section className="mt-12">
+                    <h3 className={cn("text-[15px] font-medium text-brand-ink/50", hiFont)}>{hi ? "चित्र" : "Drawings"}</h3>
+                    <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(136px,1fr))] gap-4">
+                      {drawings.map((d) => (
+                        <figure key={d.slot} className="group m-0">
+                          <div className={cn("overflow-hidden rounded-[20px] bg-brand-ink/[.035] print:border print:border-black/10", isTall(d.slot) ? "aspect-[3/4]" : "aspect-square")}>
+                            <img src={d.src} alt={`${d.part}: ${nice(d.value)}`}
+                              className={cn("size-full transition-transform duration-500 group-hover:scale-[1.04]", isPhoto(d.slot) ? "object-cover" : "object-contain p-3")} />
+                          </div>
+                          <figcaption className={cn("mt-2 text-[14px] leading-tight", hiFont)}>
+                            <span className="block text-[12px] text-brand-ink/45">{hi ? (PART_HI[d.part] ?? d.part) : d.part}</span>
+                            {hi ? hindi(SLOT_TAG[d.slot] as never, d.value) : nice(d.value)}
+                          </figcaption>
+                        </figure>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                <section className="mt-12">
+                  <h3 className={cn("text-[15px] font-medium text-brand-ink/50", hiFont)}>{hi ? "माप, इंच में" : "Measurements, in inches"}</h3>
+                  <p className="noprint mt-1 text-[14px] text-brand-ink/45">Measure over light clothing, tape snug but not tight. Ask in the corner explains each one.</p>
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                    {MEAS.map(([k, en, hiLabel]) => (
+                      <label key={k} className="group block rounded-[18px] bg-brand-ink/[.04] px-4 pb-3 pt-2.5 ring-1 ring-transparent transition-[background-color,box-shadow] focus-within:bg-white focus-within:ring-brand-ink/20 hover:bg-brand-ink/[.06] print:bg-transparent print:ring-black/15">
+                        <span className={cn("text-[12px] font-medium text-brand-ink/50", hiFont)}>{hi ? hiLabel : en}</span>
+                        <span className="mt-0.5 flex items-baseline gap-1">
+                          <input inputMode="decimal" value={m[k] ?? ""} placeholder="–"
+                            onChange={(e) => setM({ ...m, [k]: e.target.value ? parseFloat(e.target.value) : undefined })}
+                            className="w-full min-w-0 bg-transparent text-[22px] font-medium tracking-[-0.02em] outline-none placeholder:text-brand-ink/20" />
+                          <span className="text-[13px] text-brand-ink/40">in</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <AnimatePresence>
+                    {(f.bust || f.waist || f.hip) && (
+                      <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={SPRING}
+                        className={cn("mt-5 inline-block rounded-full bg-[#38bdf8]/12 px-4 py-2 text-[15px] font-medium text-[#0369a1]", hiFont)}>
+                        {hi
+                          ? `तैयार कपड़े का माप: ${[f.bust && `छाती ${f.bust} इंच`, f.waist && `कमर ${f.waist} इंच`, f.hip && `कूल्हा ${f.hip} इंच`].filter(Boolean).join(", ")}।`
+                          : `Finished garment: ${[f.bust && `bust ${f.bust} in`, f.waist && `waist ${f.waist} in`, f.hip && `hip ${f.hip} in`].filter(Boolean).join(", ")}.`}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </section>
+              </motion.div>
+            </AnimatePresence>
+          </motion.article>
+        </>
+      )}
     </main>
   );
 }
 
 const icon = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 
-function ShopView({ spec, onWearer }: { spec: Spec; onWearer: (w: string) => void }) {
-  const L = links(spec);
-  const who = wearerOf(spec);
+/** One outbound search, as a card that lifts toward the cursor. */
+function Out({ href, domain, title, note, delay }: { href: string; domain: string; title: string; note: string; delay: number }) {
   return (
-    <main className="page">
-      <h2>Ideas and shopping</h2>
-      <p className="lede">Searches written from your design. Look for ideas, buy something close ready-made, or find the fabric and a tailor to have it made.</p>
-      <div className="searchline">
-        <div className="q"><small>Searching for</small>{L.query || "Describe a garment first"}</div>
-        <div className="seg" role="group" aria-label="Shopping for">
-          {(["women", "men", "anyone"] as const).map((w) => <button key={w} aria-pressed={who === w} onClick={() => onWearer(w)}>{w[0].toUpperCase() + w.slice(1)}</button>)}
-        </div>
-      </div>
-      <h3>Buy ready-made</h3>
-      <div className="cards">
-        {L.shops.map((p) => (
-          <a className="card" key={p.label} href={p.url} target="_blank" rel="noreferrer">
-            <img src={icon(p.domain)} alt="" loading="lazy" /><div><b>{p.label}</b><span>Open search</span></div>
-          </a>
-        ))}
-      </div>
-      <h3>Ideas on Pinterest</h3>
-      <div className="cards ideas">
-        {L.pinterest.map((p) => (
-          <a className="card" key={p.url} href={p.url} target="_blank" rel="noreferrer">
-            <img src={icon("pinterest.com")} alt="" loading="lazy" /><div><b>{p.label}</b><span>Pinterest</span></div>
-          </a>
-        ))}
-      </div>
-      {L.fabric.length > 0 && (<><h3>The fabric</h3><div className="cards">{L.fabric.map((p) => (
-        <a className="card" key={p.url} href={p.url} target="_blank" rel="noreferrer"><img src={icon("amazon.in")} alt="" loading="lazy" /><div><b>{p.label}</b><span>By the metre</span></div></a>
-      ))}</div></>)}
-      <h3>Have it made</h3>
-      <div className="cards">
-        <a className="card" href={L.tailors.url} target="_blank" rel="noreferrer"><img src={icon("maps.google.com")} alt="" loading="lazy" /><div><b>Tailors near you</b><span>Take your tailor sheet along</span></div></a>
-      </div>
+    <motion.a href={href} target="_blank" rel="noreferrer" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay }}
+      whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}
+      className="group flex items-center gap-4 rounded-[24px] bg-white p-4 pr-5 no-underline shadow-[0_0_0_1px_rgba(13,17,23,.07)] transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(13,17,23,.1),0_24px_50px_-28px_rgba(13,17,23,.4)]">
+      <img src={icon(domain)} alt="" loading="lazy" className="size-11 shrink-0 rounded-[14px] bg-brand-ink/[.04] object-contain p-2" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[16px] font-medium text-brand-ink">{title}</span>
+        <span className="block text-[13px] text-brand-ink/50">{note}</span>
+      </span>
+      <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-brand-ink/30 transition-[transform,color] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-ink" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" /></svg>
+    </motion.a>
+  );
+}
+
+function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string) => void; onTalk: () => void }) {
+  const L = links(spec);
+  const who = wearerOf(spec) as "women" | "men" | "anyone";
+  const groups: { title: string; items: { href: string; domain: string; title: string; note: string }[] }[] = [
+    { title: "Buy something close, ready-made", items: L.shops.map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: "Opens a search on their site" })) },
+    { title: "Ideas", items: L.pinterest.map((p) => ({ href: p.url, domain: "pinterest.com", title: p.label, note: "Pinterest" })) },
+    { title: "The fabric", items: L.fabric.map((p) => ({ href: p.url, domain: "amazon.in", title: p.label, note: "By the metre" })) },
+    { title: "Have it made", items: [{ href: L.tailors.url, domain: "maps.google.com", title: "Tailors near you", note: "Take your tailor sheet along" }] },
+  ].filter((g) => g.items.length);
+
+  return (
+    <main className="mx-auto max-w-[1180px] px-5 pb-32 pt-14 md:px-10 md:pt-20">
+      <PageHead title="Find it, or have it made." lede="Searches written from your design. Look for ideas, buy something close, or find the fabric and a tailor. Every link opens on the shop's own site." />
+      {!spec.slots.garment ? <NeedsDesign text="Describe the garment first, and the searches here write themselves." onTalk={onTalk} /> : (
+        <>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.22 }}
+            className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[28px] bg-brand-ink/[.035] p-6 md:p-8">
+            <div className="min-w-[220px] flex-1">
+              <p className="text-[13px] font-medium text-brand-ink/45">Searching for</p>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.p key={L.query} initial={{ opacity: 0, y: 6, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}
+                  className="mt-1 text-[clamp(20px,2vw,28px)] font-medium leading-tight tracking-[-0.02em]">{L.query}</motion.p>
+              </AnimatePresence>
+            </div>
+            <Switch label="Shopping for" value={who} onChange={onWearer} options={[["women", "Women"], ["men", "Men"], ["anyone", "Anyone"]]} />
+          </motion.div>
+          {groups.map((g, gi) => (
+            <section key={g.title} className="mt-12">
+              <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 + gi * 0.08 }}
+                className="text-[22px] font-medium tracking-[-0.02em]">{g.title}</motion.h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {g.items.map((it, i) => <Out key={it.href} {...it} delay={0.34 + gi * 0.08 + i * 0.04} />)}
+              </div>
+            </section>
+          ))}
+        </>
+      )}
     </main>
   );
 }
@@ -683,8 +811,8 @@ export default function App() {
   ), [view, started]);
 
   if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
-  if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} /></>);
-  if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} /></>);
+  if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => setView("talk")} /></>);
+  if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => setView("talk")} /></>);
 
   if (!started) return (
     <>
