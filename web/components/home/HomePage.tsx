@@ -50,14 +50,14 @@ function Measure() {
   const fanCentre = Math.floor(FAN.length / 2);
   return (
     <section ref={ref} className="relative h-[190vh] bg-foreground text-background">
-      <div className="sticky top-0 flex h-screen flex-col items-center justify-center gap-[7vh] overflow-hidden px-5">
-        <h2 className="display text-center text-[clamp(44px,9.5vw,160px)]" style={{ perspective: "600px" }} aria-label="Made to measure.">
+      <div className="sticky top-0 flex h-screen flex-col items-center justify-center gap-[5vh] overflow-hidden px-3">
+        <h2 className="display whitespace-nowrap text-center text-[clamp(52px,13.5vw,250px)] font-black leading-[0.85] tracking-[-0.035em]" style={{ perspective: "600px" }} aria-label="Made to measure.">
           {WORD.map((char, i) => <CharacterV1 key={i} char={char} index={i} centerIndex={centre} scrollYProgress={scrollYProgress} />)}
         </h2>
-        <div className="flex items-center justify-center gap-[1vw]" aria-hidden>
+        <div className="flex items-center justify-center -space-x-[1.5vw]" aria-hidden>
           {FAN.map((photo, i) => (
             <CharacterV3 key={photo.src} char={photo.src} index={i} centerIndex={fanCentre} scrollYProgress={scrollYProgress}
-              className="h-[17vw] w-[12vw] rounded-[3px] grayscale md:h-[14vw] md:w-[10vw]" />
+              className="h-[22vw] w-[15vw] rounded-[3px] shadow-[0_30px_60px_-20px_rgba(0,0,0,.8)] ring-1 ring-white/10 grayscale contrast-125 md:h-[19vw] md:w-[13.5vw]" />
           ))}
         </div>
       </div>
