@@ -11,7 +11,7 @@ const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis
 // Tried in order: the light model answers in a couple of seconds; a busy or failing one hands over to the next.
 const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean);
 // one budget for every model in the list, inside the function's 25 s limit (vercel.json)
-const BUDGET_MS = 18000;
+const BUDGET_MS = 20000;
 
 const WINDOW_MS = 5 * 60 * 1000;
 const MAX_PER_WINDOW = 20;
@@ -144,7 +144,8 @@ export async function askModel(messages, models = MODELS) {
   for (const model of models) {
     const left = end - Date.now();
     if (left < 1500) break;
-    const reply = await askOne(model, messages, left);
+    // a stalled model gives up its turn early, so the next one still has time
+    const reply = await askOne(model, messages, Math.min(left, 9000));
     if (reply !== null) return reply;
   }
   return null;
