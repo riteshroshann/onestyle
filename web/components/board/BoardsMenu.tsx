@@ -25,13 +25,13 @@ export function BoardsMenu({ current, onOpen, onNew }: { current: string; onOpen
   const root = useRef<HTMLDivElement>(null);
   const here = boards.find((b) => b.id === current);
 
-  useEffect(() => { if (open) { setBoards(listBoards()); setConfirm(null); } }, [open]);
+  const refresh = () => listBoards().then(setBoards).catch(() => setBoards([]));
+  useEffect(() => { if (open) { void refresh(); setConfirm(null); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const refresh = () => setBoards(listBoards());
-    refresh();
+    void refresh();
     window.addEventListener(CHANGED, refresh);
     return () => window.removeEventListener(CHANGED, refresh);
-  }, [current]);
+  }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!open) return;
     const away = (e: PointerEvent) => { if (!root.current?.contains(e.target as Node)) setOpen(false); };
@@ -78,7 +78,7 @@ export function BoardsMenu({ current, onOpen, onNew }: { current: string; onOpen
                       </span>
                     </button>
                     {confirm === b.id ? (
-                      <button type="button" onClick={() => { removeBoard(b.id); setBoards(listBoards()); if (b.id === current) onNew(); }}
+                      <button type="button" onClick={async () => { await removeBoard(b.id); await refresh(); if (b.id === current) onNew(); }}
                         className="mr-2 h-8 shrink-0 rounded-full bg-[#b5121b] px-3 text-[12px] font-medium text-white">Remove</button>
                     ) : (
                       <button type="button" onClick={() => setConfirm(b.id)} aria-label={`Remove ${b.title}`}

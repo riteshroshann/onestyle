@@ -1,6 +1,6 @@
 // The marketplace on Supabase: Auth for sign-in, Postgres for data, Realtime for live updates.
 // Row-level security in supabase/schema.sql is what enforces who may see and change what; the checks here only give clearer messages.
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MarketError } from "./types.ts";
 import type { Craft, DesignRequest, DesignSnapshot, Message, MessageKind, Profile, RequestStatus, Role, SignUp, Store } from "./types.ts";
@@ -56,7 +56,7 @@ function created<T>(result: { data: T | null; error: unknown }): T {
 }
 
 export function createCloudStore(url: string, anonKey: string): Store {
-  const db: SupabaseClient = createClient(url, anonKey);
+  const db: SupabaseClient = supabase(url, anonKey)!;
 
   async function profileOf(id: string): Promise<Profile | null> {
     const row = check(await db.from("profiles").select("*").eq("id", id).maybeSingle<ProfileRow>());

@@ -12,7 +12,9 @@ import type { ReadingState } from "./board/Reading";
 import { HaloDropzone } from "./ui/halo-dropzone";
 import { BoardsMenu } from "./board/BoardsMenu";
 import { SOFT, SPRING } from "./site/Motion";
-import { loadScene, saveScene, thumbnail } from "../lib/boards";
+import { boardHome, loadScene, saveScene, thumbnail } from "../lib/boards";
+
+const SAVE_FAIL = "This board could not be saved. Check your connection; it saves again with your next change.";
 
 const STEPS: [string, string][] = [
   ["Drop pictures", "Garments you love, one look per picture works best."],
@@ -46,10 +48,17 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons 
   const [hint, setHint] = useState("");
   const [reading, setReading] = useState<ReadingState | null>(null);
   const outcome = useRef<{ ups: Update[]; note: string } | null>(null);
-  const [initial] = useState(() => loadScene(boardId));
+  const [loaded, setLoaded] = useState(false);
+  const [empty, setEmpty] = useState(true);
+  const [home, setHome] = useState<"cloud" | "device" | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [initial] = useState(() => loadScene(boardId).catch(() => null).then((s) => {
+    setEmpty(!s?.elements?.length);
+    setLoaded(true);
+    return { elements: s?.elements ?? [], files: (s?.files ?? {}) as any, appState: { viewBackgroundColor: "#ffffff" } };
+  }));
   const cover = useRef<{ fileId?: string; src?: string }>({});
   const saveTimer = useRef<any>(null);
-  const [empty, setEmpty] = useState(() => !initial?.elements?.length);
 
   const persist = (elements: readonly any[], files: any) => {
     clearTimeout(saveTimer.current);
@@ -57,8 +66,11 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons 
       const kept = elements.filter((e) => !e.isDeleted);
       const first = kept.find((e) => e.type === "image" && files?.[e.fileId]);
       if (first && first.fileId !== cover.current.fileId) cover.current = { fileId: first.fileId, src: await thumbnail(files[first.fileId].dataURL) };
-      // a full device keeps the board on screen; it just cannot be remembered
-      if (!saveScene(boardId, kept, files, cover.current.src)) setHint("This device is out of space, so this board will not be kept. Remove an old board to make room.");
+      setSaving(true);
+      const where = await saveScene(boardId, kept, files, cover.current.src);
+      setSaving(false);
+      if (where === false) setHint(SAVE_FAIL);
+      else { setHome(where); setHint((h) => (h === SAVE_FAIL ? "" : h)); }
     }, 800);
   };
 
@@ -153,12 +165,13 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons 
   };
 
   useEffect(() => () => clearTimeout(saveTimer.current), []);
+  useEffect(() => { boardHome().then(setHome).catch(() => setHome("device")); }, []);
 
   return (
     <div className="boardwrap">
       <Excalidraw
         excalidrawAPI={(a: any) => { api.current = a; }}
-        initialData={initial ? { elements: initial.elements, files: initial.files, appState: { viewBackgroundColor: "#ffffff" } } : { appState: { viewBackgroundColor: "#ffffff" } }}
+        initialData={initial}
         theme="light"
         onChange={(els: readonly any[], _s: any, files: any) => { persist(els, files); setEmpty(!els.some((e) => !e.isDeleted)); }}
         UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false, toggleTheme: false, changeViewBackgroundColor: true, export: { saveFileToDisk: true } } }}
@@ -171,9 +184,20 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons 
           <MainMenu.DefaultItems.ChangeCanvasBackground />
         </MainMenu>
       </Excalidraw>
-      <div className="absolute left-[64px] top-4 z-[4]"><BoardsMenu current={boardId} onOpen={onOpen} onNew={onNew} /></div>
+      <div className="absolute left-[64px] top-4 z-[4] flex items-center gap-3">
+        <BoardsMenu current={boardId} onOpen={onOpen} onNew={onNew} />
+        <AnimatePresence mode="wait">
+          {!empty && home && (
+            <motion.span key={saving ? "saving" : home} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+              className="hidden items-center gap-2 text-[13px] text-brand-ink/50 sm:flex">
+              <span className={saving ? "size-1.5 animate-pulse rounded-full bg-brand-ink/40" : "size-1.5 rounded-full bg-[#22c55e]"} aria-hidden="true" />
+              {saving ? "Saving" : home === "cloud" ? "Saved to your account" : <>Saved on this device. <a href="/login/?next=/studio/?view=board" className="font-medium text-brand-ink underline decoration-brand-ink/25 underline-offset-4 hover:decoration-brand-ink">Sign in</a> to keep it everywhere.</>}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
       <AnimatePresence>
-        {empty && !reading && (
+        {loaded && empty && !reading && (
           <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}
             className="pointer-events-none absolute inset-0 z-[3] grid place-items-center overflow-y-auto px-5 pb-28 pt-20">
             <div className="pointer-events-auto w-full max-w-[640px]">
