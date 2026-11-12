@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
@@ -14,6 +15,8 @@ const Board = dynamic(() => import("./Board"), { ssr: false });
 import { Pleats } from "./Pleats";
 import { SendToMaker } from "./market/SendToMaker";
 import { Mark } from "./site/Mark";
+import { Arrow, Dots, Reveal, SOFT, SPRING } from "./site/Motion";
+import { cn } from "@/lib/utils";
 
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
@@ -170,34 +173,121 @@ function useVoice(onFinal: (t: string) => void) {
   return { supported, live, status, interim, level, lang, setLang, start, stop };
 }
 
-const Mic = () => (<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
+const Mic = () => (<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
+const EXAMPLES = [PLACEHOLDER, "Ek maroon lehenga, gota patti ke saath", "A linen shirt with a mandarin collar", "A black blouse with a deep back"];
 
-function Line({ onSend, voice, autoFocus, label }: { onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; autoFocus?: boolean; label?: string }) {
-  const [text, setText] = useState("");
-  const send = () => { const t = text.trim(); if (t) { onSend(t); setText(""); } };
+/** Speech language, as a two-way switch whose ink slides between the sides. */
+function LangSwitch({ voice }: { voice: ReturnType<typeof useVoice> }) {
+  const id = useId();
   return (
-    <div>
-      {label && <label htmlFor="brief">{label}</label>}
-      <div className="field">
-        <input id={label ? "brief" : undefined} value={voice.live ? voice.interim : text} onChange={(e) => setText(e.target.value)} autoFocus={autoFocus}
-          onKeyDown={(e) => e.key === "Enter" && send()} readOnly={voice.live}
-          placeholder={voice.live ? "" : PLACEHOLDER} aria-label="Describe the garment" />
-        {voice.supported && (
-          <button className="lang" onClick={() => voice.setLang(voice.lang === "en-IN" ? "hi-IN" : "en-IN")}
-            aria-label={voice.lang === "en-IN" ? "Speaking English. Switch to Hindi" : "Speaking Hindi. Switch to English"}>
-            {voice.lang === "en-IN" ? "EN" : "हिं"}
-          </button>
-        )}
-        {voice.supported && (
-          <button className={`mic ${voice.live ? "live" : ""}`} onClick={() => (voice.live ? voice.stop() : voice.start())} aria-label={voice.live ? "Stop listening" : "Speak instead"}><Mic /></button>
-        )}
-        <button className="send" onClick={send}>Send</button>
-      </div>
-      <div className="hint" role="status">{voice.status}</div>
+    <div role="group" aria-label="Speech language" className="relative flex h-9 items-center rounded-full bg-brand-ink/[.05] p-1 text-[13px] font-medium">
+      {([["en-IN", "EN", "English"], ["hi-IN", "हिं", "Hindi"]] as const).map(([code, short, name]) => (
+        <button key={code} type="button" aria-pressed={voice.lang === code} aria-label={`Speak in ${name}`} onClick={() => voice.setLang(code)}
+          className={cn("relative h-7 rounded-full px-3 transition-colors", voice.lang === code ? "text-white" : "text-brand-ink/60 hover:text-brand-ink")}>
+          {voice.lang === code && <motion.span layoutId={id} transition={SPRING} className="absolute inset-0 rounded-full bg-brand-ink" />}
+          <span className="relative">{short}</span>
+        </button>
+      ))}
     </div>
   );
 }
 
+/** The brief: grows with the words, speaks, and types a chosen example in before sending it. */
+function Composer({ onSend, voice, big, busy, queued, onQueued }: {
+  onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; big?: boolean; busy?: boolean; queued?: string | null; onQueued?: () => void;
+}) {
+  const still = !!useReducedMotion();
+  const [text, setText] = useState("");
+  const [focus, setFocus] = useState(false);
+  const [tip, setTip] = useState(0);
+  const area = useRef<HTMLTextAreaElement>(null);
+  const shown = voice.live ? voice.interim : text;
+  const ready = text.trim().length > 0 && !busy && !voice.live;
+
+  useEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, big ? 180 : 120)}px`;
+  }, [shown, big]);
+  // the placeholder walks through a few briefs while the field is empty
+  useEffect(() => {
+    if (shown || still) return;
+    const t = setInterval(() => setTip((i) => (i + 1) % EXAMPLES.length), 3400);
+    return () => clearInterval(t);
+  }, [shown, still]);
+  useEffect(() => {
+    if (!queued) return;
+    if (still) { onSend(queued); onQueued?.(); return; }
+    let n = 0;
+    const t = setInterval(() => {
+      n += 2;
+      setText(queued.slice(0, n));
+      if (n >= queued.length) { clearInterval(t); setTimeout(() => { onSend(queued); setText(""); onQueued?.(); }, 260); }
+    }, 16);
+    return () => clearInterval(t);
+  }, [queued]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const send = () => { const t = text.trim(); if (t && ready) { onSend(t); setText(""); } };
+  const controls = (
+    <div className="flex shrink-0 items-center gap-1.5">
+      {voice.supported && big && <LangSwitch voice={voice} />}
+      {voice.supported && (
+        <motion.button type="button" whileTap={{ scale: 0.9 }} transition={SPRING} onClick={() => (voice.live ? voice.stop() : voice.start())}
+          aria-label={voice.live ? "Stop listening" : "Speak instead"} aria-pressed={voice.live}
+          className={cn("relative grid size-11 place-items-center rounded-full transition-colors", voice.live ? "bg-[#b5121b] text-white" : "text-brand-ink/70 hover:bg-brand-ink/[.06] hover:text-brand-ink")}>
+          {voice.live && <motion.span aria-hidden className="absolute inset-0 rounded-full bg-[#b5121b]/25" animate={{ scale: 1 + voice.level * 0.9 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />}
+          <span className="relative"><Mic /></span>
+        </motion.button>
+      )}
+      <motion.button type="submit" disabled={!ready} aria-label="Send"
+        animate={{ scale: ready ? 1 : 0.86, opacity: ready ? 1 : 0.3 }} whileTap={{ scale: 0.9 }} transition={SPRING}
+        className={cn("grid shrink-0 place-items-center rounded-full bg-brand-ink text-white", big ? "size-12" : "size-11")}>
+        <Arrow />
+      </motion.button>
+    </div>
+  );
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); send(); }}>
+      <motion.div animate={{ boxShadow: focus ? "0 18px 50px -20px rgba(13,17,23,.30)" : "0 8px 30px -22px rgba(13,17,23,.25)" }} transition={{ duration: 0.3 }}
+        className={cn("bg-white ring-1 transition-[--tw-ring-color] duration-200", focus ? "ring-brand-ink/25" : "ring-brand-ink/10 hover:ring-brand-ink/20",
+          big ? "rounded-[32px] p-3 pl-7" : "flex items-end gap-2 rounded-[28px] p-1.5 pl-6")}>
+        <div className="relative flex-1">
+          <textarea ref={area} id={big ? "brief" : undefined} rows={1} value={shown} readOnly={voice.live || !!queued} maxLength={600}
+            onChange={(e) => setText(e.target.value)} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} autoFocus={big}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            aria-label="Describe the garment"
+            className={cn("block w-full resize-none bg-transparent leading-[1.35] tracking-[-0.01em] text-brand-ink outline-none",
+              big ? "min-h-[64px] py-3 text-[clamp(19px,1.7vw,24px)]" : "min-h-11 py-[11px] text-[17px]")} />
+          {!shown && !voice.live && (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span key={tip} aria-hidden initial={{ opacity: 0, y: 8, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -8, filter: "blur(4px)" }} transition={{ duration: 0.35 }}
+                className={cn("pointer-events-none absolute inset-x-0 truncate text-brand-ink/35", big ? "top-3 text-[clamp(19px,1.7vw,24px)]" : "top-[11px] text-[17px]")}>
+                {EXAMPLES[tip]}
+              </motion.span>
+            </AnimatePresence>
+          )}
+        </div>
+        {big ? (
+          <div className="mt-1 flex items-center justify-between gap-3">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p key={voice.status || (text ? "keys" : "none")} role="status" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="hidden min-w-0 truncate text-[14px] text-brand-ink/50 sm:block">
+                {voice.status || (text && !queued ? "Enter to send, Shift and Enter for a new line" : "")}
+              </motion.p>
+            </AnimatePresence>
+            {controls}
+          </div>
+        ) : controls}
+      </motion.div>
+      {!big && voice.status && <p role="status" className="mt-2 pl-6 text-[14px] text-brand-ink/55">{voice.status}</p>}
+    </form>
+  );
+}
+
+/** Your message, with every word the studio understood stitched underneath. */
 function Said({ m }: { m: Extract<Msg, { role: "me" }> }) {
   // map each understood span back onto the original text, so the message reads exactly as it was written
   const low = m.text.toLowerCase();
@@ -216,12 +306,24 @@ function Said({ m }: { m: Extract<Msg, { role: "me" }> }) {
   let i = 0;
   marks.forEach(([a, b, v], k) => {
     if (a > i) parts.push(m.text.slice(i, a));
-    parts.push(<span key={k} className="stitch" title={v ? `Understood as ${v}` : "Noted"}>{m.text.slice(a, b)}</span>);
+    parts.push(
+      <motion.span key={k} title={v ? `Understood as ${v}` : "Noted"} className="cursor-help underline decoration-dashed decoration-2 underline-offset-[6px]"
+        initial={{ textDecorationColor: "rgba(56,189,248,0)" }} animate={{ textDecorationColor: "rgba(56,189,248,1)" }} transition={{ duration: 0.5, delay: 0.25 + k * 0.08 }}>
+        {m.text.slice(a, b)}
+      </motion.span>,
+    );
     i = b;
   });
   parts.push(m.text.slice(i));
-  return <div className="said"><span className="who">You</span>{parts}</div>;
+  return (
+    <motion.div initial={{ opacity: 0, y: 14, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={SPRING} style={{ transformOrigin: "bottom right" }}
+      className="ml-auto max-w-[min(560px,88%)] rounded-[26px] rounded-br-[8px] bg-brand-ink px-6 py-4 text-[18px] leading-[1.5] text-white">
+      {parts}
+    </motion.div>
+  );
 }
+
+const pill = "press inline-flex h-10 items-center rounded-full px-4 text-[14px] font-medium ring-1 ring-brand-ink/12 transition-[background-color,box-shadow,transform] duration-200 hover:bg-brand-ink/[.04] hover:ring-brand-ink/25 active:scale-[0.97]";
 
 // ------------------------------------------------------------------ picker sheet
 function hslHex(h: number, s: number, l: number): string {
@@ -334,7 +436,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
   const rows = ROWS.filter(([slot]) => spec.slots[slot] || spec.lists[slot]?.length || spec.excluded.some((e) => e.slot === slot));
   return (
     <aside className="order" aria-label="Your design">
-      <h2>{spec.slots.garment ? nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1) : "Your design"}</h2>
+      <AnimatePresence mode="wait" initial={false}><motion.h2 key={spec.slots.garment?.value ?? "none"} initial={{ opacity: 0, y: 10, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>{spec.slots.garment ? nice(spec.slots.garment.value)[0].toUpperCase() + nice(spec.slots.garment.value).slice(1) : "Your design"}</motion.h2></AnimatePresence>
       <div className="meta">{rows.length ? `Draft ${spec.version}. Select any detail to change it.` : ""}</div>
       {!rows.length && <div className="empty">Each detail you mention settles here, part by part, with where it came from.</div>}
       {rows.length > 0 && (
@@ -346,7 +448,8 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
             const editable = !!SLOT_TAG[slot] || slot.endsWith(".depth");
             const open = () => editable && setEditing([slot, label]);
             return (
-              <div className="item" key={slot}>
+              <motion.div layout="position" className="item" key={`${slot}:${v?.value ?? ""}:${list.map((x) => x.value).join()}`}
+                initial={{ backgroundColor: "rgba(56,189,248,.18)" }} animate={{ backgroundColor: "rgba(56,189,248,0)" }} transition={{ duration: 1.4, ease: "easeOut" }}>
                 <dt>{label}</dt>
                 <dd>
                   {v && <button onClick={open}>{lookOf(slot, v.value, contextOf(slot, spec)) && <img className={`thumb${isPhoto(slot) ? " photo" : ""}`} src={lookOf(slot, v.value, contextOf(slot, spec))} alt="" />}{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}{editable && <span className="chev">›</span>}</button>}
@@ -354,7 +457,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
                   {ex.map((x) => <span key={x.value} className="no" title={x.evidence}>{nice(x.value)}</span>)}
                   {(v || list.length > 0) && <small>from {[...new Set([v, ...list].filter(Boolean).map((x) => SOURCE[x!.src] ?? x!.src))].join(" and ")}</small>}
                 </dd>
-              </div>
+              </motion.div>
             );
           })}
           {(spec.notes?.length ?? 0) > 0 && <div className="item"><dt>Notes</dt><dd>{spec.notes!.join("; ")}<small>for your tailor</small></dd></div>}
@@ -553,23 +656,42 @@ export default function App() {
   const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
   const fromBoard = (ups: Update[], note: string) => { remember(); const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
   const reset = () => { if (msgs.length) remember(); setSpec(emptySpec()); setMsgs([]); setView("talk"); };
-  // "Start a design" links here with ?new: open on a blank design, with the last one still a Back away
+  // links in: ?new opens a blank design (the last one still a Back away), ?view=board|sheet|shop opens that page
   useLayoutEffect(() => {
-    if (!new URLSearchParams(location.search).has("new")) return;
-    reset();
-    history.replaceState(null, "", location.pathname);
+    const q = new URLSearchParams(location.search);
+    const v = q.get("view");
+    if (q.has("new")) reset();
+    if (v === "board" || v === "sheet" || v === "shop") setView(v);
+    if (q.has("new") || v) history.replaceState(null, "", location.pathname);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const still = !!useReducedMotion();
+  const [queued, setQueued] = useState<string | null>(null);
   const started = msgs.length > 0;
   const backBtn = past.length > 0 && !thinking
-    ? <button className="back" onClick={back} aria-label="Go back one step"><span aria-hidden>‹</span> Back</button> : null;
+    ? <button className={pill} onClick={back} aria-label="Go back one step"><span aria-hidden className="mr-1 text-[18px] leading-none">‹</span>Back</button> : null;
   const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
   const NAV: [View, string][] = [["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
   const header = useMemo(() => (
     <header className="top"><div className="inner">
       <a className="mark" href="/" aria-label="Bespoke home"><Mark className="size-5" /><span>Bespoke</span></a>
-      <nav className="seg" aria-label="Sections">{NAV.map(([v, l]) => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{l}</button>)}</nav>
-      <div className="right">{started && <button className="ghost" onClick={reset}>New design</button>}</div>
+      <nav className="seg" aria-label="Sections">
+        {NAV.map(([v, l]) => (
+          <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
+            {view === v && <motion.span layoutId="studio-tab" transition={SPRING} className="absolute inset-0 rounded-full bg-brand-ink" />}
+            <span className="relative">{l}</span>
+          </button>
+        ))}
+      </nav>
+      <div className="right">
+        <AnimatePresence>
+          {started && (
+            <motion.button className="ghost" onClick={reset} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }} transition={SPRING}>
+              New design
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
     </div></header>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ), [view, started]);
@@ -582,17 +704,42 @@ export default function App() {
     <>
       {header}
       <main className="hero">
-        <div className="row fade">
-          <h1 className="display">Describe it.<br />Wear it.</h1>
-          {voice.live && <div className="side"><Pleats size={150} state={state} level={voice.level} /></div>}
+        <div className="row">
+          <h1 className="display">
+            {["Describe it.", "Wear it."].map((line, i) => (
+              <span key={line} className="block overflow-hidden pb-[0.08em]">
+                <motion.span className="block" initial={{ y: "105%" }} animate={{ y: 0 }} transition={{ ...SOFT, delay: 0.08 + i * 0.1 }}>{line}</motion.span>
+              </span>
+            ))}
+          </h1>
+          <AnimatePresence>
+            {voice.live && (
+              <motion.div className="side" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={SPRING}>
+                <Pleats size={150} state={state} level={voice.level} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="brief">
-          <Line onSend={send} voice={voice} autoFocus label="Your brief" />
-          <div className="tries">
-            {SUGGESTIONS.map((x) => <button key={x} onClick={() => send(x)}>{x}</button>)}
-            <button className="alt" onClick={() => setView("board")}>Start from pictures instead</button>
-          </div>
-        </div>
+        <motion.div className="brief" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.28 }}>
+          <label htmlFor="brief" className="sr-only">Your brief</label>
+          <Composer big onSend={send} voice={voice} busy={thinking} queued={queued} onQueued={() => setQueued(null)} />
+          <ul className="mt-6 flex flex-wrap items-center gap-2">
+            {SUGGESTIONS.map((x, i) => (
+              <motion.li key={x} className="max-w-full" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.42 + i * 0.06 }}>
+                <button type="button" disabled={!!queued} onClick={() => setQueued(x)}
+                  className="press block h-11 max-w-full truncate rounded-full bg-brand-ink/[.045] px-5 text-left text-[15px] transition-[background-color,transform] duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:-translate-y-0.5 hover:bg-brand-ink/[.08] active:scale-[0.97] disabled:opacity-50">
+                  {x}
+                </button>
+              </motion.li>
+            ))}
+            <motion.li initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
+              <button type="button" onClick={() => setView("board")}
+                className="h-11 px-3 text-[15px] font-medium underline decoration-brand-ink/25 underline-offset-[6px] transition-[text-decoration-color] hover:decoration-brand-ink">
+                Start from pictures instead
+              </button>
+            </motion.li>
+          </ul>
+        </motion.div>
       </main>
     </>
   );
@@ -601,38 +748,66 @@ export default function App() {
     <>
       {header}
       <div className="fitting">
-        <section className="dialogue" aria-live="polite">
-          {msgs.map((x, i) => x.role === "me" ? <Said key={i} m={x} /> : (
-            <div className="reply" key={i}>
-              <Silk size={44} state={i === msgs.length - 1 ? state : "idle"} />
-              <div>
-                <p>{x.text}</p>
-                {x.note && <div className="aside">{x.note}</div>}
-                {x.questions.slice(0, 2).map((q) => (
-                  <div className="ask" key={q.slot}>
-                    <div className="q">{q.text}</div>
-                    {allHaveLooks(q.slot, q.options, contextOf(q.slot, spec))
-                      ? <div className="looks inline">{q.options.map((o) => <Look key={o} slot={q.slot} value={o} ctx={contextOf(q.slot, spec)} label={q.labels?.[o] ?? nice(o)} onClick={() => pick(q, o)} />)}</div>
-                      : <div className="opts">{q.options.map((o) => <button key={o} className="opt" onClick={() => pick(q, o)}>{q.labels?.[o] ?? nice(o)}</button>)}</div>}
-                  </div>
-                ))}
-                {i === msgs.length - 1 && (spec.slots.garment && questions(spec).length === 0
-                  ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} backBtn={backBtn} />
-                  : (
-                    <div className="next">
-                      {backBtn}
-                      {spec.slots.garment && <button onClick={() => setView("board")}>Add pictures</button>}
-                      {spec.slots.garment && <button onClick={() => setView("shop")}>Ideas and shopping</button>}
+        <section className="flex flex-col gap-10 pb-[220px]" aria-live="polite">
+          {msgs.map((x, i) => {
+            if (x.role === "me") return <Said key={i} m={x} />;
+            const last = i === msgs.length - 1;
+            return (
+              <motion.div key={i} className="flex gap-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}>
+                <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-brand-ink/[.05]"><Mark className="size-4" /></span>
+                <div className={cn("min-w-0 flex-1", !last && "opacity-55 transition-opacity duration-300 hover:opacity-100")}>
+                  <p className="text-[22px] font-medium leading-[1.35] tracking-[-0.02em]"><Reveal text={x.text} still={still || !last} /></p>
+                  {x.note && (
+                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: last ? 0.35 : 0 }} className="mt-3 max-w-[60ch] text-[16px] leading-[1.55] text-brand-ink/60">{x.note}</motion.p>
+                  )}
+                  {x.questions.slice(0, 2).map((q, qi) => (
+                    <div className="mt-7" key={q.slot}>
+                      <p className="mb-3 text-[15px] font-medium text-brand-ink/70">{q.text}</p>
+                      {allHaveLooks(q.slot, q.options, contextOf(q.slot, spec))
+                        ? <div className="looks inline">{q.options.map((o) => <Look key={o} slot={q.slot} value={o} ctx={contextOf(q.slot, spec)} label={q.labels?.[o] ?? nice(o)} onClick={() => pick(q, o)} />)}</div>
+                        : (
+                          <div className="flex flex-wrap gap-2">
+                            {q.options.map((o, k) => (
+                              <motion.button key={o} type="button" onClick={() => pick(q, o)} whileTap={{ scale: 0.94 }}
+                                initial={last && !still ? { opacity: 0, y: 8, scale: 0.96 } : false} animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ ...SPRING, delay: 0.3 + qi * 0.12 + k * 0.035 }}
+                                className="h-11 rounded-full bg-brand-ink/[.05] px-5 text-[15px] font-medium transition-colors duration-200 hover:bg-brand-ink hover:text-white">
+                                {q.labels?.[o] ?? nice(o)}
+                              </motion.button>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   ))}
-              </div>
-            </div>
-          ))}
+                  {last && !thinking && (spec.slots.garment && questions(spec).length === 0
+                    ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} backBtn={backBtn} />
+                    : (
+                      <motion.div className="mt-8 flex flex-wrap gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+                        {backBtn}
+                        {spec.slots.garment && <button className={pill} onClick={() => setView("board")}>Add pictures</button>}
+                        {spec.slots.garment && <button className={pill} onClick={() => setView("shop")}>Ideas and shopping</button>}
+                      </motion.div>
+                    ))}
+                </div>
+              </motion.div>
+            );
+          })}
+          <AnimatePresence>
+            {thinking && (
+              <motion.div key="dots" className="flex items-center gap-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={SPRING}>
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-ink/[.05]"><Mark className="size-4" /></span>
+                <span className="rounded-[20px] rounded-bl-[6px] bg-[#f2f3f5] px-4 py-3"><Dots /></span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div ref={endRef} />
         </section>
         <Order spec={spec} onEdit={edit} />
       </div>
-      <div className="dock"><div className="wrap">{voice.live && <Pleats size={52} state="listening" level={voice.level} />}<div className="grow"><Line onSend={send} voice={voice} /></div></div></div>
+      <div className="dock"><div className="wrap">
+        <AnimatePresence>{voice.live && <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}><Pleats size={52} state="listening" level={voice.level} /></motion.div>}</AnimatePresence>
+        <div className="grow"><Composer onSend={send} voice={voice} busy={thinking} /></div>
+      </div></div>
     </>
   );
 }

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { AskIcon } from "./AskIcon";
+import { Arrow, Dots, Reveal, SPRING } from "./Motion";
 
 interface Turn { role: "user" | "assistant"; content: string; sources?: string[]; failed?: boolean }
 const STARTERS = ["How do I measure my bust?", "What is ease?", "How does the moodboard work?"];
@@ -12,7 +13,6 @@ const UNAVAILABLE = "I could not reach the assistant. Check your connection and 
 const OFF = "I am not switched on yet.";
 // pages with their own bar along the bottom edge: the launcher sits above it
 const DOCKED = ["/studio", "/orders", "/makers"];
-const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 
 async function ask(message: string, history: Turn[]): Promise<Turn> {
   try {
@@ -28,31 +28,6 @@ async function ask(message: string, history: Turn[]): Promise<Turn> {
   } catch {
     return { role: "assistant", content: UNAVAILABLE, failed: true };
   }
-}
-
-/** Assistant text arrives word by word, the way it would if it streamed. */
-function Reveal({ text, still }: { text: string; still: boolean }) {
-  if (still) return <>{text}</>;
-  const words = text.split(/(\s+)/);
-  return (
-    <>
-      {words.map((w, i) => (
-        <motion.span key={i} initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }}
-          transition={{ duration: 0.35, delay: Math.min(i * 0.012, 1.2) }}>{w}</motion.span>
-      ))}
-    </>
-  );
-}
-
-function Dots() {
-  return (
-    <span className="flex h-5 items-center gap-1" role="status" aria-label="Thinking">
-      {[0, 1, 2].map((i) => (
-        <motion.span key={i} className="size-1.5 rounded-full bg-brand-ink/45"
-          animate={{ y: [0, -4, 0], opacity: [0.45, 1, 0.45] }} transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.14, ease: "easeInOut" }} />
-      ))}
-    </span>
-  );
 }
 
 export function Assistant() {
@@ -194,9 +169,7 @@ export function Assistant() {
                 <motion.button type="submit" disabled={!ready} aria-label="Send"
                   animate={{ scale: ready ? 1 : 0.88, opacity: ready ? 1 : 0.35 }} whileTap={{ scale: 0.9 }} transition={SPRING}
                   className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-ink text-white">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="size-[18px]">
-                    <path d="M12 19V5M6 11l6-6 6 6" />
-                  </svg>
+                  <Arrow />
                 </motion.button>
               </div>
             </form>
