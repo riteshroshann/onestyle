@@ -1,0 +1,210 @@
+{"id": "sent-001", "split": "train", "text": "i love it", "label": "pos"}
+{"id": "sent-002", "split": "train", "text": "this looks great", "label": "pos"}
+{"id": "sent-003", "split": "train", "text": "perfect, keep it like this", "label": "pos"}
+{"id": "sent-004", "split": "train", "text": "bahut accha lag raha hai", "label": "pos"}
+{"id": "sent-005", "split": "train", "text": "yes i like this one", "label": "pos"}
+{"id": "sent-006", "split": "train", "text": "so pretty", "label": "pos"}
+{"id": "sent-007", "split": "train", "text": "the colour is beautiful", "label": "pos"}
+{"id": "sent-008", "split": "train", "text": "ye design pasand hai", "label": "pos"}
+{"id": "sent-009", "split": "train", "text": "exactly what i wanted", "label": "pos"}
+{"id": "sent-010", "split": "train", "text": "this is lovely", "label": "pos"}
+{"id": "sent-011", "split": "train", "text": "nice fit", "label": "pos"}
+{"id": "sent-012", "split": "train", "text": "mast lag raha hai", "label": "pos"}
+{"id": "sent-013", "split": "train", "text": "i like the sleeves", "label": "pos"}
+{"id": "sent-014", "split": "train", "text": "great work", "label": "pos"}
+{"id": "sent-015", "split": "train", "text": "ye fabric kaafi sundar hai", "label": "pos"}
+{"id": "sent-016", "split": "train", "text": "really happy with this", "label": "pos"}
+{"id": "sent-017", "split": "train", "text": "not bad at all", "label": "pos"}
+{"id": "sent-018", "split": "train", "text": "wonderful, go ahead", "label": "pos"}
+{"id": "sent-019", "split": "train", "text": "the neckline looks amazing", "label": "pos"}
+{"id": "sent-020", "split": "train", "text": "bilkul sahi hai ye", "label": "pos"}
+{"id": "sent-021", "split": "train", "text": "i adore this shade", "label": "pos"}
+{"id": "sent-022", "split": "train", "text": "very elegant", "label": "pos"}
+{"id": "sent-023", "split": "train", "text": "this is just right", "label": "pos"}
+{"id": "sent-024", "split": "train", "text": "kya baat hai", "label": "pos"}
+{"id": "sent-025", "split": "train", "text": "thank you, it is perfect", "label": "pos"}
+{"id": "sent-026", "split": "train", "text": "yes, that cut suits me", "label": "pos"}
+{"id": "sent-027", "split": "train", "text": "i am happy with the length", "label": "pos"}
+{"id": "sent-028", "split": "train", "text": "love the embroidery on the border", "label": "pos"}
+{"id": "sent-029", "split": "train", "text": "ye colour mujhe bahut pasand hai", "label": "pos"}
+{"id": "sent-030", "split": "train", "text": "the flare is gorgeous", "label": "pos"}
+{"id": "sent-031", "split": "train", "text": "i hate it", "label": "neg"}
+{"id": "sent-032", "split": "train", "text": "this looks bad", "label": "neg"}
+{"id": "sent-033", "split": "train", "text": "no, change it", "label": "neg"}
+{"id": "sent-034", "split": "train", "text": "bilkul pasand nahi aaya", "label": "neg"}
+{"id": "sent-035", "split": "train", "text": "i do not like this", "label": "neg"}
+{"id": "sent-036", "split": "train", "text": "too tight for me", "label": "neg"}
+{"id": "sent-037", "split": "train", "text": "the colour is ugly", "label": "neg"}
+{"id": "sent-038", "split": "train", "text": "ye design accha nahi hai", "label": "neg"}
+{"id": "sent-039", "split": "train", "text": "not what i wanted", "label": "neg"}
+{"id": "sent-040", "split": "train", "text": "this is terrible", "label": "neg"}
+{"id": "sent-041", "split": "train", "text": "it fits badly", "label": "neg"}
+{"id": "sent-042", "split": "train", "text": "bahut bura lag raha hai", "label": "neg"}
+{"id": "sent-043", "split": "train", "text": "i dislike the sleeves", "label": "neg"}
+{"id": "sent-044", "split": "train", "text": "poor work", "label": "neg"}
+{"id": "sent-045", "split": "train", "text": "ye fabric theek nahi hai", "label": "neg"}
+{"id": "sent-046", "split": "train", "text": "really unhappy with this", "label": "neg"}
+{"id": "sent-047", "split": "train", "text": "not good at all", "label": "neg"}
+{"id": "sent-048", "split": "train", "text": "remove it please", "label": "neg"}
+{"id": "sent-049", "split": "train", "text": "the neckline looks wrong", "label": "neg"}
+{"id": "sent-050", "split": "train", "text": "bilkul galat hai ye", "label": "neg"}
+{"id": "sent-051", "split": "train", "text": "i cannot stand this shade", "label": "neg"}
+{"id": "sent-052", "split": "train", "text": "too flashy", "label": "neg"}
+{"id": "sent-053", "split": "train", "text": "this is far too heavy", "label": "neg"}
+{"id": "sent-054", "split": "train", "text": "nahi chahiye ye", "label": "neg"}
+{"id": "sent-055", "split": "train", "text": "no sequins please", "label": "neg"}
+{"id": "sent-056", "split": "train", "text": "not too long", "label": "neg"}
+{"id": "sent-057", "split": "train", "text": "sleeves mat rakhna", "label": "neg"}
+{"id": "sent-058", "split": "train", "text": "without lace", "label": "neg"}
+{"id": "sent-059", "split": "train", "text": "kadhai nahi chahiye", "label": "neg"}
+{"id": "sent-060", "split": "train", "text": "do not add any print", "label": "neg"}
+{"id": "sent-061", "split": "train", "text": "i want a dress", "label": "neu"}
+{"id": "sent-062", "split": "train", "text": "what is the price range", "label": "neu"}
+{"id": "sent-063", "split": "train", "text": "kurti banwani hai", "label": "neu"}
+{"id": "sent-064", "split": "train", "text": "sleeve length 18 inch", "label": "neu"}
+{"id": "sent-065", "split": "train", "text": "can i see the sheet", "label": "neu"}
+{"id": "sent-066", "split": "train", "text": "which sizes do you do", "label": "neu"}
+{"id": "sent-067", "split": "train", "text": "the occasion is diwali", "label": "neu"}
+{"id": "sent-068", "split": "train", "text": "ye kitne din mein banega", "label": "neu"}
+{"id": "sent-069", "split": "train", "text": "waist 30 inches", "label": "neu"}
+{"id": "sent-070", "split": "train", "text": "please send the measurements form", "label": "neu"}
+{"id": "sent-071", "split": "train", "text": "a lehenga in red", "label": "neu"}
+{"id": "sent-072", "split": "train", "text": "kya aap silk mein bana doge", "label": "neu"}
+{"id": "sent-073", "split": "train", "text": "neckline is v shaped", "label": "neu"}
+{"id": "sent-074", "split": "train", "text": "i am attaching a picture", "label": "neu"}
+{"id": "sent-075", "split": "train", "text": "colour is navy blue", "label": "neu"}
+{"id": "sent-076", "split": "train", "text": "hello, i need a gown", "label": "neu"}
+{"id": "sent-077", "split": "train", "text": "length till the knee", "label": "neu"}
+{"id": "sent-078", "split": "train", "text": "palazzo set for office", "label": "neu"}
+{"id": "sent-079", "split": "train", "text": "ye sheet kaise dekhun", "label": "neu"}
+{"id": "sent-080", "split": "train", "text": "fabric georgette please", "label": "neu"}
+{"id": "sent-081", "split": "train", "text": "how do i pin a photo", "label": "neu"}
+{"id": "sent-082", "split": "train", "text": "fit semi fitted", "label": "neu"}
+{"id": "sent-083", "split": "train", "text": "when will it be ready", "label": "neu"}
+{"id": "sent-084", "split": "train", "text": "ek blouse chahiye", "label": "neu"}
+{"id": "sent-085", "split": "train", "text": "sleeves are elbow length", "label": "neu"}
+{"id": "sent-086", "split": "train", "text": "hip 38", "label": "neu"}
+{"id": "sent-087", "split": "train", "text": "what does fitted mean", "label": "neu"}
+{"id": "sent-088", "split": "train", "text": "design maker ko bhejna hai", "label": "neu"}
+{"id": "sent-089", "split": "train", "text": "back neckline round", "label": "neu"}
+{"id": "sent-090", "split": "train", "text": "a jacket in wool", "label": "neu"}
+{"id": "sent-091", "split": "test", "text": "love this neckline", "label": "pos"}
+{"id": "sent-092", "split": "test", "text": "i really like the puff sleeves", "label": "pos"}
+{"id": "sent-093", "split": "test", "text": "yes this is exactly what i wanted", "label": "pos"}
+{"id": "sent-094", "split": "test", "text": "the colour is perfect", "label": "pos"}
+{"id": "sent-095", "split": "test", "text": "this fabric looks lovely", "label": "pos"}
+{"id": "sent-096", "split": "test", "text": "ye wala design bahut accha hai", "label": "pos"}
+{"id": "sent-097", "split": "test", "text": "mujhe ye sleeves pasand aaye", "label": "pos"}
+{"id": "sent-098", "split": "test", "text": "bilkul yahi chahiye mujhe", "label": "pos"}
+{"id": "sent-099", "split": "test", "text": "gorgeous, please keep the embroidery", "label": "pos"}
+{"id": "sent-100", "split": "test", "text": "this fit is just right", "label": "pos"}
+{"id": "sent-101", "split": "test", "text": "not bad, i like the length", "label": "pos"}
+{"id": "sent-102", "split": "test", "text": "the zari border looks beautiful", "label": "pos"}
+{"id": "sent-103", "split": "test", "text": "love the way the lehenga flares", "label": "pos"}
+{"id": "sent-104", "split": "test", "text": "ye colour mast lag raha hai", "label": "pos"}
+{"id": "sent-105", "split": "test", "text": "that is exactly the v neck i meant", "label": "pos"}
+{"id": "sent-106", "split": "test", "text": "nice, go ahead with this", "label": "pos"}
+{"id": "sent-107", "split": "test", "text": "the mirror work is so pretty", "label": "pos"}
+{"id": "sent-108", "split": "test", "text": "haan ye kaafi sundar hai", "label": "pos"}
+{"id": "sent-109", "split": "test", "text": "really happy with the sample", "label": "pos"}
+{"id": "sent-110", "split": "test", "text": "perfect, thank you for the quick fix", "label": "pos"}
+{"id": "sent-111", "split": "test", "text": "i adore the deep back", "label": "pos"}
+{"id": "sent-112", "split": "test", "text": "the sheet looks great to me", "label": "pos"}
+{"id": "sent-113", "split": "test", "text": "ye fit ekdum sahi hai", "label": "pos"}
+{"id": "sent-114", "split": "test", "text": "this is better than the last one, i like it", "label": "pos"}
+{"id": "sent-115", "split": "test", "text": "wow the pastel shade is just what i imagined", "label": "pos"}
+{"id": "sent-116", "split": "test", "text": "sleeves ka design pasand aaya", "label": "pos"}
+{"id": "sent-117", "split": "test", "text": "great, the length works for me", "label": "pos"}
+{"id": "sent-118", "split": "test", "text": "i am loving the chanderi", "label": "pos"}
+{"id": "sent-119", "split": "test", "text": "yeh neckline mujhe bahut pasand hai", "label": "pos"}
+{"id": "sent-120", "split": "test", "text": "super, that is the one", "label": "pos"}
+{"id": "sent-121", "split": "test", "text": "the colour matches my dupatta perfectly", "label": "pos"}
+{"id": "sent-122", "split": "test", "text": "so elegant, keep it", "label": "pos"}
+{"id": "sent-123", "split": "test", "text": "mast hai, isi ko final karo", "label": "pos"}
+{"id": "sent-124", "split": "test", "text": "i like how loose it is at the hem", "label": "pos"}
+{"id": "sent-125", "split": "test", "text": "the pearl work is exactly right", "label": "pos"}
+{"id": "sent-126", "split": "test", "text": "kya baat hai, bahut accha bana hai", "label": "pos"}
+{"id": "sent-127", "split": "test", "text": "happy with the fabric choice", "label": "pos"}
+{"id": "sent-128", "split": "test", "text": "this looks very flattering", "label": "pos"}
+{"id": "sent-129", "split": "test", "text": "perfect fit at the waist", "label": "pos"}
+{"id": "sent-130", "split": "test", "text": "the print is lovely, do not change it", "label": "pos"}
+{"id": "sent-131", "split": "test", "text": "no embroidery", "label": "neg"}
+{"id": "sent-132", "split": "test", "text": "not too deep please", "label": "neg"}
+{"id": "sent-133", "split": "test", "text": "i do not like this neckline", "label": "neg"}
+{"id": "sent-134", "split": "test", "text": "this colour is too loud for me", "label": "neg"}
+{"id": "sent-135", "split": "test", "text": "mustard nahi chahiye", "label": "neg"}
+{"id": "sent-136", "split": "test", "text": "lehenga mat banana", "label": "neg"}
+{"id": "sent-137", "split": "test", "text": "sleeves bahut tight hain", "label": "neg"}
+{"id": "sent-138", "split": "test", "text": "ye design mujhe pasand nahi aaya", "label": "neg"}
+{"id": "sent-139", "split": "test", "text": "please remove the sequins", "label": "neg"}
+{"id": "sent-140", "split": "test", "text": "i hate the puff sleeves", "label": "neg"}
+{"id": "sent-141", "split": "test", "text": "the fabric feels too heavy", "label": "neg"}
+{"id": "sent-142", "split": "test", "text": "ye length bahut chhoti hai", "label": "neg"}
+{"id": "sent-143", "split": "test", "text": "this is not what i asked for", "label": "neg"}
+{"id": "sent-144", "split": "test", "text": "never use net for this one", "label": "neg"}
+{"id": "sent-145", "split": "test", "text": "the fit is too loose, not happy", "label": "neg"}
+{"id": "sent-146", "split": "test", "text": "no gota patti at all", "label": "neg"}
+{"id": "sent-147", "split": "test", "text": "not too flashy", "label": "neg"}
+{"id": "sent-148", "split": "test", "text": "i dont want prints", "label": "neg"}
+{"id": "sent-149", "split": "test", "text": "it looks cheap, change it", "label": "neg"}
+{"id": "sent-150", "split": "test", "text": "the back is too deep for me", "label": "neg"}
+{"id": "sent-151", "split": "test", "text": "ye colour accha nahi lag raha", "label": "neg"}
+{"id": "sent-152", "split": "test", "text": "stripes nahi chahiye", "label": "neg"}
+{"id": "sent-153", "split": "test", "text": "i dislike the boat neck", "label": "neg"}
+{"id": "sent-154", "split": "test", "text": "too much zari, tone it down", "label": "neg"}
+{"id": "sent-155", "split": "test", "text": "the sleeves are way too short", "label": "neg"}
+{"id": "sent-156", "split": "test", "text": "bahut zyada heavy lag raha hai", "label": "neg"}
+{"id": "sent-157", "split": "test", "text": "this shade is ugly", "label": "neg"}
+{"id": "sent-158", "split": "test", "text": "not happy with the stitching", "label": "neg"}
+{"id": "sent-159", "split": "test", "text": "yeh neckline bilkul nahi chahiye", "label": "neg"}
+{"id": "sent-160", "split": "test", "text": "without any mirror work please", "label": "neg"}
+{"id": "sent-161", "split": "test", "text": "the sample is disappointing", "label": "neg"}
+{"id": "sent-162", "split": "test", "text": "hmm no, that is too tight at the hip", "label": "neg"}
+{"id": "sent-163", "split": "test", "text": "dont make it so shiny", "label": "neg"}
+{"id": "sent-164", "split": "test", "text": "i am not a fan of this print", "label": "neg"}
+{"id": "sent-165", "split": "test", "text": "wrong colour again", "label": "neg"}
+{"id": "sent-166", "split": "test", "text": "bahut ajeeb lag raha hai ye", "label": "neg"}
+{"id": "sent-167", "split": "test", "text": "no thanks, remove the tassels", "label": "neg"}
+{"id": "sent-168", "split": "test", "text": "this is too revealing", "label": "neg"}
+{"id": "sent-169", "split": "test", "text": "ye fabric bilkul theek nahi hai", "label": "neg"}
+{"id": "sent-170", "split": "test", "text": "not this colour, something softer", "label": "neg"}
+{"id": "sent-171", "split": "test", "text": "kurti chahiye", "label": "neu"}
+{"id": "sent-172", "split": "test", "text": "i want a kurti in cotton", "label": "neu"}
+{"id": "sent-173", "split": "test", "text": "what is the sleeve length", "label": "neu"}
+{"id": "sent-174", "split": "test", "text": "neckline depth 7 inch", "label": "neu"}
+{"id": "sent-175", "split": "test", "text": "length 42 inches", "label": "neu"}
+{"id": "sent-176", "split": "test", "text": "can you send the sheet", "label": "neu"}
+{"id": "sent-177", "split": "test", "text": "which fabrics do you have for winter", "label": "neu"}
+{"id": "sent-178", "split": "test", "text": "waist 28 and hip 36", "label": "neu"}
+{"id": "sent-179", "split": "test", "text": "lehenga for my sister's wedding", "label": "neu"}
+{"id": "sent-180", "split": "test", "text": "ye kab tak ready hoga", "label": "neu"}
+{"id": "sent-181", "split": "test", "text": "kya aap georgette mein bana sakte ho", "label": "neu"}
+{"id": "sent-182", "split": "test", "text": "garment length knee tak", "label": "neu"}
+{"id": "sent-183", "split": "test", "text": "sleeves elbow length", "label": "neu"}
+{"id": "sent-184", "split": "test", "text": "i am sending a picture", "label": "neu"}
+{"id": "sent-185", "split": "test", "text": "what colours are available", "label": "neu"}
+{"id": "sent-186", "split": "test", "text": "hi, i need a blouse", "label": "neu"}
+{"id": "sent-187", "split": "test", "text": "bust 34 waist 30", "label": "neu"}
+{"id": "sent-188", "split": "test", "text": "the occasion is a farewell", "label": "neu"}
+{"id": "sent-189", "split": "test", "text": "please share the measurements format", "label": "neu"}
+{"id": "sent-190", "split": "test", "text": "ye sheet Hindi mein chahiye", "label": "neu"}
+{"id": "sent-191", "split": "test", "text": "fabric is georgette", "label": "neu"}
+{"id": "sent-192", "split": "test", "text": "a dress with flutter sleeves", "label": "neu"}
+{"id": "sent-193", "split": "test", "text": "when will the maker reply", "label": "neu"}
+{"id": "sent-194", "split": "test", "text": "is a v neck possible with this", "label": "neu"}
+{"id": "sent-195", "split": "test", "text": "i will upload pic 2 now", "label": "neu"}
+{"id": "sent-196", "split": "test", "text": "neeche se flared rakhna", "label": "neu"}
+{"id": "sent-197", "split": "test", "text": "ek anarkali banwani hai", "label": "neu"}
+{"id": "sent-198", "split": "test", "text": "colour navy and fit relaxed", "label": "neu"}
+{"id": "sent-199", "split": "test", "text": "how do i measure my shoulder", "label": "neu"}
+{"id": "sent-200", "split": "test", "text": "i need it by next month", "label": "neu"}
+{"id": "sent-201", "split": "test", "text": "sleeve ki length kitni honi chahiye", "label": "neu"}
+{"id": "sent-202", "split": "test", "text": "set of kurta and palazzo", "label": "neu"}
+{"id": "sent-203", "split": "test", "text": "request sent to the maker", "label": "neu"}
+{"id": "sent-204", "split": "test", "text": "do you stitch jumpsuits", "label": "neu"}
+{"id": "sent-205", "split": "test", "text": "this is for office wear", "label": "neu"}
+{"id": "sent-206", "split": "test", "text": "what does ease mean", "label": "neu"}
+{"id": "sent-207", "split": "test", "text": "ghera zyada rakhna hai", "label": "neu"}
+{"id": "sent-208", "split": "test", "text": "side slits 8 inches", "label": "neu"}
+{"id": "sent-209", "split": "test", "text": "a hoodie in grey fleece", "label": "neu"}
+{"id": "sent-210", "split": "test", "text": "kya yeh design maker ko bhej diya", "label": "neu"}

@@ -60,7 +60,22 @@ Edit distance matches the shipped trigram rule on F1 (the intervals overlap wide
 | BM25, deployed (`retrieve.js`) | 0.547 (0.44 to 0.67) | 0.720 | 0.827 | 0.671 (0.59 to 0.76) |
 | Dense, bge-small-en-v1.5 | 0.533 (0.43 to 0.64) | 0.747 | 0.853 | 0.671 |
 | Hybrid, reciprocal rank fusion | 0.600 (0.48 to 0.71) | 0.827 | 0.907 | 0.728 (0.64 to 0.81) |
+| Sentiment (stance of a preference line) | `engine/bespoke/apps/sentiment.py`, gold `data/gold/sentiment.jsonl` | Reads "love this neckline", "no embroidery" or "not too deep" as wanted or rejected, for chat lines and for the exclusion list | `results/sentiment.json` | Study only; the shipped binder handles negation by rule |
 
 n = 75 answerable questions, intervals are bootstrap over questions; the arms are within each other's intervals on Recall@1, so the only supported claim is that fusing the two does not hurt and probably helps at Recall@3 and @5. Python's BM25 MRR differs from the Node one in the third decimal because it also ranks the passages scoring zero.
 
 Answerability: the deployed rule answers when the top BM25 score is at least 2.5. On this set it answers 74 of 75 answerable questions (coverage 0.99) and also answers 16 of the 25 unanswerable ones (abstains on 36%): the false answers are three off-topic questions (laptop wifi, which phone, translate) and 13 near-topic ones whose top passage shares a word with the question, for example the silk-fabric passage for a question about washing a silk kurti (`false_answers` in the result). AUROC of the top score for answerable against unanswerable is 0.844 for BM25 and 0.859 for the dense cosine (25 negatives, so intervals are wide: 0.72 to 0.94 and 0.77 to 0.93). Raising the 2.5 threshold to about 4.7 would abstain on 80% of unanswerable questions but would also drop 17% of answerable ones (threshold chosen on the same questions, so optimistic). Whether to move it is a product choice.
+
+## Sentiment: stance towards the design
+
+`python scripts/apps.py sentiment`, about 40 s on the laptop GPU. Gold: 210 lines written by one annotator in English and Hinglish, labelled neg (rejects or dislikes, including "no embroidery" and "not too deep"), neu (states or asks) or pos (likes or wants). 90 lines train, 120 test (40 per class). Mixed lines ("love the neck, sleeves too tight") are left out. The lexicon was written from the training lines and ordinary sense, but the same person wrote the test lines, so it is the system most exposed to leakage. The learned systems also train on 300 lines generated from ontology forms with approval, rejection and request templates.
+
+| System (test, n = 120) | Accuracy | Macro F1 (95% interval) | Accuracy on lines with a negator (n = 50) |
+|---|---|---|---|
+| Majority class | 0.333 | 0.167 | 0.00 |
+| Lexicon with negation scope (3 tokens) | 0.917 | 0.916 (0.859 to 0.958) | 0.80 |
+| TF-IDF logistic regression, hand-written lines only | 0.867 | 0.865 (0.805 to 0.918) | 0.72 |
+| TF-IDF logistic regression plus synthetic lines | 0.875 | 0.874 (0.809 to 0.926) | 0.84 |
+| MiniLM fine-tuned plus synthetic lines (seed 13) | 0.908 | 0.909 (0.852 to 0.951) | 0.96 |
+
+MiniLM macro F1 over three seeds is 0.909, 0.909 and 0.843, so the learned model is the least stable. The intervals overlap throughout: the data cannot rank the lexicon, the logistic regression and MiniLM. What it does show is where each fails. The lexicon is perfect on neutral lines and its errors are rejections it has no word for ("this is too revealing") and approvals phrased without a lexicon word; its 10 errors are listed in the result. The classifiers are better on lines with a negator, where scope matters. Not used in the product: `bind()` already turns "no" and "nahi" into `exclude` updates, and a stance model would only add value on free chat lines, which the maker chat could use to flag an unhappy customer.

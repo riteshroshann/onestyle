@@ -1,7 +1,7 @@
 """Run one syllabus study and write its results/<topic>.json.
 
 usage: python scripts/apps.py <topic>
-topics: ner, grounding, qa
+topics: ner, grounding, qa, sentiment
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-TOPICS = {"ner": "ner", "grounding": "grounding", "qa": "qa"}
+TOPICS = {"ner": "ner", "grounding": "grounding", "qa": "qa", "sentiment": "sentiment"}
 
 
 def main() -> None:

@@ -1,0 +1,229 @@
+{
+ "task": "stance polarity of design lines: neg / neu / pos",
+ "gold": "data/gold/sentiment.jsonl",
+ "n_train_hand_written": 90,
+ "n_train_synthetic": 300,
+ "n_test": 120,
+ "test_class_counts": {
+  "neg": 40,
+  "neu": 40,
+  "pos": 40
+ },
+ "seed": 13,
+ "interval": "bootstrap over test lines, 1000 resamples",
+ "systems": {
+  "majority_class": {
+   "accuracy": 0.3333,
+   "accuracy_ci95": [
+    0.2581,
+    0.4167
+   ],
+   "macro_f1": 0.1667,
+   "macro_f1_ci95": [
+    0.1368,
+    0.1961
+   ],
+   "accuracy_on_lines_with_a_negator": 0.0,
+   "n_lines_with_a_negator": 25,
+   "confusion_gold_to_predicted": {
+    "neg": {
+     "neg": 0,
+     "neu": 40,
+     "pos": 0
+    },
+    "neu": {
+     "neg": 0,
+     "neu": 40,
+     "pos": 0
+    },
+    "pos": {
+     "neg": 0,
+     "neu": 40,
+     "pos": 0
+    }
+   }
+  },
+  "lexicon_with_negation_scope": {
+   "accuracy": 0.9167,
+   "accuracy_ci95": [
+    0.8583,
+    0.9583
+   ],
+   "macro_f1": 0.9164,
+   "macro_f1_ci95": [
+    0.8594,
+    0.9584
+   ],
+   "accuracy_on_lines_with_a_negator": 0.8,
+   "n_lines_with_a_negator": 25,
+   "confusion_gold_to_predicted": {
+    "neg": {
+     "neg": 34,
+     "neu": 2,
+     "pos": 4
+    },
+    "neu": {
+     "neg": 0,
+     "neu": 40,
+     "pos": 0
+    },
+    "pos": {
+     "neg": 0,
+     "neu": 4,
+     "pos": 36
+    }
+   }
+  },
+  "tfidf_logreg_hand_written_only": {
+   "accuracy": 0.8667,
+   "accuracy_ci95": [
+    0.8083,
+    0.9167
+   ],
+   "macro_f1": 0.8654,
+   "macro_f1_ci95": [
+    0.8046,
+    0.9181
+   ],
+   "accuracy_on_lines_with_a_negator": 0.72,
+   "n_lines_with_a_negator": 25,
+   "confusion_gold_to_predicted": {
+    "neg": {
+     "neg": 30,
+     "neu": 2,
+     "pos": 8
+    },
+    "neu": {
+     "neg": 4,
+     "neu": 36,
+     "pos": 0
+    },
+    "pos": {
+     "neg": 2,
+     "neu": 0,
+     "pos": 38
+    }
+   }
+  },
+  "tfidf_logreg_plus_synthetic": {
+   "accuracy": 0.875,
+   "accuracy_ci95": [
+    0.8167,
+    0.9252
+   ],
+   "macro_f1": 0.8744,
+   "macro_f1_ci95": [
+    0.8094,
+    0.926
+   ],
+   "accuracy_on_lines_with_a_negator": 0.84,
+   "n_lines_with_a_negator": 25,
+   "confusion_gold_to_predicted": {
+    "neg": {
+     "neg": 32,
+     "neu": 2,
+     "pos": 6
+    },
+    "neu": {
+     "neg": 3,
+     "neu": 36,
+     "pos": 1
+    },
+    "pos": {
+     "neg": 1,
+     "neu": 2,
+     "pos": 37
+    }
+   }
+  },
+  "minilm_finetuned_plus_synthetic": {
+   "accuracy": 0.9083,
+   "accuracy_ci95": [
+    0.85,
+    0.95
+   ],
+   "macro_f1": 0.9087,
+   "macro_f1_ci95": [
+    0.8515,
+    0.9514
+   ],
+   "accuracy_on_lines_with_a_negator": 0.96,
+   "n_lines_with_a_negator": 25,
+   "confusion_gold_to_predicted": {
+    "neg": {
+     "neg": 36,
+     "neu": 0,
+     "pos": 4
+    },
+    "neu": {
+     "neg": 1,
+     "neu": 37,
+     "pos": 2
+    },
+    "pos": {
+     "neg": 1,
+     "neu": 3,
+     "pos": 36
+    }
+   },
+   "macro_f1_over_3_seeds": [
+    0.9087,
+    0.9092,
+    0.8429
+   ],
+   "note": "interval and confusion are for seed 13"
+  }
+ },
+ "lexicon_errors": [
+  {
+   "text": "bilkul yahi chahiye mujhe",
+   "gold": "pos",
+   "predicted": "neu"
+  },
+  {
+   "text": "this fit is just right",
+   "gold": "pos",
+   "predicted": "neu"
+  },
+  {
+   "text": "wow the pastel shade is just what i imagined",
+   "gold": "pos",
+   "predicted": "neu"
+  },
+  {
+   "text": "the colour matches my dupatta perfectly",
+   "gold": "pos",
+   "predicted": "neu"
+  },
+  {
+   "text": "not too deep please",
+   "gold": "neg",
+   "predicted": "pos"
+  },
+  {
+   "text": "ye design mujhe pasand nahi aaya",
+   "gold": "neg",
+   "predicted": "pos"
+  },
+  {
+   "text": "not too flashy",
+   "gold": "neg",
+   "predicted": "pos"
+  },
+  {
+   "text": "ye colour accha nahi lag raha",
+   "gold": "neg",
+   "predicted": "pos"
+  },
+  {
+   "text": "too much zari, tone it down",
+   "gold": "neg",
+   "predicted": "neu"
+  },
+  {
+   "text": "no thanks, remove the tassels",
+   "gold": "neg",
+   "predicted": "neu"
+  }
+ ]
+}
