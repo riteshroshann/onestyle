@@ -158,7 +158,8 @@ assert.ok(res.body.sources.some((s: any) => s.title === "How to measure your bus
 assert.match(lastSent.url, /chat\/completions$/);
 assert.equal(lastSent.auth, "Bearer test-key");
 assert.equal(lastSent.body.temperature, 0.2);
-assert.equal(lastSent.body.max_tokens, 220);
+assert.equal(lastSent.body.max_tokens, 320);
+assert.equal(lastSent.body.reasoning_effort, "none");
 assert.deepEqual(res.body.links[0], { label: "Add measurements", href: "/studio/?view=sheet" });
 assert.ok(res.body.links.length <= 2);
 const sent = lastSent.body.messages;
