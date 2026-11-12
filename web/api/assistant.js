@@ -8,8 +8,8 @@ import { FALLBACK, SYSTEM_MARKER, checkAnswer, redact, screen, trimHistory } fro
 import { grounded, retrieve } from "../lib/assistant/retrieve.js";
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
-// Tried in order: a busy or failing model hands the question to the next one.
-const MODELS = (process.env.LLM_MODEL || "gemini-flash-latest,gemini-flash-lite-latest").split(",").map((m) => m.trim()).filter(Boolean);
+// Tried in order: the light model answers in a couple of seconds; a busy or failing one hands over to the next.
+const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean);
 // one budget for every model in the list, inside the function's 25 s limit (vercel.json)
 const BUDGET_MS = 18000;
 

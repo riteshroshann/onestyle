@@ -204,7 +204,7 @@ assert.equal(res.code, 502);
   await mod.default(post(ON_TOPIC), res);
   assert.equal(res.code, 200);
   assert.match(res.body.answer, /fullest part of your chest/);
-  assert.deepEqual(models, ["gemini-flash-latest", "gemini-flash-lite-latest"]);
+  assert.deepEqual(models, ["gemini-flash-lite-latest", "gemini-flash-latest"]);
 }
 
 // 5g. a follow-up borrows context from the previous user turn
