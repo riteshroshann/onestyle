@@ -19,7 +19,8 @@ const STEPS = [
 const SAID = ["waist pe fitted", "neeche se thoda loose", "V neck thoda deep", "no embroidery"];
 const READS = [["Bodice", "Fitted"], ["Below the waist", "Slightly loose"], ["Neckline", "V, a little deep"], ["Avoid", "Embroidery"]];
 const FAN = [PHOTOS.tennis, PHOTOS.horizon, PHOTOS.flare, PHOTOS.underwater, PHOTOS.llamas, PHOTOS.silhouette, PHOTOS.backs];
-const GALLERY = [PHOTOS.profile, PHOTOS.steps, PHOTOS.horizon, PHOTOS.flare, PHOTOS.silhouette, PHOTOS.monument, PHOTOS.llamas, PHOTOS.dusk];
+// the stock Skiper 52 set, illustrations by AarzooAly (x.com/AarzooAly)
+const GALLERY = [13, 32, 20, 21, 19, 1, 2, 3, 4].map((n) => ({ src: `/images/skiper/${n}.jpeg`, alt: "Illustration by AarzooAly", code: "# 23" }));
 const WORD = "Made to measure.".split("");
 
 const rise = { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-80px" }, transition: { type: "spring", duration: 0.9, bounce: 0 } } as const;
@@ -67,9 +68,11 @@ function Measure() {
 
 function Gallery() {
   return (
-    <section className="mx-auto max-w-[1440px] px-5 py-24 md:px-10 md:py-40">
-      <motion.h2 {...rise} className="display mb-12 text-[clamp(44px,7vw,112px)]">Start from a picture.</motion.h2>
-      <HoverExpand_001 images={GALLERY} />
+    <section className="bg-[#f5f4f3] py-24 md:py-40">
+      <motion.h2 {...rise} className="display mx-auto mb-12 max-w-[1440px] px-5 text-[clamp(44px,7vw,112px)] md:px-10">Start from a picture.</motion.h2>
+      <div className="flex w-full items-center justify-center overflow-hidden">
+        <HoverExpand_001 images={GALLERY} />
+      </div>
     </section>
   );
 }
