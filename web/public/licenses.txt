@@ -46,3 +46,12 @@ Halo Dropzone from Cult UI (cult-ui.com). MIT License.
 Dot Matrix loader (dotmatrix). MIT License.
 metal-fx by Jakub Antalik, built on Paper Shaders liquidMetal. Apache-2.0.
 Motion, GSAP and Lenis. See each project for its licence.
+
+Colour photographs on the home page (CC0 1.0, public domain, via Rawpixel):
+twirl.jpg  Pink Indian dress woman dancing. CC0 1.0, via Rawpixel: https://www.rawpixel.com/image/3301554/free-photo-image-skirt-dancer-indian-dance-images-pictures
+namaste.jpg  Free Indian wedding photo. CC0 1.0, via Rawpixel: https://www.rawpixel.com/image/5919721/free-indian-wedding-photo-public-domain-cc0
+hem.jpg  Free Indian wedding photo. CC0 1.0, via Rawpixel: https://www.rawpixel.com/image/5924300/free-indian-wedding-photo-public-domain-cc0
+bangles.jpg  Traditional Indian wedding. CC0 1.0, via Rawpixel: https://www.rawpixel.com/image/6029692/photo-image-public-domain-wedding-person
+paisley.jpg  Sari Scarf Fabric. CC0 1.0, via Rawpixel: https://www.rawpixel.com/image/5966347/sari-scarf-fabric
+machine.jpg  Sewing machine. CC0 1.0, via Rawpixel: https://www.rawpixel.com/image/6032464/sewing-machine-free-public-domain-cc0-photo
+Illustrations in the picture gallery by AarzooAly (x.com/AarzooAly), from the Skiper UI demo.

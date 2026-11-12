@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScro
 import { useRef, useState } from "react";
 import { HoverExpand_001 } from "@/components/ui/skiper-ui/skiper52";
 import { ClipDiv } from "@/components/ui/skiper-ui/skiper66";
-import { type Photo, PHOTOS } from "@/lib/photos";
+import { COLOUR, type Photo } from "@/lib/photos";
 import { Cta } from "../site/Cta";
 import { Footer } from "../site/Footer";
 import { Header } from "../site/Header";
@@ -18,9 +18,9 @@ const BRIEF = [
   { said: "no embroidery", read: "Plain" },
 ];
 const STEPS: { title: string; photo: Photo }[] = [
-  { title: "Say it.", photo: PHOTOS.flare },
-  { title: "See it.", photo: PHOTOS.sari },
-  { title: "Wear it.", photo: PHOTOS.llamas },
+  { title: "Say it.", photo: COLOUR.namaste },
+  { title: "See it.", photo: COLOUR.paisley },
+  { title: "Wear it.", photo: COLOUR.hem },
 ];
 const GALLERY = [13, 32, 20, 21, 19, 1, 2, 3, 4].map((n) => ({ src: `/images/skiper/${n}.jpeg`, alt: "Illustration by AarzooAly", code: "# 23" }));
 
@@ -54,8 +54,8 @@ function Hero() {
         </div>
         <motion.div {...rise(0)} className="order-1 aspect-[4/5] md:order-2 md:col-span-5 md:aspect-auto">
           <div className="relative h-full overflow-hidden rounded-[22px] bg-black">
-            <motion.img style={{ y }} src={PHOTOS.profile.src} alt={PHOTOS.profile.alt}
-              className="absolute inset-0 h-[112%] w-full scale-[1.12] object-cover object-[45%_20%]" />
+            <motion.img style={{ y }} src={COLOUR.twirl.src} alt={COLOUR.twirl.alt}
+              className="absolute inset-0 h-[112%] w-full scale-[1.12] object-cover object-[50%_60%]" />
           </div>
         </motion.div>
       </div>
@@ -125,7 +125,7 @@ function Gallery() {
 function Makers() {
   return (
     <section className={`${GUTTER} pt-3 md:pt-5`}>
-      <ClipDiv imgSrc={PHOTOS.seamstress.src} className="aspect-[4/5] w-full sm:aspect-video lg:w-full">
+      <ClipDiv imgSrc={COLOUR.machine.src} className="aspect-[4/5] w-full sm:aspect-video lg:w-full">
         <div className="px-6 text-center text-white">
           <h2 className={`${DISPLAY} text-[clamp(64px,11vw,200px)]`}>For makers.</h2>
           <div className="mt-10 flex justify-center"><Cta href="/makers/" tone="light" className="h-14 px-8 text-[17px] font-semibold">Open the studio</Cta></div>
