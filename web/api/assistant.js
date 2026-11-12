@@ -10,7 +10,8 @@ import { grounded, retrieve } from "../lib/assistant/retrieve.js";
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
 // Tried in order: a busy or failing model hands the question to the next one.
 const MODELS = (process.env.LLM_MODEL || "gemini-flash-latest,gemini-flash-lite-latest").split(",").map((m) => m.trim()).filter(Boolean);
-const TIMEOUT_MS = 15000;
+// one budget for every model in the list, inside the function's 25 s limit (vercel.json)
+const BUDGET_MS = 18000;
 
 const WINDOW_MS = 5 * 60 * 1000;
 const MAX_PER_WINDOW = 20;
@@ -36,7 +37,6 @@ const ASKED = [
   [/maker|tailor|darzi|designer|request|send/i, "makers"],
   [/shop|buy|price|ready.?made/i, "limits"],
   [/\b(app|about|bespoke|start)\b/i, "describing"],
-  [/b(app|about|bespoke|start)b/i, "describing"],
 ];
 
 /** Up to two pages to go next: the ones the question names, then the guides the answer came from, then the studio. */
@@ -117,9 +117,9 @@ export function buildMessages(message, history, passages) {
   ];
 }
 
-async function askOne(model, messages) {
+async function askOne(model, messages, ms) {
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => ctl.abort(), ms);
   try {
     const r = await fetch(`${BASE}chat/completions`, {
       method: "POST",
@@ -140,8 +140,11 @@ async function askOne(model, messages) {
 
 /** First answer from the model list; null only when every model failed. */
 export async function askModel(messages, models = MODELS) {
+  const end = Date.now() + BUDGET_MS;
   for (const model of models) {
-    const reply = await askOne(model, messages);
+    const left = end - Date.now();
+    if (left < 1500) break;
+    const reply = await askOne(model, messages, left);
     if (reply !== null) return reply;
   }
   return null;

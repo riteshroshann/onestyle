@@ -9,7 +9,7 @@
       "maxDuration": 15
     },
     "api/assistant.js": {
-      "maxDuration": 20
+      "maxDuration": 25
     }
   },
   "git": {

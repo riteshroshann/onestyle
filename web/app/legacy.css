@@ -40,7 +40,7 @@ a { color: inherit; }
 .top .right { justify-self: end; }
 .ghost { height: 40px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 500; color: var(--ink); transition: background .2s; }
 .ghost:hover { background: rgba(13,17,23,.06); }
-@media (max-width: 560px) { .mark { display: none; } .top .inner { grid-template-columns: 1fr auto; padding: 0 6px; height: 56px; } .seg { gap: 0; } .seg button { padding: 0 11px; } .ghost { padding: 0 10px; } }
+@media (max-width: 560px) { .mark span { display: none; } .mark { padding: 0 6px; } .top .inner { grid-template-columns: auto 1fr auto; gap: 4px; padding: 0 6px 0 10px; height: 56px; } .seg { gap: 0; justify-self: center; } .seg button { padding: 0 10px; font-size: 14px; } .ghost { padding: 0 8px; font-size: 14px; } }
 
 /* ---------------------------------------------------------------- hero */
 .hero { max-width: 1440px; margin: 0 auto; padding: clamp(56px, 7vw, 104px) 20px 96px; }
