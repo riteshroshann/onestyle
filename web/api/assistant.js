@@ -125,8 +125,7 @@ async function askOne(model, messages, ms) {
       method: "POST",
       signal: ctl.signal,
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.LLM_API_KEY}` },
-      // little hidden reasoning: answers are short, and the function has a time limit
-      body: JSON.stringify({ model, temperature: 0.2, max_tokens: 320, reasoning_effort: "low", messages }),
+      body: JSON.stringify({ model, temperature: 0.2, max_tokens: 320, messages }),
     });
     if (!r.ok) return null;
     const data = await r.json();
