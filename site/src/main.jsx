@@ -4,12 +4,12 @@ import { createRoot } from "react-dom/client";
 import FolderFloat from "./FolderFloat";
 
 const GUIDES = [
-  { label: "Using Bespoke", value: "guide.html" },
-  { label: "How it is built", value: "developers.html" },
-  { label: "The tagging ladder", value: "developers.html#ladder" },
-  { label: "Text analytics", value: "developers.html#text-analytics" },
-  { label: "MCP server", value: "mcp.html" },
-  { label: "Contributing", value: "contributing.html" },
+  { label: "Using Bespoke", value: "guide/" },
+  { label: "How it is built", value: "developers/" },
+  { label: "The tagging ladder", value: "developers/#ladder" },
+  { label: "Text analytics", value: "developers/#text-analytics" },
+  { label: "MCP server", value: "mcp/" },
+  { label: "Contributing", value: "contributing/" },
 ];
 
 const mount = document.getElementById("folder");

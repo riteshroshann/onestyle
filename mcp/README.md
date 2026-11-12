@@ -1,6 +1,6 @@
 # Bespoke MCP server
 
-Lets Claude and other MCP clients use Bespoke: ask its guarded adviser, search its guides, and link people into the studio. Full guide: https://riteshroshann.github.io/onestyle/mcp.html
+Lets Claude and other MCP clients use Bespoke: ask its guarded adviser, search its guides, and link people into the studio. Full guide: https://riteshroshann.github.io/onestyle/mcp/
 
 ```bash
 cd mcp && npm install

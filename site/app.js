@@ -1,10 +1,10 @@
 // Bespoke docs: the sliding nav pill, reveals, copy buttons and the search panel. No libraries.
 const PAGES = [
-  ["index.html", "Overview", "What Bespoke is and how it is built"],
-  ["guide.html", "Using Bespoke", "Talk, Board, Sheet, Shop, makers and Ask"],
-  ["developers.html", "Developer guide", "Architecture, the text analytics pipeline, running it"],
-  ["mcp.html", "MCP server", "Use Bespoke from Claude and other agents"],
-  ["contributing.html", "Contributing", "How to make a change that lands"],
+  ["./", "Overview", "What Bespoke is and how it is built"],
+  ["guide/", "Using Bespoke", "Talk, Board, Sheet, Shop, makers and Ask"],
+  ["developers/", "Developer guide", "Architecture, the text analytics pipeline, running it"],
+  ["mcp/", "MCP server", "Use Bespoke from Claude and other agents"],
+  ["contributing/", "Contributing", "How to make a change that lands"],
 ];
 
 // the dark pill slides to the page you are on
