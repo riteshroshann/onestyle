@@ -20,6 +20,7 @@ TOPICS = {
     "onehot": ("vectors_eval", "run_onehot"),
     "bow": ("vectors_eval", "run_bow"),
     "tfidf": ("vectors_eval", "run_tfidf"),
+    "ngram": ("ngram_eval", "run"),
 }
 
 
