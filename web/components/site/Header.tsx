@@ -36,7 +36,6 @@ export function Header({ current, cta = true, tone = "light" }: { current?: stri
             <a key={l.href} href={l.href} aria-current={current === l.href ? "page" : undefined} className={cn(link, "hidden aria-[current=page]:bg-secondary sm:block", dark && "aria-[current=page]:bg-white/10")}>{l.label}</a>
           ))}
           {me === null && <a href="/login/" className={link}>Sign in</a>}
-          {me && <a href={homeFor(me)} className={link}>{me.name.split(" ")[0]}</a>}
         </nav>
         {cta && <div className="hidden sm:block"><Cta href="/studio/" tone={dark ? "light" : "dark"}>Start a design</Cta></div>}
       </div>
