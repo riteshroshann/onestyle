@@ -1,0 +1,16 @@
+{
+  "name": "bespoke-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Bespoke: ask its adviser, search its guides, open designs in the studio.",
+  "type": "module",
+  "main": "server.js",
+  "bin": { "bespoke-mcp": "server.js" },
+  "author": "Ritesh Roshan <riteshroshansahoo01@gmail.com>",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node test.js" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  }
+}

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developer guide · Bespoke docs</title>
+<meta name="description" content="Bespoke's architecture and text analytics pipeline: tokenizer, gazetteer, fine-tuned tagger, constrained Viterbi, binding, state tracking, CLIP moodboard reading and guarded retrieval.">
+<meta name="author" content="Ritesh Roshan">
+<meta property="og:title" content="Developer guide · Bespoke docs"><meta property="og:description" content="Bespoke's architecture and text analytics pipeline: tokenizer, gazetteer, fine-tuned tagger, constrained Viterbi, binding, state tracking, CLIP moodboard reading and guarded retrieval.">
+<meta property="og:image" content="https://onestyle-tawny.vercel.app/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><nav aria-label="Docs">
+  <a class="brand" href="index.html"><b>&gt;&lt;</b>Bespoke <small>docs</small></a>
+  <div class="links"><a href="index.html">Overview</a><a href="guide.html">Using Bespoke</a><a href="developers.html" aria-current="page">Developers</a><a href="mcp.html">MCP</a><a href="contributing.html">Contributing</a></div>
+  <a class="cta" href="https://onestyle-tawny.vercel.app/studio/?new">Open Bespoke</a>
+</nav></header>
+<main>
+  <div class="wrap hero"><h1 class="display reveal">How it<br>is built.</h1><p class="lede reveal">Small, explicit pieces, each with one job and a test that holds it to that job. The model is never the only thing between a customer and a correct sheet.</p></div>
+  <section id="map"><div class="wrap cols"><h2 class="reveal">The map</h2><div class="reveal"><pre><code>ontology/bespoke.json   one source of truth: 21 tags, forms in English, Hinglish and Devanagari, Hindi terms, ease and depth tables, slot costs
+engine/                 Python: lexicon, data generation, the training ladder, ONNX export
+web/lib/engine/         TypeScript mirror of the engine that runs in the browser
+web/components/         the studio (Talk, Board, Sheet, Shop), the market, the site
+web/api/                Vercel functions: assistant.js (Ask), understand.js (the language model reader)
+web/lib/assistant/      BM25 retrieval over the guides, and the guardrails
+web/supabase/           schema for accounts, requests, messages, boards and designs, all behind row-level security
+mcp/                    the MCP server
+site/                   these docs</code></pre></div></div></section>
+  <section id="pipeline"><div class="wrap cols"><h2 class="reveal">From words to a specification</h2><div class="reveal"><ol class="steps">
+<li><b>Tokenize and tag.</b> One regex tokenizer and one ontology-driven gazetteer, identical in Python and TypeScript and held together by 352 parity fixtures. A fine-tuned MiniLM tags what the gazetteer misses; decoding is Viterbi with BIO constraints, so <code>I-FIT</code> can never follow <code>O</code>.</li>
+<li><b>Bind.</b> Clauses are cut at punctuation and conjunctions, including <code>aur</code> and <code>lekin</code>. Values attach to the nearest part cue (<code>waist</code>, <code>neeche se</code>), intensity (<code>thoda</code>, <code>bahut</code>) and negation (<code>no</code>, <code>nahi</code>, <code>mat</code>) to the nearest value. Numbers that describe the person, such as an age, are never read as lengths. Typos are grounded by character-trigram similarity.</li>
+<li><b>Track state.</b> Each message yields updates (<code>set</code>, <code>add</code>, <code>exclude</code>, <code>compare</code>); the design is a fold over them, so it is versioned and replayable. Words beat the board; answers and edits beat both.</li>
+<li><b>Ask.</b> Missing or uncertain critical slots are ranked by cost × (1 − confidence), and at most three are asked.</li>
+<li><b>Read the board.</b> The canvas becomes a graph of numbered pictures, circles and notes. CLIP scores each picture and each circled crop zero-shot; evidence is pooled per slot with salience and signed polarity. <code>deeper than #1 but less than #2</code> becomes an interval in inches.</li>
+<li><b>Write it out.</b> The tailor sheet in English or Hindi with finished measurements (body plus ease), and plain search links for ideas, shopping, fabric and tailors.</li></ol></div></div></section>
+  <section id="ladder" class="dark"><div class="wrap cols"><h2 class="reveal">The tagging ladder</h2><div class="reveal"><p>Every system is trained on the same 12,000 generated requests and scored on the same held-out, hand-written ones. Strict span F1 (seqeval) with 95% bootstrap intervals over requests.</p>
+<div class="table"><table><thead><tr><th>Rung</th><th>System</th><th>F1</th><th>95% CI</th></tr></thead><tbody><tr><td>L0</td><td>Gazetteer, longest match</td><td>0.936</td><td>0.898 to 0.967</td></tr><tr><td>L2a</td><td>HMM, Viterbi</td><td>0.751</td><td>0.693 to 0.809</td></tr><tr><td>L2b</td><td>CRF</td><td>0.832</td><td>0.789 to 0.876</td></tr><tr><td>L2b</td><td>CRF + gazetteer feature</td><td>0.900</td><td>0.853 to 0.942</td></tr><tr><td>L3</td><td>MiniLM-L12 (33M) + BIO-constrained Viterbi</td><td>0.812</td><td>0.754 to 0.866</td></tr><tr class="win"><td>L3</td><td>MiniLM + gazetteer (deployed)</td><td>0.953</td><td>0.918 to 0.982</td></tr></tbody></table></div>
+<h3>What we learned</h3>
+<p>The first transformer run scored 0.715, below the gazetteer. The errors showed positional bias: the templates had taught it that the second word of <code>{pattern} {fabric}</code> is a fabric. Fixing the data, not the model, took it to 0.884: attribute bags in random order, distractor words that must stay outside, and three gold-label mistakes corrected.</p>
+<p>On its own the transformer does not beat a good gazetteer on words the gazetteer knows. Its value is recall on what it has never seen: <code>georget</code>, <code>organzaa</code>, <code>anarkalli</code>, new spellings, unlisted words in context. Gazetteer first with the transformer filling gaps is the best system, with recall of 0.967.</p>
+<p class="muted">The test set is 52 requests written separately from the templates. It is a seed set and it is small; the intervals say how small. The planned benchmark is 1,200 requests, 40% Hinglish, two annotators.</p></div></div></section>
+  <section id="text-analytics"><div class="wrap cols"><h2 class="reveal">The text analytics underneath</h2><div class="reveal"><p>The pipeline is a tour of the field, each technique used where it earns its place:</p>
+<ul class="steps"><li><b>Tokenization and normalisation</b> across scripts, with transliterated Hinglish and Devanagari mapped to one ontology.</li>
+<li><b>Dictionary-based named entity recognition</b> with longest-match gazetteers.</li>
+<li><b>Sequence labelling</b>: HMMs with Viterbi, CRFs with hand-built and gazetteer features, and a fine-tuned transformer with constrained decoding.</li>
+<li><b>Weak supervision and data generation</b>: templates, attribute bags and distractors, plus catalogue weak labels.</li>
+<li><b>Fuzzy matching</b> with character trigrams for spelling variants and typos.</li>
+<li><b>Dependency-style binding</b> of values to parts, intensity and negation within clauses.</li>
+<li><b>Dialogue state tracking</b> as a fold over typed updates, with a cost-aware question policy.</li>
+<li><b>Zero-shot vision-language classification</b> with CLIP for the moodboard.</li>
+<li><b>Information retrieval</b>: BM25 over the guides, with a calibrated grounding threshold.</li>
+<li><b>Retrieval-augmented generation with guardrails</b>: input screening, redaction, fenced context and output checks.</li>
+<li><b>Speech to text</b>: the browser's recogniser, or Whisper on the device.</li></ul></div></div></section>
+  <section id="run"><div class="wrap cols"><h2 class="reveal">Run it</h2><div class="reveal"><pre><code>git clone https://github.com/riteshroshann/onestyle
+cd onestyle/web
+bun install
+bun run dev                          # http://localhost:3000
+bun run build                        # static export into out/
+bun tests/assistant.test.ts          # Ask: retrieval, guardrails, handler</code></pre>
+<p>Without keys the studio runs fully on the device and the marketplace keeps its data in the browser. To connect the services, set these in <code>web/.env.local</code> or on Vercel:</p>
+<pre><code>NEXT_PUBLIC_SUPABASE_URL=...         # accounts, requests, boards, designs
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...    # public by design; row-level security protects the data
+LLM_API_KEY=...                      # server only: Ask and the language model reader</code></pre>
+<p>Apply <code>web/supabase/schema.sql</code>, then <code>boards.sql</code> and <code>designs.sql</code>. To retrain the tagger, see <code>engine/</code> and the ladder commands in the README.</p></div></div></section>
+  <section id="principles"><div class="wrap cols"><h2 class="reveal">How we build</h2><div class="reveal"><p>Words first, pictures suggest. The device answer always stands. Every value from a model is checked against the ontology. Every number in these docs can be reproduced from the repository. Nothing about a person is logged.</p></div></div></section>
+</main>
+<footer><div class="wrap row"><span><b style="color:#38bdf8;font-weight:500">&gt;&lt;</b> Bespoke · Engineered by Ritesh Roshan</span><span><a href="https://onestyle-tawny.vercel.app/">Product</a> · <a href="https://github.com/riteshroshann/onestyle">GitHub</a></span></div></footer>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contributing · Bespoke docs</title>
+<meta name="description" content="The bar for a change to Bespoke, the checks that must pass, and how commits are written.">
+<meta name="author" content="Ritesh Roshan">
+<meta property="og:title" content="Contributing · Bespoke docs"><meta property="og:description" content="The bar for a change to Bespoke, the checks that must pass, and how commits are written.">
+<meta property="og:image" content="https://onestyle-tawny.vercel.app/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><nav aria-label="Docs">
+  <a class="brand" href="index.html"><b>&gt;&lt;</b>Bespoke <small>docs</small></a>
+  <div class="links"><a href="index.html">Overview</a><a href="guide.html">Using Bespoke</a><a href="developers.html">Developers</a><a href="mcp.html">MCP</a><a href="contributing.html" aria-current="page">Contributing</a></div>
+  <a class="cta" href="https://onestyle-tawny.vercel.app/studio/?new">Open Bespoke</a>
+</nav></header>
+<main>
+  <div class="wrap hero"><h1 class="display reveal">Make a change<br>that lands.</h1><p class="lede reveal">Small, finished, tested and plain. The same bar applies to everyone, including the people who started it.</p></div>
+  <section id="bar"><div class="wrap cols"><h2 class="reveal">The bar</h2><div class="reveal"><ol class="steps"><li><b>Finished.</b> No placeholders, no TODOs, no stubs. If something cannot be finished, leave it out and say what is missing.</li>
+<li><b>Verified.</b> Run it, test it, look at it. Screenshots at 390 and 1440 pixels for anything visual, in both the light pages and the dark Talk page.</li>
+<li><b>Small.</b> One change per pull request, matching the code around it. Comments say why, not what.</li>
+<li><b>Honest.</b> Fix the cause of a failure; never weaken a test to make it pass. Every number you add must be reproducible.</li></ol></div></div></section>
+  <section id="checks"><div class="wrap cols"><h2 class="reveal">Before you open a pull request</h2><div class="reveal"><pre><code>cd web
+bun x tsc --noEmit -p .           # types
+bun run build                     # the static export must build
+bun tests/assistant.test.ts       # Ask, retrieval and guardrails
+cd ../engine && pytest            # the engine, if you touched it</code></pre></div></div></section>
+  <section id="design"><div class="wrap cols"><h2 class="reveal">Design rules</h2><div class="reveal"><p>White, Google Sans at weight 500 for display type, one accent (<code>#38bdf8</code>), glass only on what floats, generous space. No badges, check-mark lists, emoji icons, nested cards or decorative gradients. Every state is designed: hover, focus, pressed, disabled, loading, empty and error. Motion answers a person's action, and reduced-motion turns it off.</p></div></div></section>
+  <section id="writing"><div class="wrap cols"><h2 class="reveal">Writing</h2><div class="reveal"><p>Copy in plain, active, sentence-case words. Buttons say what happens: <code>Send to a maker</code>, not <code>Submit</code>. Commit messages are short and plain, describing what changed in one line.</p></div></div></section>
+  <section id="safety"><div class="wrap cols"><h2 class="reveal">Data and safety</h2><div class="reveal"><p>Never log what people type. Keep secrets out of code; they live in the deployment's environment. New tables get row-level security before they get data. The Ask guardrails, retrieval threshold and output checks are tested; keep them that way.</p></div></div></section>
+</main>
+<footer><div class="wrap row"><span><b style="color:#38bdf8;font-weight:500">&gt;&lt;</b> Bespoke · Engineered by Ritesh Roshan</span><span><a href="https://onestyle-tawny.vercel.app/">Product</a> · <a href="https://github.com/riteshroshann/onestyle">GitHub</a></span></div></footer>
+<script src="app.js"></script>
+</body>
+</html>

@@ -17,3 +17,5 @@ engine/looks/raw/
 docs/report/main.pdf
 docs/report/fonts/*.ttc
 engine/looks/*.log
+mcp/node_modules/
+web/bun.lock

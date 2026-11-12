@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bespoke docs · Clothes made from your words</title>
+<meta name="description" content="Documentation for Bespoke: how people describe clothes in English or Hinglish and get a tailor sheet, how the text analytics pipeline works, the MCP server and how to contribute.">
+<meta name="author" content="Ritesh Roshan">
+<meta property="og:title" content="Bespoke docs"><meta property="og:description" content="Clothes made from your words. Guides, the text analytics pipeline, the MCP server.">
+<meta property="og:image" content="https://onestyle-tawny.vercel.app/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><nav aria-label="Docs">
+  <a class="brand" href="index.html"><b>&gt;&lt;</b>Bespoke <small>docs</small></a>
+  <div class="links"><a href="index.html" aria-current="page">Overview</a><a href="guide.html">Using Bespoke</a><a href="developers.html">Developers</a><a href="mcp.html">MCP</a><a href="contributing.html">Contributing</a></div>
+  <a class="cta" href="https://onestyle-tawny.vercel.app/studio/?new">Open Bespoke</a>
+</nav></header>
+
+<main>
+  <div class="wrap hero">
+    <h1 class="display reveal">Clothes made<br>from your words.</h1>
+    <p class="lede reveal">Bespoke listens to how people really describe clothes, in English or Hinglish, typed or spoken, reads the pictures they love, asks only for what is missing, and writes it all down as a sheet any tailor can cut from.</p>
+    <div class="actions reveal"><a class="cta" href="guide.html">Read the guide</a><a class="cta ghost" href="developers.html">How it is built</a></div>
+  </div>
+
+  <section id="what">
+    <div class="wrap cols">
+      <h2 class="reveal">What it does</h2>
+      <div class="reveal">
+        <p>A customer says <code>kurti chahiye, waist pe fitted, neeche se thoda loose, V neck thoda deep, no embroidery</code>. Bespoke turns that into a part-by-part specification: a fitted bodice with 1.5 inches of ease, a slightly loose hem, a V neckline about 6.75 inches deep, and no embroidery. It then asks for the sleeve length, fabric and colour, ranked by what a wrong guess would cost.</p>
+        <p class="muted">The design ends as a tailor sheet in English or Hindi, ideas and shopping searches, or a request sent to a designer or tailor on Bespoke, who can flag what is missing and talk it through in one thread.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="numbers" class="dark">
+    <div class="wrap cols">
+      <h2 class="reveal">Understanding that does not break</h2>
+      <div class="reveal">
+        <p>Two readers work on every message. On the device, always: a gazetteer of 1,212 forms in English, Hinglish and Devanagari and a fine-tuned 33M-parameter tagger running in the browser as int8 ONNX. Alongside it, when configured: a language model whose every value is checked against the ontology. If the model is slow or down, the device answer stands and nobody sees an error.</p>
+        <p>The deployed tagger, gazetteer first with the transformer filling the gaps, scores <b style="color:#fff;font-weight:500">0.953 span F1</b> on held-out requests, with recall of 0.967. Every number is reproducible from the repository.</p>
+        <p class="small">Scores are strict seqeval span F1 on 52 hand-written requests with 95% bootstrap intervals. The set is small, and the developer guide says exactly how small.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <div class="wrap">
+      <h2 class="reveal">Start here</h2>
+      <div class="grid">
+        <a class="card reveal" href="guide.html"><h3>Using Bespoke</h3><p>Talk, Board, Sheet and Shop, sending a design to a maker, and asking for advice.</p><span class="go">Read the guide</span></a>
+        <a class="card reveal" href="developers.html"><h3>Developer guide</h3><p>The architecture, the six-step pipeline from words to a specification, and how to run and test it.</p><span class="go">See how it works</span></a>
+        <a class="card reveal" href="mcp.html"><h3>MCP server</h3><p>Ask Bespoke, search its guides and open designs from Claude or any agent that speaks MCP.</p><span class="go">Connect an agent</span></a>
+        <a class="card reveal" href="contributing.html"><h3>Contributing</h3><p>The bar for a change, the tests that must pass, and how commits are written.</p><span class="go">Make a change</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap row"><span><b style="color:#38bdf8;font-weight:500">&gt;&lt;</b> Bespoke · Engineered by Ritesh Roshan</span><span><a href="https://onestyle-tawny.vercel.app/">Product</a> · <a href="https://github.com/riteshroshann/onestyle">GitHub</a></span></div></footer>
+<script src="app.js"></script>
+</body>
+</html>

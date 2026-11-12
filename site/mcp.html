@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP server · Bespoke docs</title>
+<meta name="description" content="Connect Claude or any MCP client to Bespoke: ask its adviser, search its guides and open designs in the studio.">
+<meta name="author" content="Ritesh Roshan">
+<meta property="og:title" content="MCP server · Bespoke docs"><meta property="og:description" content="Connect Claude or any MCP client to Bespoke: ask its adviser, search its guides and open designs in the studio.">
+<meta property="og:image" content="https://onestyle-tawny.vercel.app/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><nav aria-label="Docs">
+  <a class="brand" href="index.html"><b>&gt;&lt;</b>Bespoke <small>docs</small></a>
+  <div class="links"><a href="index.html">Overview</a><a href="guide.html">Using Bespoke</a><a href="developers.html">Developers</a><a href="mcp.html" aria-current="page">MCP</a><a href="contributing.html">Contributing</a></div>
+  <a class="cta" href="https://onestyle-tawny.vercel.app/studio/?new">Open Bespoke</a>
+</nav></header>
+<main>
+  <div class="wrap hero"><h1 class="display reveal">Bespoke,<br>for agents.</h1><p class="lede reveal">A small Model Context Protocol server, so Claude and other agents can ask Bespoke's adviser, search its guides and hand people straight into the studio.</p></div>
+  <section id="tools"><div class="wrap cols"><h2 class="reveal">Tools</h2><div class="reveal"><div class="table"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody>
+<tr><td><code>ask_bespoke</code></td><td>Asks the same guarded adviser as the button in the corner: how Bespoke works, or what to choose, with an optional design for context.</td></tr>
+<tr><td><code>search_guides</code></td><td>BM25 search over Bespoke's guides, run locally. Returns the best passages with titles.</td></tr>
+<tr><td><code>studio_link</code></td><td>A link that opens the studio on a fresh design, the board, the sheet or shopping.</td></tr></tbody></table></div></div></div></section>
+  <section id="install"><div class="wrap cols"><h2 class="reveal">Connect it</h2><div class="reveal"><p>The server lives in <code>mcp/</code> and runs over stdio with Node 20 or later.</p>
+<pre><code>git clone https://github.com/riteshroshann/onestyle
+cd onestyle/mcp && npm install</code></pre>
+<h3>Claude Code</h3>
+<pre><code>claude mcp add bespoke -- node /path/to/onestyle/mcp/server.js</code></pre>
+<h3>Claude Desktop and other clients</h3>
+<pre><code>{
+  "mcpServers": {
+    "bespoke": { "command": "node", "args": ["/path/to/onestyle/mcp/server.js"] }
+  }
+}</code></pre>
+<p class="muted">Set <code>BESPOKE_URL</code> to point <code>ask_bespoke</code> and links at another deployment, such as a local one.</p></div></div></section>
+  <section id="example"><div class="wrap cols"><h2 class="reveal">Try it</h2><div class="reveal"><pre><code>&gt; Which colours suit a maroon silk kurta for a winter wedding? Use Bespoke.
+
+ask_bespoke({ question: "Which colour palette suits it?", design: "for men, maroon, silk, kurta, for wedding" })
+studio_link({ view: "new" })</code></pre>
+<p class="muted">The adviser keeps the product's guardrails: off-topic questions and attempts to change its rules are refused, and it never invents links.</p></div></div></section>
+</main>
+<footer><div class="wrap row"><span><b style="color:#38bdf8;font-weight:500">&gt;&lt;</b> Bespoke · Engineered by Ritesh Roshan</span><span><a href="https://onestyle-tawny.vercel.app/">Product</a> · <a href="https://github.com/riteshroshann/onestyle">GitHub</a></span></div></footer>
+<script src="app.js"></script>
+</body>
+</html>
