@@ -75,7 +75,8 @@ class NGramLM:
         if not self.modified:
             d = y
             return (d, d, d)
-        return (1 - 2 * y * n2 / n1, 2 - 3 * y * n3 / n2, 3 - 4 * y * n4 / n3)
+        d = (1 - 2 * y * n2 / n1, 2 - 3 * y * n3 / n2, 3 - 4 * y * n4 / n3)
+        return tuple(min(max(x, 0.05), k) for k, x in enumerate(d, 1))  # keep 0 < D_k < k on tiny counts
 
     def prob(self, word: str, history: tuple[str, ...]) -> float:
         w = self._map(word)

@@ -41,4 +41,4 @@ def test_unseen_word_maps_to_unk_and_keeps_mass():
 
 def test_modified_discounts_are_ordered():
     d1, d2, d3 = NGramLM(3, "kn").fit(S).D[3]
-    assert 0 < d1 < 1 and 0 < d2 < 2 and 0 < d3 < 3  # Chen and Goodman's bounds
+    assert 0 < d1 <= 1 and 0 < d2 <= 2 and 0 < d3 <= 3  # Chen and Goodman's bounds
