@@ -10,7 +10,7 @@ export function Footer() {
     <footer className="border-t border-brand-ink/10 bg-white text-brand-ink">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-8 px-5 py-12 md:flex-row md:items-end md:justify-between md:px-10">
         <span className="display text-[56px]">Bespoke</span>
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-7 gap-y-2 text-[15px] font-semibold">
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-8 gap-y-3 text-[15px] font-semibold md:flex md:gap-x-7">
           {LINKS.map((l) => <a key={l.href} href={l.href} className="text-brand-ink no-underline decoration-brand underline-offset-4 hover:underline">{l.label}</a>)}
         </nav>
       </div>
