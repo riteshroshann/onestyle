@@ -9,6 +9,26 @@ import { Arrow, Dots, Reveal, SPRING } from "./Motion";
 
 interface Turn { role: "user" | "assistant"; content: string; sources?: string[]; links?: { label: string; href: string }[]; failed?: boolean }
 const STARTERS = ["How do I measure my bust?", "What is ease?", "How does the moodboard work?"];
+// with a design open, the starters turn to choosing
+const STYLE_STARTERS = ["Which colour palette suits my design?", "Give me three neckline options", "What fabric works best for it?"];
+
+/** The studio's open design in a few words, sent along so advice fits it. Empty when there is none. */
+function designSummary(): string {
+  try {
+    const spec = JSON.parse(sessionStorage.getItem("bespoke.spec") ?? "null");
+    if (!spec?.slots?.garment) return "";
+    const one = (k: string): string | undefined => spec.slots?.[k]?.value;
+    const many = (k: string): string => (spec.lists?.[k] ?? []).map((v: { value: string }) => v.value).join(" and ");
+    const no = (spec.excluded ?? []).map((e: { value: string }) => e.value).join(", ");
+    const garment = one("garment") === "kurti" && one("wearer") === "men" ? "kurta" : one("garment");
+    return [
+      one("wearer") && "for " + one("wearer"), many("colour"), many("shade"), one("fabric"), garment,
+      one("neckline.shape") && one("neckline.shape") + " neckline", one("sleeve.length") && one("sleeve.length") + " sleeves",
+      one("garment.length") && one("garment.length") + " length", many("pattern"), many("embellishment"),
+      many("occasion") && "for " + many("occasion"), no && "not " + no,
+    ].filter(Boolean).join(", ");
+  } catch { return ""; }
+}
 const UNAVAILABLE = "I could not reach the assistant. Check your connection and try again.";
 const OFF = "I am not switched on yet.";
 // pages with their own bar along the bottom edge: the launcher sits above it
@@ -19,7 +39,7 @@ async function ask(message: string, history: Turn[]): Promise<Turn> {
     const res = await fetch("/api/assistant", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ message, history: history.filter((t) => !t.failed).map(({ role, content }) => ({ role, content })) }),
+      body: JSON.stringify({ message, design: designSummary(), history: history.filter((t) => !t.failed).map(({ role, content }) => ({ role, content })) }),
     });
     if (res.status === 501) return { role: "assistant", content: OFF, failed: true };
     const body = await res.json();
@@ -34,6 +54,8 @@ export function Assistant() {
   const path = usePathname();
   const still = !!useReducedMotion();
   const [open, setOpen] = useState(false);
+  const [hasDesign, setHasDesign] = useState(false);
+  useEffect(() => { if (open) setHasDesign(!!designSummary()); }, [open]);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -110,7 +132,7 @@ export function Assistant() {
                   <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.05 }}
                     className="text-[26px] leading-[1.1] tracking-[-0.03em]">Hi. What are you<br />making today?</motion.p>
                   <ul className="flex flex-col items-start gap-2">
-                    {STARTERS.map((s, i) => (
+                    {(hasDesign ? STYLE_STARTERS : STARTERS).map((s, i) => (
                       <motion.li key={s} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.1 + i * 0.05 }}>
                         <button type="button" onClick={() => send(s)}
                           className="press rounded-full px-4 py-2 text-left text-[14px] text-brand-ink ring-1 ring-black/10 transition-[background-color,box-shadow,transform] duration-200 hover:bg-black/[.04] hover:ring-black/20 active:scale-[0.97]">
