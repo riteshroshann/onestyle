@@ -2,14 +2,20 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
-import { Measurements, PART_HI, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines } from "../lib/engine/describe";
-import { hindi } from "../lib/engine/lexicon";
-import { Question, Spec, Update, answer, apply, bind, contextOf, depthInches, emptySpec, garmentName, questions, wearerOf, wearerUpdates } from "../lib/engine/spec";
+import { ONTO, Span, correctTranscript, hindi, tagRules, tokenize } from "../lib/engine/lexicon";
+import { Measurements, PART_HI, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines, wearerText } from "../lib/engine/describe";
+import {
+  AGES, BUDGETS, Question, Spec, Update, answer, answerFromText, apply, ask, asked, bind, contextOf, depthInches, emptySpec, garmentName,
+  profileUpdates, wearerOf,
+} from "../lib/engine/spec";
+import { EXAMPLE_BRIEFS, EXAMPLE_CHANGES, meaning, verdict } from "../lib/engine/sense";
+import { screen } from "../lib/assistant/guard.js";
 import { allHaveLooks, groupOf, isPhoto, isTall, lookOf } from "../lib/looks";
-import { isCommonWord, loadTagger, tag } from "../lib/models";
-import { understand } from "../lib/understand";
+import { isCommonWord, loadTagger, tag, toMono16k, transcribe } from "../lib/models";
+import { Turn, askNext, chooseQuestion, understand } from "../lib/understand";
+import { MAX_SECONDS, hasSpeech, transcribeRemote } from "../lib/voice";
 
 const Board = dynamic(() => import("./Board"), { ssr: false });
 import { SendToMaker } from "./market/SendToMaker";
@@ -21,14 +27,17 @@ import { currentDesignId, forgetDeviceCopy, latestDesign, newDesignId, readSessi
 import { supabase } from "../lib/supabase";
 
 type Msg =
-  | { role: "me"; text: string; tokens: string[]; spans: Span[] }
-  | { role: "bot"; text: string; questions: Question[]; note?: string };
+  | { role: "me"; text: string; tokens: string[]; spans: Span[]; skipped?: boolean }
+  // `questions` is how earlier sessions stored the follow-ups; new turns carry one `question`
+  | { role: "bot"; text: string; question?: Question | null; questions?: Question[]; note?: string; examples?: string[] };
 type View = "talk" | "board" | "sheet" | "shop";
+const VIEWS: View[] = ["talk", "board", "sheet", "shop"];
+export const studioHref = (v: View, q = "") => `/studio/${v}/${q}`;
 
 const PLACEHOLDER = "A pastel blue kurti for my farewell";
 const TALK_STEPS: [string, string][] = [
-  ["Describe it", "Type or speak: the garment, the occasion, colours, anything you already know."],
-  ["Answer a few questions", "Tap an answer for what is missing. Change any detail on the right whenever you like."],
+  ["Describe it", "Type or speak: the garment, who it is for, the occasion, anything you already know."],
+  ["Answer a few questions", "One at a time, only what is missing. Skip any you like."],
   ["Take it to a maker", "Get a tailor sheet in English or Hindi, or send it to a maker on Bespoke."],
 ];
 const SLOT_TAG: Record<string, string> = {
@@ -36,11 +45,16 @@ const SLOT_TAG: Record<string, string> = {
   "bodice.fit": "FIT", "lower.fit": "FIT", "lower.silhouette": "SILHOUETTE", "garment.length": "LENGTH", fabric: "FABRIC",
   colour: "COLOUR", shade: "SHADE", pattern: "PATTERN", embellishment: "EMBELL", occasion: "OCCASION", style: "STYLE", components: "GARMENT",
 };
+const PROFILE_CHOICES: Record<string, [string, string][]> = {
+  wearer: [["women", "a woman"], ["men", "a man"], ["anyone", "anyone"]],
+  age: AGES.map((a) => [a, ({ kid: "under 13", teen: "13 to 19", "50+": "50 and over" } as Record<string, string>)[a] ?? a]),
+  budget: BUDGETS.map((b) => [b, ({ "under 1000": "under ₹1,000", "1000-3000": "₹1,000 to 3,000", "3000-8000": "₹3,000 to 8,000", "8000+": "over ₹8,000" } as Record<string, string>)[b]]),
+};
 const ROWS: [string, string][] = [
-  ["garment", "Garment"], ["components", "Pieces"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["back.depth", "Back"],
+  ["garment", "Garment"], ["wearer", "For"], ["age", "Age"], ["components", "Pieces"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["back.depth", "Back"],
   ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"], ["bodice.fit", "Fit"], ["lower.fit", "Below the waist"],
   ["lower.silhouette", "Silhouette"], ["garment.length", "Length"], ["fabric", "Fabric"], ["colour", "Colour"], ["shade", "Shade"],
-  ["pattern", "Print"], ["embellishment", "Finish"], ["occasion", "Occasion"], ["style", "Mood"],
+  ["pattern", "Print"], ["embellishment", "Finish"], ["occasion", "Occasion"], ["style", "Style"], ["budget", "Budget"],
 ];
 const DRAWN: [string, string][] = [
   ["garment", "Garment"], ["neckline.shape", "Neckline"], ["neckline.depth", "Neck depth"], ["sleeve.style", "Sleeve"], ["sleeve.length", "Sleeve length"],
@@ -48,139 +62,156 @@ const DRAWN: [string, string][] = [
 ];
 const SOURCE: Record<string, string> = { model: "your words", words: "your words", note: "a note on your board", image: "your pictures", answer: "your answer", edit: "your edit", profile: "your profile" };
 const LIST_SLOTS = ["colour", "embellishment", "style", "pattern", "occasion", "shade", "components"];
-const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", trousers: "pants", crew: "crew neck", hooded: "hooded", turtle: "turtle neck", "t-shirt": "t-shirt" };
+const NICE: Record<string, string> = { v: "V", "deep v": "deep V", u: "U", "a-line": "A-line", trousers: "pants", crew: "crew neck", hooded: "hooded", turtle: "turtle neck", "t-shirt": "t-shirt", traditional: "classic", western: "modern" };
 const nice = (v: string) => NICE[v] ?? v;
+const profileLabel = (slot: string, v: string) => PROFILE_CHOICES[slot]?.find(([k]) => k === v)?.[1] ?? nice(v);
 const FAMILY_TITLE: Record<string, string> = {
   top_long: "Kurtas, dresses and gowns", top_short: "Tops, shirts and blouses", knit_top: "Sweatshirts and knits", outer: "Jackets and coats",
   bottom: "Pants, skirts and bottoms", set: "Sets", drape: "Sarees and dupattas",
 };
+const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
 // the open design lives for this tab only; the account keeps it across devices (lib/designs.ts)
 const load = readSession;
 const save = writeSession;
 
 // ------------------------------------------------------------------ voice
-// Two engines. The browser's speech service is instant where it works (Chrome, Edge, Safari). Brave ships the
-// API but blocks the service ("network" error) and Firefox has no API, so there we record locally and
-// transcribe on-device with Whisper. Any failure of the first engine falls through to the second.
+// The clip is recorded with MediaRecorder and transcribed by Gemini on the server (/api/transcribe), which writes
+// English, Hindi and Hinglish in Latin script. While recording, the browser's own recogniser (Chrome, Edge, Safari)
+// shows live words. If the server cannot answer, the browser's words are used, then on-device Whisper.
+// Nothing is sent by itself: the transcript lands in the composer to be checked first.
 const micMessage = (e: any) =>
-  e?.name === "NotAllowedError" || e === "not-allowed" ? "The microphone is blocked. Allow it from the icon in the address bar, then try again."
-    : e?.name === "NotFoundError" || e === "audio-capture" ? "No microphone was found on this device."
-      : "The microphone could not start.";
+  e?.name === "NotAllowedError" ? "The microphone is blocked. Allow it from the icon in the address bar, then try again."
+    : e?.name === "NotFoundError" ? "No microphone was found. Plug one in or type instead."
+      : "The microphone could not start. Close other apps using it, then try again.";
 
-function useVoice(onFinal: (t: string) => void) {
-  const [live, setLive] = useState(false);
-  const [status, setStatus] = useState("");
+type Phase = "idle" | "listening" | "transcribing" | "error";
+
+function useVoice(onText: (t: string) => void) {
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [error, setError] = useState("");
+  const [note, setNote] = useState("");
   const [interim, setInterim] = useState("");
   const [level, setLevel] = useState(0);
+  const [seconds, setSeconds] = useState(0);
   const [lang, setLang] = useState<"en-IN" | "hi-IN">("en-IN");
-  const rec = useRef<any>(null);
   const media = useRef<MediaRecorder | null>(null);
+  const rec = useRef<any>(null);
+  const heard = useRef("");
+  const cancelled = useRef(false);
   const stopMeter = useRef<() => void>(() => {});
-  const SR = typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
-  const isBrave = typeof navigator !== "undefined" && !!(navigator as any).brave;
-  const engine = useRef<"browser" | "whisper">(SR && !isBrave ? "browser" : "whisper");
-  const supported = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+  const supported = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined";
 
-  const meter = (stream: MediaStream, onSilence?: () => void) => {
+  const fail = (msg: string) => { setError(msg); setPhase("error"); setNote(""); };
+  const done = (t: string) => { setPhase("idle"); setNote(""); setInterim(""); onText(t.trim()); };
+
+  const meter = (stream: MediaStream, onEnd: () => void) => {
     const ctx = new AudioContext();
     const an = ctx.createAnalyser(); an.fftSize = 1024;
     ctx.createMediaStreamSource(stream).connect(an);
     const buf = new Uint8Array(an.fftSize);
     const t0 = performance.now();
-    let raf = 0, spoke = false, lastVoice = t0;
+    let raf = 0, spoke = false, lastVoice = t0, shown = -1;
     const tick = () => {
       an.getByteTimeDomainData(buf);
       let s = 0; for (const v of buf) s += ((v - 128) / 128) ** 2;
       const lv = Math.min(1, Math.sqrt(s / buf.length) * 4);
       setLevel(lv);
       const now = performance.now();
+      const sec = Math.floor((now - t0) / 1000);
+      if (sec !== shown) { shown = sec; setSeconds(sec); }
       if (lv > 0.08) { spoke = true; lastVoice = now; }
-      // stop after 1.6 s of silence once speech has started, or after 25 s in any case
-      if (onSilence && ((spoke && now - lastVoice > 1600) || now - t0 > 25000)) { onSilence(); return; }
+      // stop after 2 s of quiet once speech has started, and always at the clip limit
+      if ((spoke && now - lastVoice > 2000) || now - t0 > MAX_SECONDS * 1000) { onEnd(); return; }
       raf = requestAnimationFrame(tick);
     };
     tick();
     return () => { cancelAnimationFrame(raf); void ctx.close(); };
   };
 
-  const startWhisper = useCallback(async () => {
-    let stream: MediaStream;
-    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-    catch (e) { setStatus(micMessage(e)); setLive(false); return; }
-    void import("../lib/models").then((m) => m.loadSpeech());   // warm the model while the customer speaks
-    const chunks: globalThis.Blob[] = [];
-    const mr = new MediaRecorder(stream);
-    mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-    mr.onstop = async () => {
-      stopMeter.current(); stream.getTracks().forEach((t) => t.stop());
-      setLive(false); setLevel(0);
-      if (!chunks.length) { setStatus(""); return; }
-      setStatus("Writing down what you said. The first time takes a moment while the speech model loads.");
+  const finish = async (blob: Blob | null) => {
+    if (cancelled.current) { setPhase("idle"); setInterim(""); return; }
+    setPhase("transcribing");
+    const browser = heard.current.trim();
+    let samples: Float32Array | null = null;
+    if (blob?.size) { try { samples = await toMono16k(blob); } catch { samples = null; } }
+    if (samples && !hasSpeech(samples) && !browser) { fail("Nothing was heard. Check the microphone is not muted, then try again."); return; }
+    if (samples) {
+      const r = await transcribeRemote(samples, lang === "hi-IN" ? "hi" : "en");
+      if ("text" in r && r.text) { done(r.text); return; }
+      if ("text" in r && !browser) { fail("We could not make out any words. Speak a little closer and try again."); return; }
+    }
+    if (browser) { done(browser); return; }
+    if (samples) {
+      setNote("Writing it down on this device. The first time takes a moment.");
       try {
-        const { toMono16k, transcribe } = await import("../lib/models");
-        const text = await transcribe(await toMono16k(new globalThis.Blob(chunks, { type: mr.mimeType })), lang);
-        setStatus("");
-        if (text && !/^\[.*\]$/.test(text)) onFinal(text); else setStatus("Nothing was heard. Speak a little closer to the microphone.");
-      } catch (e: any) { setStatus(`The speech model did not load: ${e?.message ?? e}`); }
+        const t = await transcribe(samples, lang);
+        if (t && !/^\[.*\]$/.test(t)) { done(t); return; }
+      } catch { /* the model did not load; the message below says what to do */ }
+    }
+    fail("We could not make out the words. Try again, or type it instead.");
+  };
+
+  const start = async () => {
+    if (phase === "listening" || phase === "transcribing") return;
+    setError(""); setNote(""); setInterim(""); setSeconds(0); setLevel(0);
+    heard.current = ""; cancelled.current = false;
+    let stream: MediaStream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+    catch (e) { fail(micMessage(e)); return; }
+    const chunks: Blob[] = [];
+    let mr: MediaRecorder;
+    try { mr = new MediaRecorder(stream); } catch { stream.getTracks().forEach((t) => t.stop()); fail("This browser cannot record audio. Type your brief instead."); return; }
+    mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    mr.onstop = () => {
+      stopMeter.current(); stream.getTracks().forEach((t) => t.stop());
+      try { rec.current?.stop(); } catch { /* already stopped */ }
+      rec.current = null; setLevel(0);
+      void finish(chunks.length ? new Blob(chunks, { type: mr.mimeType }) : null);
     };
     media.current = mr;
     mr.start(250);
-    setLive(true); setStatus("Listening. Pause when you have finished.");
+    // live words while speaking, where the browser has a recogniser; Brave ships the API but blocks the service
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SR && !(navigator as any).brave) {
+      try {
+        const r = new SR();
+        r.lang = lang; r.interimResults = true; r.continuous = true;
+        r.onresult = (e: any) => {
+          let text = "";
+          for (const res of e.results) text += res[0].transcript;
+          heard.current = text;
+          setInterim(text.trim());
+        };
+        r.onerror = () => { /* the recorded clip is the source of truth; live words are a preview */ };
+        r.start();
+        rec.current = r;
+      } catch { rec.current = null; }
+    }
+    setPhase("listening");
     stopMeter.current = meter(stream, () => { if (mr.state === "recording") mr.stop(); });
-  }, [lang, onFinal]);
+  };
 
-  const startBrowser = useCallback(() => {
-    const r = new SR();
-    let heard = false;
-    r.lang = lang; r.interimResults = true; r.continuous = false;
-    r.onresult = (e: any) => {
-      heard = true;
-      let fin = "", mid = "";
-      for (const res of e.results) (res.isFinal ? (fin += res[0].transcript) : (mid += res[0].transcript));
-      setInterim(mid);
-      if (fin) { setInterim(""); onFinal(fin); }
-    };
-    r.onerror = (e: any) => {
-      stopMeter.current(); setLive(false); setLevel(0);
-      if (e.error === "not-allowed" || e.error === "audio-capture") { setStatus(micMessage(e.error)); return; }
-      if (e.error === "no-speech" || e.error === "aborted") { setStatus(""); return; }
-      // network, service-not-allowed, language-not-supported: the browser's service is unavailable here
-      engine.current = "whisper";
-      if (!heard) void startWhisper();
-    };
-    r.onend = () => { stopMeter.current(); setLive(false); setLevel(0); setStatus((s) => (s.startsWith("Listening") ? "" : s)); };
-    rec.current = r;
-    try { r.start(); } catch { engine.current = "whisper"; void startWhisper(); return; }
-    setLive(true); setStatus("Listening.");
-    navigator.mediaDevices?.getUserMedia({ audio: true }).then((stream) => {
-      const stopM = meter(stream);
-      stopMeter.current = () => { stopM(); stream.getTracks().forEach((t) => t.stop()); };
-    }).catch(() => { /* the level meter is decoration */ });
-  }, [SR, lang, onFinal, startWhisper]);
-
-  const start = useCallback(() => {
-    setStatus("");
-    if (engine.current === "browser" && SR) startBrowser(); else void startWhisper();
-  }, [SR, startBrowser, startWhisper]);
-  const stop = useCallback(() => {
-    if (media.current?.state === "recording") media.current.stop();
-    else { rec.current?.stop(); stopMeter.current(); setLive(false); setLevel(0); }
-  }, []);
-  return { supported, live, status, interim, level, lang, setLang, start, stop };
+  const stop = () => { if (media.current?.state === "recording") media.current.stop(); };
+  const cancel = () => { cancelled.current = true; stop(); };
+  const dismiss = () => { setPhase("idle"); setError(""); };
+  return { supported, phase, error, note, interim, level, seconds, lang, setLang, start, stop, cancel, dismiss };
 }
+type Voice = ReturnType<typeof useVoice>;
 
 const Mic = () => (<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
+const StopIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor" /></svg>);
 const EXAMPLES = [PLACEHOLDER, "Ek maroon lehenga, gota patti ke saath", "A linen shirt with a mandarin collar", "A black blouse with a deep back"];
 
 /** Speech language, as a two-way switch whose ink slides between the sides. */
-function LangSwitch({ voice }: { voice: ReturnType<typeof useVoice> }) {
+function LangSwitch({ voice }: { voice: Voice }) {
   const id = useId();
   return (
     <div role="group" aria-label="Speech language" className="relative flex h-9 items-center rounded-full bg-brand-ink/[.05] p-1 text-[13px] font-medium">
-      {([["en-IN", "EN", "English"], ["hi-IN", "हिं", "Hindi"]] as const).map(([code, short, name]) => (
+      {([["en-IN", "EN", "English"], ["hi-IN", "हिं", "Hindi or Hinglish"]] as const).map(([code, short, name]) => (
         <button key={code} type="button" aria-pressed={voice.lang === code} aria-label={`Speak in ${name}`} onClick={() => voice.setLang(code)}
-          className={cn("relative h-7 rounded-full px-3 transition-colors", voice.lang === code ? "text-white" : "text-brand-ink/60 hover:text-brand-ink")}>
+          disabled={voice.phase === "listening" || voice.phase === "transcribing"}
+          className={cn("relative h-7 rounded-full px-3 transition-colors disabled:opacity-50", voice.lang === code ? "text-white" : "text-brand-ink/60 hover:text-brand-ink")}>
           {voice.lang === code && <motion.span layoutId={id} transition={SPRING} className="absolute inset-0 rounded-full bg-brand-ink" />}
           <span className="relative">{short}</span>
         </button>
@@ -189,17 +220,52 @@ function LangSwitch({ voice }: { voice: ReturnType<typeof useVoice> }) {
   );
 }
 
-/** The brief: grows with the words and can be spoken instead of typed. */
-function Composer({ onSend, voice, big, busy }: {
-  onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; big?: boolean; busy?: boolean;
+/** Five bars that follow the voice, so it is plain the microphone hears you. */
+function Level({ level }: { level: number }) {
+  return (
+    <span aria-hidden className="flex h-5 items-center gap-[3px]">
+      {[0.55, 0.85, 1, 0.8, 0.5].map((k, i) => (
+        <motion.span key={i} className="w-[3px] rounded-full bg-[#b5121b]" animate={{ height: 4 + Math.min(1, level * k * 1.6) * 16 }} transition={{ type: "spring", stiffness: 500, damping: 28 }} />
+      ))}
+    </span>
+  );
+}
+
+const clock = (s: number) => `0:${String(Math.min(s, 59)).padStart(2, "0")}`;
+
+/** What the microphone is doing, in one line, with the fix when something went wrong. */
+function VoiceLine({ voice, hint }: { voice: Voice; hint: string }) {
+  if (voice.phase === "listening") return (
+    <span className="flex min-w-0 items-center gap-3 text-[14px] text-brand-ink/60">
+      <Level level={voice.level} />
+      <span className="tabular-nums">{clock(voice.seconds)}</span>
+      <span className="hidden truncate sm:inline">Listening. Pause when you are done.</span>
+      <button type="button" onClick={voice.cancel} className="press rounded-full px-2 py-1 font-medium text-brand-ink/70 transition-colors hover:bg-brand-ink/[.06] hover:text-brand-ink">Cancel</button>
+    </span>
+  );
+  if (voice.phase === "transcribing") return (
+    <span className="flex min-w-0 items-center gap-3 text-[14px] text-brand-ink/60"><Dots /><span className="truncate">{voice.note || "Writing down what you said"}</span></span>
+  );
+  if (voice.phase === "error") return (
+    <span className="flex min-w-0 items-center gap-2 text-[14px] text-[#b5121b]">
+      <span className="min-w-0">{voice.error}</span>
+      <button type="button" onClick={() => void voice.start()} className="press shrink-0 rounded-full px-2 py-1 font-medium underline decoration-[#b5121b]/30 underline-offset-4 hover:decoration-[#b5121b]">Try again</button>
+    </span>
+  );
+  return <span className="truncate text-[14px] text-brand-ink/50">{hint}</span>;
+}
+
+/** The brief: grows with the words and can be spoken instead of typed. The text lives in the App so voice can fill it. */
+function Composer({ value, setValue, onSend, voice, big, busy, heard, placeholder }: {
+  value: string; setValue: (t: string) => void; onSend: (t: string) => void; voice: Voice; big?: boolean; busy?: boolean; heard?: boolean; placeholder?: string;
 }) {
   const still = !!useReducedMotion();
-  const [text, setText] = useState("");
   const [focus, setFocus] = useState(false);
   const [tip, setTip] = useState(0);
   const area = useRef<HTMLTextAreaElement>(null);
-  const shown = voice.live ? voice.interim : text;
-  const ready = text.trim().length > 0 && !busy && !voice.live;
+  const live = voice.phase === "listening" || voice.phase === "transcribing";
+  const shown = live ? voice.interim : value;
+  const ready = value.trim().length > 0 && !busy && !live;
 
   useEffect(() => {
     const el = area.current;
@@ -207,68 +273,72 @@ function Composer({ onSend, voice, big, busy }: {
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, big ? 180 : 120)}px`;
   }, [shown, big]);
+  // a fresh transcript is put in front of the customer to check
+  useEffect(() => { if (heard) area.current?.focus(); }, [heard]);
   // the placeholder walks through a few briefs while the field is empty
   useEffect(() => {
-    if (shown || still) return;
+    if (shown || still || placeholder) return;
     const t = setInterval(() => setTip((i) => (i + 1) % EXAMPLES.length), 3400);
     return () => clearInterval(t);
-  }, [shown, still]);
+  }, [shown, still, placeholder]);
 
-  const send = () => { const t = text.trim(); if (t && ready) { onSend(t); setText(""); } };
-  const controls = (
-    <div className="ml-auto flex shrink-0 items-center gap-1.5">
-      {voice.supported && big && <LangSwitch voice={voice} />}
-      {voice.supported && (
-        <motion.button type="button" whileTap={{ scale: 0.9 }} transition={SPRING} onClick={() => (voice.live ? voice.stop() : voice.start())}
-          aria-label={voice.live ? "Stop listening" : "Speak instead"} aria-pressed={voice.live}
-          className={cn("relative grid size-11 place-items-center rounded-full transition-colors", voice.live ? "bg-[#b5121b] text-white" : "text-brand-ink/70 hover:bg-brand-ink/[.06] hover:text-brand-ink")}>
-          {voice.live && <motion.span aria-hidden className="absolute inset-0 rounded-full bg-[#b5121b]/25" animate={{ scale: 1 + voice.level * 0.9 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />}
-          <span className="relative"><Mic /></span>
-        </motion.button>
-      )}
-      <motion.button type="submit" disabled={!ready} aria-label="Send"
-        animate={{ scale: ready ? 1 : 0.86, opacity: ready ? 1 : 0.3 }} whileTap={{ scale: 0.9 }} transition={SPRING}
-        className={cn("grid shrink-0 place-items-center rounded-full bg-brand-ink text-white", big ? "size-12" : "size-11")}>
-        <Arrow />
-      </motion.button>
-    </div>
+  const send = () => { const t = value.trim(); if (t && ready) { onSend(t); setValue(""); } };
+  const hint = heard ? "Check the words, then send." : value ? "Enter to send, Shift and Enter for a new line" : "";
+  const mic = voice.supported && (
+    <motion.button type="button" whileTap={{ scale: 0.9 }} transition={SPRING} disabled={voice.phase === "transcribing" || busy}
+      onClick={() => (voice.phase === "listening" ? voice.stop() : void voice.start())}
+      aria-label={voice.phase === "listening" ? "Stop and write it down" : "Speak instead"} aria-pressed={voice.phase === "listening"}
+      className={cn("relative grid size-11 shrink-0 place-items-center rounded-full transition-colors disabled:opacity-40",
+        voice.phase === "listening" ? "bg-[#b5121b] text-white" : "text-brand-ink/70 hover:bg-brand-ink/[.06] hover:text-brand-ink")}>
+      {voice.phase === "listening" && <motion.span aria-hidden className="absolute inset-0 rounded-full bg-[#b5121b]/25" animate={{ scale: 1 + voice.level * 0.9 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} />}
+      <span className="relative">{voice.phase === "listening" ? <StopIcon /> : <Mic />}</span>
+    </motion.button>
   );
+  const submit = (
+    <motion.button type="submit" disabled={!ready} aria-label="Send"
+      animate={{ scale: ready ? 1 : 0.86, opacity: ready ? 1 : 0.3 }} whileTap={{ scale: 0.9 }} transition={SPRING}
+      className={cn("grid shrink-0 place-items-center rounded-full bg-brand-ink text-white transition-colors hover:bg-[#232c3b] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#38bdf8]/50", big ? "size-12" : "size-11")}>
+      <Arrow />
+    </motion.button>
+  );
+  const ph = live ? (voice.phase === "listening" ? "Listening" : "") : placeholder;
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); send(); }}>
       <motion.div animate={{ boxShadow: focus ? "0 18px 50px -20px rgba(13,17,23,.30)" : "0 8px 30px -22px rgba(13,17,23,.25)" }} transition={{ duration: 0.3 }}
-        className={cn("bg-white ring-1 transition-[--tw-ring-color] duration-200", focus ? "ring-brand-ink/25" : "ring-brand-ink/10 hover:ring-brand-ink/20",
-          big ? "rounded-[32px] p-3 pl-7" : "flex items-end gap-2 rounded-[28px] p-1.5 pl-6")}>
-        <div className="relative flex-1">
-          <textarea ref={area} id={big ? "brief" : undefined} rows={1} value={shown} readOnly={voice.live} maxLength={600}
-            onChange={(e) => setText(e.target.value)} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} autoFocus={big}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            aria-label="Describe the garment"
-            className={cn("block w-full resize-none bg-transparent leading-[1.35] tracking-[-0.01em] text-brand-ink outline-none",
-              big ? "min-h-[64px] py-3 text-[clamp(19px,1.7vw,24px)]" : "min-h-11 py-[11px] text-[17px]")} />
-          {!shown && !voice.live && (
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span key={tip} aria-hidden initial={{ opacity: 0, y: 8, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -8, filter: "blur(4px)" }} transition={{ duration: 0.35 }}
-                className={cn("pointer-events-none absolute inset-x-0 truncate text-brand-ink/35", big ? "top-3 text-[clamp(19px,1.7vw,24px)]" : "top-[11px] text-[17px]")}>
-                {EXAMPLES[tip]}
-              </motion.span>
-            </AnimatePresence>
-          )}
-        </div>
-        {big ? (
-          <div className="mt-1 flex items-center justify-between gap-3">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.p key={voice.status || (text ? "keys" : "none")} role="status" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="hidden min-w-0 truncate text-[14px] text-brand-ink/50 sm:block">
-                {voice.status || (text ? "Enter to send, Shift and Enter for a new line" : "")}
-              </motion.p>
-            </AnimatePresence>
-            {controls}
+        className={cn("bg-white ring-1 transition-[--tw-ring-color] duration-200",
+          voice.phase === "listening" ? "ring-[#b5121b]/40" : focus ? "ring-brand-ink/25" : "ring-brand-ink/10 hover:ring-brand-ink/20",
+          big ? "rounded-[32px] p-3 pl-7" : "rounded-[28px] p-1.5 pl-6")}>
+        <div className={cn(!big && "flex items-end gap-2")}>
+          <div className="relative min-w-0 flex-1">
+            <textarea ref={area} id={big ? "brief" : undefined} rows={1} value={shown} readOnly={live} maxLength={600}
+              onChange={(e) => setValue(e.target.value)} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} autoFocus={big}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+              aria-label="Describe the garment"
+              className={cn("block w-full resize-none bg-transparent leading-[1.35] tracking-[-0.01em] text-brand-ink outline-none",
+                live && "text-brand-ink/60", big ? "min-h-[64px] py-3 text-[clamp(19px,1.7vw,24px)]" : "min-h-11 py-[11px] text-[17px]")} />
+            {!shown && (
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span key={ph ?? tip} aria-hidden initial={{ opacity: 0, y: 8, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -8, filter: "blur(4px)" }} transition={{ duration: 0.35 }}
+                  className={cn("pointer-events-none absolute inset-x-0 truncate text-brand-ink/35", big ? "top-3 text-[clamp(19px,1.7vw,24px)]" : "top-[11px] text-[17px]")}>
+                  {ph ?? EXAMPLES[tip]}
+                </motion.span>
+              </AnimatePresence>
+            )}
           </div>
-        ) : controls}
+          {!big && <div className="flex shrink-0 items-center gap-1.5">{mic}{submit}</div>}
+        </div>
+        {big && (
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div role="status" aria-live="polite" className="order-last flex min-h-6 min-w-0 basis-full items-center sm:order-none sm:basis-0 sm:flex-1"><VoiceLine voice={voice} hint={hint} /></div>
+            <div className="ml-auto flex shrink-0 items-center gap-1.5">{voice.supported && <LangSwitch voice={voice} />}{mic}{submit}</div>
+          </div>
+        )}
       </motion.div>
-      {!big && voice.status && <p role="status" className="mt-2 pl-6 text-[14px] text-brand-ink/55">{voice.status}</p>}
+      {!big && (voice.phase !== "idle" || heard) && (
+        <div role="status" aria-live="polite" className="mt-2 flex items-center pl-6"><VoiceLine voice={voice} hint={hint} /></div>
+      )}
     </form>
   );
 }
@@ -303,13 +373,14 @@ function Said({ m }: { m: Extract<Msg, { role: "me" }> }) {
   parts.push(m.text.slice(i));
   return (
     <motion.div initial={{ opacity: 0, y: 14, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={SPRING} style={{ transformOrigin: "bottom right" }}
-      className="ml-auto max-w-[min(560px,88%)] rounded-[26px] rounded-br-[8px] bg-brand-ink px-6 py-4 text-[18px] leading-[1.5] text-white">
+      className={cn("ml-auto max-w-[min(560px,88%)] rounded-[26px] rounded-br-[8px] px-6 py-4 text-[18px] leading-[1.5]",
+        m.skipped ? "bg-brand-ink/[.05] text-brand-ink/55" : "bg-brand-ink text-white")}>
       {parts}
     </motion.div>
   );
 }
 
-const pill = "press inline-flex h-10 items-center rounded-full px-4 text-[14px] font-medium ring-1 ring-brand-ink/12 transition-[background-color,box-shadow,transform] duration-200 hover:bg-brand-ink/[.04] hover:ring-brand-ink/25 active:scale-[0.97]";
+const pill = "press inline-flex h-10 items-center rounded-full px-4 text-[14px] font-medium ring-1 ring-brand-ink/12 transition-[background-color,box-shadow,transform] duration-200 hover:bg-brand-ink/[.04] hover:ring-brand-ink/25 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]";
 
 // ------------------------------------------------------------------ picker sheet
 function hslHex(h: number, s: number, l: number): string {
@@ -363,7 +434,9 @@ function Picker({ slot, label, current, ctx, onPick, onClose }: {
   }, [onClose]);
   const tagName = SLOT_TAG[slot];
   let body: React.ReactNode;
-  if (slot === "colour") {
+  if (PROFILE_CHOICES[slot]) {
+    body = <div className="choices">{PROFILE_CHOICES[slot].map(([v, l]) => <button key={v} className="choice" aria-pressed={current.includes(v)} onClick={() => onPick(v)}>{l}</button>)}</div>;
+  } else if (slot === "colour") {
     body = (
       <>
         <div className="palette">
@@ -420,9 +493,10 @@ function Picker({ slot, label, current, ctx, onPick, onClose }: {
 function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: string, note?: string) => void }) {
   const [editing, setEditing] = useState<[string, string] | null>(null);
   const rows = ROWS.filter(([slot]) => spec.slots[slot] || spec.lists[slot]?.length || spec.excluded.some((e) => e.slot === slot));
+  const title = spec.slots.garment ? cap(nice(garmentName(spec))) : "Your design";
   return (
     <aside className="order" aria-label="Your design">
-      <AnimatePresence mode="wait" initial={false}><motion.h2 key={spec.slots.garment?.value ?? "none"} initial={{ opacity: 0, y: 10, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>{spec.slots.garment ? nice(garmentName(spec))[0].toUpperCase() + nice(garmentName(spec)).slice(1) : "Your design"}</motion.h2></AnimatePresence>
+      <AnimatePresence mode="wait" initial={false}><motion.h2 key={title} initial={{ opacity: 0, y: 10, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>{title}</motion.h2></AnimatePresence>
       <div className="meta">{rows.length ? `Draft ${spec.version}. Select any detail to change it.` : ""}</div>
       {!rows.length && <div className="empty">Each detail you mention settles here, part by part, with where it came from.</div>}
       {rows.length > 0 && (
@@ -431,14 +505,19 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
             const v = spec.slots[slot];
             const list = spec.lists[slot] ?? [];
             const ex = spec.excluded.filter((e) => e.slot === slot);
-            const editable = !!SLOT_TAG[slot] || slot.endsWith(".depth");
+            const editable = !!SLOT_TAG[slot] || slot.endsWith(".depth") || !!PROFILE_CHOICES[slot];
             const open = () => editable && setEditing([slot, label]);
+            const text = !v ? "" : slot === "garment" ? nice(garmentName(spec))
+              : slot === "wearer" ? (wearerText({ ...spec, slots: { wearer: v } })?.en ?? v.value)
+                : PROFILE_CHOICES[slot] ? profileLabel(slot, v.value)
+                  : slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in`
+                    : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`;
             return (
               <motion.div layout="position" className="item" key={`${slot}:${v?.value ?? ""}:${list.map((x) => x.value).join()}`}
                 initial={{ backgroundColor: "rgba(56,189,248,.18)" }} animate={{ backgroundColor: "rgba(56,189,248,0)" }} transition={{ duration: 1.4, ease: "easeOut" }}>
                 <dt>{label}</dt>
                 <dd>
-                  {v && <button onClick={open}>{lookOf(slot, v.value, contextOf(slot, spec)) && <img className={`thumb${isPhoto(slot) ? " photo" : ""}`} src={lookOf(slot, v.value, contextOf(slot, spec))} alt="" />}{slot.endsWith(".depth") && depthInches(v) ? `${depthInches(v)} in` : `${v.intensity === "slight" ? "slightly " : v.intensity === "strong" ? "very " : ""}${nice(v.value)}`}{editable && <span className="chev">›</span>}</button>}
+                  {v && <button onClick={open}>{lookOf(slot, v.value, contextOf(slot, spec)) && <img className={`thumb${isPhoto(slot) ? " photo" : ""}`} src={lookOf(slot, v.value, contextOf(slot, spec))} alt="" />}{text}{editable && <span className="chev">›</span>}</button>}
                   {list.length > 0 && <button onClick={open}>{slot === "colour" && list.map((x) => <span key={x.value} className="dot" style={{ background: SWATCH[x.value] ?? "#ccc" }} />)}{list.map((x) => nice(x.value)).join(", ")}{editable && <span className="chev">›</span>}</button>}
                   {ex.map((x) => <span key={x.value} className="no" title={x.evidence}>{nice(x.value)}</span>)}
                   {(v || list.length > 0) && <small>from {[...new Set([v, ...list].filter(Boolean).map((x) => SOURCE[x!.src] ?? x!.src))].join(" and ")}</small>}
@@ -466,7 +545,7 @@ function Switch<T extends string>({ value, options, onChange, label }: { value: 
     <div role="group" aria-label={label} className="relative flex h-11 items-center rounded-full bg-brand-ink/[.05] p-1 text-[14px] font-medium">
       {options.map(([v, text]) => (
         <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}
-          className={cn("relative h-9 rounded-full px-4 transition-colors", value === v ? "text-white" : "text-brand-ink/60 hover:text-brand-ink")}>
+          className={cn("relative h-9 rounded-full px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]", value === v ? "text-white" : "text-brand-ink/60 hover:text-brand-ink")}>
           {value === v && <motion.span layoutId={id} transition={SPRING} className="absolute inset-0 rounded-full bg-brand-ink" />}
           <span className="relative">{text}</span>
         </button>
@@ -475,15 +554,15 @@ function Switch<T extends string>({ value, options, onChange, label }: { value: 
   );
 }
 
-/** The opening of the sheet and shop pages: a big line, one sentence on what the page is for. */
+/** The opening of a studio page, in the home page's voice: one big line, one sentence on what the page is for. */
 function PageHead({ title, lede }: { title: string; lede: string }) {
   return (
     <>
-      <h1 className="display overflow-hidden pb-[0.08em] text-[clamp(48px,7vw,112px)] leading-[0.95]">
+      <h1 className="display overflow-hidden pb-[0.08em] text-[clamp(56px,9vw,160px)] leading-[0.92]">
         <motion.span className="block" initial={{ y: "105%" }} animate={{ y: 0 }} transition={{ ...SOFT, delay: 0.05 }}>{title}</motion.span>
       </h1>
       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.15 }}
-        className="mt-6 max-w-[54ch] text-[clamp(17px,1.4vw,20px)] leading-[1.5] text-brand-ink/60">{lede}</motion.p>
+        className="mt-8 max-w-[52ch] text-[clamp(17px,1.4vw,20px)] leading-[1.5] text-brand-ink/60">{lede}</motion.p>
     </>
   );
 }
@@ -491,10 +570,9 @@ function PageHead({ title, lede }: { title: string; lede: string }) {
 /** Shown on a page that needs a design before it has anything to say. */
 function NeedsDesign({ text, onTalk }: { text: string; onTalk: () => void }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.25 }}
-      className="mt-12 rounded-[32px] bg-brand-ink/[.035] px-8 py-12 md:px-12">
-      <p className="max-w-[40ch] text-[22px] font-medium leading-[1.35] tracking-[-0.02em]">{text}</p>
-      <button type="button" onClick={onTalk} className="press mt-6 h-12 rounded-full bg-brand-ink px-6 text-[15px] font-medium text-white transition-colors hover:bg-[#232c3b] active:scale-[0.97]">
+    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.25 }} className="mt-14 max-w-[640px]">
+      <p className="text-[clamp(22px,2vw,28px)] font-medium leading-[1.3] tracking-[-0.02em]">{text}</p>
+      <button type="button" onClick={onTalk} className="press mt-8 h-14 rounded-full bg-brand-ink px-9 text-[17px] font-medium text-white transition-colors hover:bg-[#232c3b] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#38bdf8]/50">
         Describe a garment
       </button>
     </motion.div>
@@ -515,23 +593,25 @@ function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; set
     return v && src ? [{ slot, part, value: v, src }] : [];
   });
   const [lang, setLang] = useState<"en" | "hi">("en");
+  // what was typed, so "34." can become "34.5" before it is a number
+  const [typed, setTyped] = useState<Partial<Record<keyof Measurements, string>>>({});
   const hi = lang === "hi";
   const [sending, setSending] = useState(false);
   const garment = spec.slots.garment
-    ? (hi ? hindi("GARMENT", spec.slots.garment.value) : nice(garmentName(spec))[0].toUpperCase() + nice(garmentName(spec)).slice(1))
+    ? (hi ? hindi("GARMENT", spec.slots.garment.value) : cap(nice(garmentName(spec))))
     : (hi ? "पोशाक" : "Garment");
   const date = new Date().toLocaleDateString(hi ? "hi-IN" : "en-IN", { day: "numeric", month: "long", year: "numeric" });
   const hiFont = hi ? "hi" : "";
 
   return (
-    <main className="mx-auto max-w-[1180px] px-5 pb-32 pt-14 md:px-10 md:pt-20 print:p-0">
+    <main className="mx-auto max-w-[1440px] px-5 pb-32 pt-[clamp(56px,7vw,104px)] md:px-10 print:p-0">
       <div className="noprint">
         <PageHead title="Tailor sheet." lede="Everything your tailor needs, written from your design. Add your measurements, then print it or send it to a maker on Bespoke." />
       </div>
       {!lines.length ? <NeedsDesign text="Your sheet fills in as you describe the garment. Start in Talk, then come back here." onTalk={onTalk} /> : (
         <>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.25 }}
-            className="noprint mt-10 flex flex-wrap items-center gap-3">
+            className="noprint mt-12 flex flex-wrap items-center gap-3">
             <Switch label="Sheet language" value={lang} onChange={setLang} options={[["en", "English"], ["hi", "हिंदी"]]} />
             <span className="flex-1" />
             <button type="button" onClick={() => window.print()}
@@ -589,8 +669,13 @@ function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; set
                       <label key={k} className="group block rounded-[18px] bg-brand-ink/[.04] px-4 pb-3 pt-2.5 ring-1 ring-transparent transition-[background-color,box-shadow] focus-within:bg-white focus-within:ring-brand-ink/20 hover:bg-brand-ink/[.06] print:bg-transparent print:ring-black/15">
                         <span className={cn("text-[12px] font-medium text-brand-ink/50", hiFont)}>{hi ? hiLabel : en}</span>
                         <span className="mt-0.5 flex items-baseline gap-1">
-                          <input inputMode="decimal" value={m[k] ?? ""} placeholder="–"
-                            onChange={(e) => setM({ ...m, [k]: e.target.value ? parseFloat(e.target.value) : undefined })}
+                          <input inputMode="decimal" value={typed[k] ?? m[k] ?? ""} placeholder="–"
+                            onChange={(e) => {
+                              const t = e.target.value.replace(/[^\d.]/g, "");
+                              setTyped({ ...typed, [k]: t });
+                              const n = parseFloat(t);
+                              setM({ ...m, [k]: isNaN(n) ? undefined : n });
+                            }}
                             className="w-full min-w-0 bg-transparent text-[22px] font-medium tracking-[-0.02em] outline-none placeholder:text-brand-ink/20" />
                           <span className="text-[13px] text-brand-ink/40">in</span>
                         </span>
@@ -624,7 +709,7 @@ function Out({ href, domain, title, note, delay }: { href: string; domain: strin
   return (
     <motion.a href={href} target="_blank" rel="noreferrer" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay }}
       whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}
-      className="group flex items-center gap-4 rounded-[24px] bg-white p-4 pr-5 no-underline shadow-[0_0_0_1px_rgba(13,17,23,.07)] transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(13,17,23,.1),0_24px_50px_-28px_rgba(13,17,23,.4)]">
+      className="group flex items-center gap-4 rounded-[24px] bg-white p-4 pr-5 no-underline shadow-[0_0_0_1px_rgba(13,17,23,.07)] transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(13,17,23,.1),0_24px_50px_-28px_rgba(13,17,23,.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]">
       <img src={icon(domain)} alt="" loading="lazy" className="size-11 shrink-0 rounded-[14px] bg-brand-ink/[.04] object-contain p-2" />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-medium text-brand-ink">{title}</span>
@@ -637,35 +722,37 @@ function Out({ href, domain, title, note, delay }: { href: string; domain: strin
 
 function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string) => void; onTalk: () => void }) {
   const L = links(spec);
-  const who = wearerOf(spec) as "women" | "men" | "anyone";
+  const who = wearerOf(spec);
+  const section = who === "men" ? "men's" : "women's";
+  const note = (filtered: boolean) => who === "anyone" ? "Opens a search on their site" : filtered ? `Opens the ${section} section` : `Searches ${section} styles`;
   const groups: { title: string; items: { href: string; domain: string; title: string; note: string }[] }[] = [
-    { title: "Buy something close, ready-made", items: L.shops.map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: "Opens a search on their site" })) },
+    { title: "Buy something close, ready-made", items: L.shops.map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: note(p.filtered) })) },
     { title: "Ideas", items: L.pinterest.map((p) => ({ href: p.url, domain: "pinterest.com", title: p.label, note: "Pinterest" })) },
     { title: "The fabric", items: L.fabric.map((p) => ({ href: p.url, domain: "amazon.in", title: p.label, note: "By the metre" })) },
     { title: "Have it made", items: [{ href: L.tailors.url, domain: "maps.google.com", title: "Tailors near you", note: "Take your tailor sheet along" }] },
   ].filter((g) => g.items.length);
 
   return (
-    <main className="mx-auto max-w-[1180px] px-5 pb-32 pt-14 md:px-10 md:pt-20">
-      <PageHead title="Find it, or have it made." lede="Searches written from your design. Look for ideas, buy something close, or find the fabric and a tailor. Every link opens on the shop's own site." />
+    <main className="mx-auto max-w-[1440px] px-5 pb-32 pt-[clamp(56px,7vw,104px)] md:px-10">
+      <PageHead title="Find it." lede="Searches written from your design and who it is for. Look for ideas, buy something close, or find the fabric and a tailor. Every link opens on the shop's own site." />
       {!spec.slots.garment ? <NeedsDesign text="Describe the garment first, and the searches here write themselves." onTalk={onTalk} /> : (
         <>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.22 }}
-            className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[28px] bg-brand-ink/[.035] p-6 md:p-8">
+            className="mt-12 flex flex-wrap items-end gap-x-8 gap-y-5">
             <div className="min-w-[220px] flex-1">
-              <p className="text-[13px] font-medium text-brand-ink/45">Searching for</p>
+              <p className="text-[14px] font-medium text-brand-ink/45">Searching for</p>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.p key={L.query} initial={{ opacity: 0, y: 6, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}
-                  className="mt-1 text-[clamp(20px,2vw,28px)] font-medium leading-tight tracking-[-0.02em]">{L.query}</motion.p>
+                  className="mt-1 text-[clamp(26px,3vw,40px)] font-medium leading-tight tracking-[-0.03em]">{L.query}</motion.p>
               </AnimatePresence>
             </div>
             <Switch label="Shopping for" value={who} onChange={onWearer} options={[["women", "Women"], ["men", "Men"], ["anyone", "Anyone"]]} />
           </motion.div>
           {groups.map((g, gi) => (
-            <section key={g.title} className="mt-12">
+            <section key={g.title} className="mt-14">
               <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 + gi * 0.08 }}
-                className="text-[22px] font-medium tracking-[-0.02em]">{g.title}</motion.h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                className="text-[clamp(22px,2vw,28px)] font-medium tracking-[-0.02em]">{g.title}</motion.h2>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {g.items.map((it, i) => <Out key={it.href} {...it} delay={0.34 + gi * 0.08 + i * 0.04} />)}
               </div>
             </section>
@@ -702,19 +789,71 @@ function Finale({ spec, onSheet, onShop, backBtn }: { spec: Spec; onSheet: () =>
   );
 }
 
+/** One follow-up: the question, its options as pictures or pills, and a way to skip or answer in your own words. */
+function Ask({ q, spec, live, still, onPick, onSkip }: { q: Question; spec: Spec; live: boolean; still: boolean; onPick: (v: string) => void; onSkip: () => void }) {
+  const ctx = contextOf(q.slot, spec);
+  const label = (o: string) => q.labels?.[o] ?? (PROFILE_CHOICES[q.slot] ? profileLabel(q.slot, o) : nice(o));
+  return (
+    <div className="mt-7">
+      <p className="mb-4 text-[17px] font-medium tracking-[-0.01em] text-brand-ink/80">{q.text}</p>
+      {live && allHaveLooks(q.slot, q.options, ctx)
+        ? <div className="looks inline">{q.options.map((o) => <Look key={o} slot={q.slot} value={o} ctx={ctx} label={label(o)} onClick={() => onPick(o)} />)}</div>
+        : (
+          <div className="flex flex-wrap gap-2">
+            {q.options.map((o, k) => (
+              <motion.button key={o} type="button" onClick={() => onPick(o)} whileTap={{ scale: 0.94 }} disabled={!live}
+                initial={live && !still ? { opacity: 0, y: 8, scale: 0.96 } : false} animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ ...SPRING, delay: 0.3 + k * 0.035 }}
+                className="h-11 rounded-full bg-brand-ink/[.05] px-5 text-[15px] font-medium transition-colors duration-200 hover:bg-brand-ink hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8] disabled:pointer-events-none">
+                {label(o)}
+              </motion.button>
+            ))}
+          </div>
+        )}
+      {live && (
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }} className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] text-brand-ink/50">
+          <button type="button" onClick={onSkip}
+            className="press h-9 rounded-full px-4 font-medium text-brand-ink/70 ring-1 ring-brand-ink/12 transition-colors hover:bg-brand-ink/[.04] hover:text-brand-ink active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]">Skip</button>
+          <span>or type your own answer below</span>
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+/** The conversation so far, as turns a model can read. */
+function turnsOf(msgs: Msg[]): Turn[] {
+  return msgs.map((m): Turn => m.role === "me"
+    ? { role: "user", content: m.skipped ? "(skipped the question)" : m.text }
+    : { role: "assistant", content: [m.text, (m.question ?? m.questions?.[0])?.text].filter(Boolean).join(" ") });
+}
+const pendingOf = (msgs: Msg[]): Question | null => {
+  const last = msgs[msgs.length - 1];
+  return last?.role === "bot" ? (last.question ?? last.questions?.[0] ?? null) : null;
+};
+const viewOf = (path: string): View | null => {
+  const v = path.split("/").filter(Boolean)[1];
+  return VIEWS.includes(v as View) ? (v as View) : null;
+};
+
 // ------------------------------------------------------------------ app
 export default function App() {
+  const router = useRouter();
+  const path = usePathname() ?? "/studio/";
+  const view: View = viewOf(path) ?? "talk";
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
   const [designId, setDesignId] = useState(currentDesignId);
   // a signed-in person opening a fresh tab gets their latest design back; until we know, the page waits
   const [resuming, setResuming] = useState(() => !!supabase() && !readSession<Msg[]>("bespoke.msgs", []).length && !new URLSearchParams(location.search).has("new"));
-  const [view, setView] = useState<View>("talk");
   const [boardId, setBoardId] = useState(newBoardId);
+  const go = useCallback((v: View) => { if (v !== view) router.push(studioHref(v)); }, [router, view]);
   // the board opens blank from anywhere in the studio; earlier boards are one click away in its history
-  const openBoard = () => { setBoardId(newBoardId()); setView("board"); };
+  const openBoard = () => { setBoardId(newBoardId()); go("board"); };
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
   const [thinking, setThinking] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [heard, setHeard] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   // every step can be taken back: the design and the conversation as they were before it
   const [past, setPast] = useState<{ spec: Spec; msgs: Msg[] }[]>(() => load("bespoke.past", []));
@@ -725,7 +864,7 @@ export default function App() {
     const prev = past[past.length - 1];
     if (!prev) return;
     setSpec(prev.spec); setMsgs(prev.msgs); setPast(past.slice(0, -1));
-    if (!prev.msgs.length) setView("talk");
+    if (!prev.msgs.length) go("talk");
   };
   useEffect(() => { save("bespoke.past", past); }, [past]);
 
@@ -741,44 +880,89 @@ export default function App() {
       if (d) { setSpec(d.spec as Spec); setMsgs(d.msgs as Msg[]); setM(d.meas as Measurements); setDesignId(d.id); setCurrentDesignId(d.id); }
     }).catch(() => {}).finally(() => setResuming(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, thinking]);
   useEffect(() => { window.scrollTo({ top: 0 }); }, [view]);
 
-  const reply = useCallback((next: Spec, ups: Update[], note?: string) => {
-    const got = ups.filter((u) => u.op !== "compare").length;
-    const text = !next.slots.garment && !got ? "Tell me a little more. What should we make, and for which occasion?"
-      : next.slots.garment ? `${phrase(next)[0].toUpperCase()}${phrase(next).slice(1)}.` : "Noted. What should we make?";
-    setMsgs((x) => [...x, { role: "bot", text, questions: questions(next), note: note ?? (advice(next) || undefined) }]);
+  /** The studio's turn: read the design back, then one question, chosen by the model when it can, else the engine. */
+  const reply = useCallback(async (next: Spec, ups: Update[], history: Turn[], note?: string) => {
+    const open = ask(next);
+    const proposal = open.length ? await askNext(history, next, open, 4500) : null;
+    const question = chooseQuestion(open, proposal, next);
+    const who = wearerText(next);
+    const got = ups.filter((u) => u.op !== "compare" && u.op !== "asked").length;
+    // who it is for is read back on the turn it was learned; after that it sits in the design panel
+    const learned = ups.some((u) => u.slot === "wearer" || u.slot === "age");
+    const text = next.slots.garment ? `${cap(phrase(next))}${who && learned ? `, for ${who.en}` : ""}.`
+      : who ? `Got it, for ${who.en}. What should we make?`
+        : got ? "Noted. What should we make?" : "Tell me a little more. What should we make, and for which occasion?";
+    setMsgs((x) => [...x, { role: "bot", text, question, note: note ?? (advice(next) || undefined) }]);
   }, []);
 
   const send = useCallback(async (text: string) => {
     remember();
     setThinking(true);
+    setHeard(false);
+    const pending = pendingOf(msgs);
+    const meMsg = (tokens: string[], spans: Span[]): Msg => ({ role: "me", text, tokens, spans });
+    // guardrails first: injection, unsafe or off-limits text is answered here and never reaches a model
+    const guard = screen(text, []);
+    if (!guard.ok) {
+      const reply = guard.reason === "self_harm" ? guard.reply : "I can only help design clothes here. Tell me what you would like made, for example:";
+      setMsgs((x) => [...x, meMsg([text], []), { role: "bot", text: reply, examples: guard.reason === "self_harm" ? undefined : EXAMPLE_BRIEFS, question: pending }]);
+      setThinking(false);
+      return;
+    }
     // the language model (when configured) and the on-device engine run together; the device answers alone if the model cannot
     const second = understand(text, spec);
-    const { tokens, spans } = await tag(correctTranscript(text, isCommonWord));
-    const ups = [...bind(tokens, spans, "words"), ...wearerUpdates(text)];
-    setMsgs((x) => [...x, { role: "me", text, tokens, spans }]);
+    const corrected = correctTranscript(text, isCommonWord);
+    let tokens: string[], spans: Span[];
+    try { ({ tokens, spans } = await tag(corrected)); }
+    catch { tokens = tokenize(corrected); spans = tagRules(tokens); }
+    const rules = tagRules(tokens);
+    // a typed answer to the open question: an option's own label, or a profile detail the tagger cannot read
+    const label = pending?.options.find((o) => [o, pending.labels?.[o] ?? "", nice(o)].some((l) => l && l.toLowerCase() === text.trim().toLowerCase()));
+    const direct = pending ? (label ? answer(pending.slot, label) : answerFromText(pending.slot, text)) : [];
+    const profile = [...profileUpdates(text), ...direct];
+    const local = meaning(tokens, rules, spans, profile);
+    const ups = [...bind(tokens, spans, "words"), ...profile];
+    setMsgs((x) => [...x, meMsg(tokens, spans)]);
     const model = await second;
+    if (verdict(local, model) === "rubbish") {
+      const started = !!spec.slots.garment;
+      setMsgs((x) => [...x, {
+        role: "bot", question: pending,
+        text: started ? "I did not catch a change to your design. You could say something like:" : "I did not catch a garment in that. Try describing what you would like made, for example:",
+        examples: started ? EXAMPLE_CHANGES : EXAMPLE_BRIEFS,
+      }]);
+      setThinking(false);
+      return;
+    }
     // an age is never a length, whichever reader thought so
-    const fromModel = (model ?? []).filter((u) => !(u.slot.endsWith("length") && /year|old|saal|age|umr/i.test(u.value?.evidence ?? "")));
-    const all = fromModel.length ? [...ups, ...fromModel] : ups;
+    const fromModel = (model?.updates ?? []).filter((u) => !(u.slot.endsWith("length") && /year|old|saal|age|umr/i.test(u.value?.evidence ?? "")));
+    const all = [...ups, ...fromModel, ...(pending ? [asked(pending.slot)] : [])];
     const next = apply(spec, all);
     setSpec(next);
-    reply(next, all);
+    await reply(next, all, turnsOf([...msgs, meMsg(tokens, spans)]));
     setThinking(false);
-  }, [spec, reply, remember]);
+  }, [spec, msgs, reply, remember]);
 
-  const voice = useVoice(useCallback((t: string) => { void send(t); }, [send]));
+  const voice = useVoice(useCallback((t: string) => { setDraft((d) => (d.trim() ? `${d.trim()} ${t}` : t)); setHeard(true); }, []));
+  const typeDraft = (t: string) => { setDraft(t); if (heard) setHeard(false); };
 
-  const pick = (q: Question, v: string) => {
+  const step = async (ups: Update[], me: Msg) => {
     remember();
-    const ups = answer(q.slot, v);
+    setThinking(true);
     const next = apply(spec, ups);
     setSpec(next);
-    setMsgs((x) => [...x, { role: "me", text: q.labels?.[v] ?? v, tokens: [q.labels?.[v] ?? v], spans: [] }]);
-    reply(next, ups);
+    setMsgs((x) => [...x, me]);
+    await reply(next, ups, turnsOf([...msgs, me]));
+    setThinking(false);
   };
+  const pick = (q: Question, v: string) => {
+    const label = q.labels?.[v] ?? (PROFILE_CHOICES[q.slot] ? profileLabel(q.slot, v) : nice(v));
+    void step([...answer(q.slot, v), asked(q.slot)], { role: "me", text: label, tokens: [label], spans: [] });
+  };
+  const skip = (q: Question) => void step([asked(q.slot)], { role: "me", text: "Skip", tokens: ["skip"], spans: [], skipped: true });
   const edit = (slot: string, value: string, note?: string) => {
     const ups: Update[] = [{ op: LIST_SLOTS.includes(slot) ? "replace" : "set", slot, value: { value, p: 1, src: "edit", evidence: "edited" } }];
     if (note) ups.push({ op: "note", slot: "notes", value: { value: note, p: 1, src: "edit", evidence: "edited" } });
@@ -786,20 +970,27 @@ export default function App() {
     setSpec(apply(spec, ups));
   };
   const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
-  const fromBoard = (ups: Update[], note: string) => { remember(); const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
+  const fromBoard = (ups: Update[], note: string) => {
+    remember(); const next = apply(spec, ups); setSpec(next); go("talk");
+    void reply(next, ups, turnsOf(msgs), note);
+  };
   const reset = () => {
     if (msgs.length) remember();
     const id = newDesignId();
     setDesignId(id); setCurrentDesignId(id);
-    setSpec(emptySpec()); setMsgs([]); setView("talk");
+    setSpec(emptySpec()); setMsgs([]); setDraft(""); setHeard(false);
+    go("talk");
   };
-  // links in: ?new opens a blank design (the last one still a Back away), ?view=board|sheet|shop opens that page
+  // links in: /studio/ and the old ?view=board|sheet|shop open the page's own URL; ?new opens a blank design
   useLayoutEffect(() => {
     const q = new URLSearchParams(location.search);
-    const v = q.get("view");
-    if (q.has("new")) reset();
-    if (v === "board" || v === "sheet" || v === "shop") setView(v);
-    if (q.has("new") || v) history.replaceState(null, "", location.pathname);
+    const fresh = q.has("new");
+    if (!viewOf(location.pathname)) {
+      const v = q.get("view");
+      location.replace(studioHref(VIEWS.includes(v as View) ? (v as View) : "talk", fresh ? "?new" : ""));
+      return;
+    }
+    if (fresh) { reset(); history.replaceState(null, "", location.pathname); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const still = !!useReducedMotion();
@@ -810,12 +1001,13 @@ export default function App() {
   const header = useMemo(() => (
     <header className="top"><div className="inner">
       <a className="mark" href="/" aria-label="Bespoke home"><Mark className="size-5" /><span>Bespoke</span></a>
-      <nav className="seg" aria-label="Sections">
+      <nav className="seg" aria-label="Studio">
         {NAV.map(([v, l]) => (
-          <button key={v} aria-pressed={view === v} onClick={() => (v === "board" ? openBoard() : setView(v))}>
+          <a key={v} href={studioHref(v)} aria-current={view === v ? "page" : undefined}
+            onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); if (v === "board") openBoard(); else go(v); }}>
             {view === v && <motion.span layoutId="studio-tab" transition={SPRING} className="absolute inset-0 rounded-full bg-brand-ink" />}
             <span className="relative">{l}</span>
-          </button>
+          </a>
         ))}
       </nav>
       <div className="right">
@@ -829,14 +1021,18 @@ export default function App() {
       </div>
     </div></header>
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [view, started]);
+  ), [view, started, go]);
 
-  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
-  if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => setView("talk")} /></>);
-  if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => setView("talk")} /></>);
-
+  if (!viewOf(path)) return null;   // on the way to /studio/talk/
   if (resuming) return (
     <>{header}<main className="hero"><motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[17px] text-brand-ink/50">Opening your last design</motion.p></main></>
+  );
+  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
+  if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => go("talk")} /></>);
+  if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => go("talk")} /></>);
+
+  const composer = (big?: boolean, placeholder?: string) => (
+    <Composer big={big} value={draft} setValue={typeDraft} onSend={send} voice={voice} busy={thinking} heard={heard} placeholder={placeholder} />
   );
 
   if (!started) return (
@@ -854,17 +1050,17 @@ export default function App() {
         </div>
         <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.22 }}
           className="mt-8 max-w-[52ch] text-[clamp(17px,1.4vw,20px)] leading-[1.5] text-brand-ink/60">
-          Tell us the garment you want, the way you would tell a friend, in English or Hinglish. We ask what is missing and turn it into a sheet any tailor can follow.
+          Tell us the garment you want, the way you would tell a friend, in English or Hinglish. We ask what is missing, one question at a time, and turn it into a sheet any tailor can follow.
         </motion.p>
         <motion.div className="brief" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.28 }}>
           <label htmlFor="brief" className="sr-only">Your brief</label>
-          <Composer big onSend={send} voice={voice} busy={thinking} />
-          <ol className="mt-12 grid max-w-[1040px] gap-6 sm:grid-cols-3">
+          {composer(true)}
+          <ol className="mt-14 grid max-w-[1040px] gap-6 sm:grid-cols-3">
             {TALK_STEPS.map(([title, text], i) => (
               <motion.li key={title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.45 + i * 0.07 }}
                 className="border-t border-brand-ink/10 pt-4">
                 <span className="text-[13px] font-medium text-brand-ink/40">{i + 1}</span>
-                <p className="mt-1 text-[16px] font-medium">{title}</p>
+                <p className="mt-1 text-[17px] font-medium tracking-[-0.01em]">{title}</p>
                 <p className="mt-1 max-w-[34ch] text-[14px] leading-[1.5] text-brand-ink/55">{text}</p>
               </motion.li>
             ))}
@@ -880,6 +1076,8 @@ export default function App() {
     </>
   );
 
+  const pending = pendingOf(msgs);
+  const done = !!spec.slots.garment && ask(spec).length === 0;
   return (
     <>
       {header}
@@ -888,40 +1086,34 @@ export default function App() {
           {msgs.map((x, i) => {
             if (x.role === "me") return <Said key={i} m={x} />;
             const last = i === msgs.length - 1;
+            const q = x.question ?? x.questions?.[0] ?? null;
             return (
               <motion.div key={i} className="flex gap-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={SPRING}>
                 <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-brand-ink/[.05]"><Mark className="size-4" /></span>
                 <div className={cn("min-w-0 flex-1", !last && "opacity-55 transition-opacity duration-300 hover:opacity-100")}>
-                  <p className="text-[22px] font-medium leading-[1.35] tracking-[-0.02em]"><Reveal text={x.text} still={still || !last} /></p>
+                  <p className="text-[clamp(21px,1.8vw,26px)] font-medium leading-[1.3] tracking-[-0.025em]"><Reveal text={x.text} still={still || !last} /></p>
                   {x.note && (
                     <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: last ? 0.35 : 0 }} className="mt-3 max-w-[60ch] text-[16px] leading-[1.55] text-brand-ink/60">{x.note}</motion.p>
                   )}
-                  {x.questions.slice(0, 2).map((q, qi) => (
-                    <div className="mt-7" key={q.slot}>
-                      <p className="mb-3 text-[15px] font-medium text-brand-ink/70">{q.text}</p>
-                      {allHaveLooks(q.slot, q.options, contextOf(q.slot, spec))
-                        ? <div className="looks inline">{q.options.map((o) => <Look key={o} slot={q.slot} value={o} ctx={contextOf(q.slot, spec)} label={q.labels?.[o] ?? nice(o)} onClick={() => pick(q, o)} />)}</div>
-                        : (
-                          <div className="flex flex-wrap gap-2">
-                            {q.options.map((o, k) => (
-                              <motion.button key={o} type="button" onClick={() => pick(q, o)} whileTap={{ scale: 0.94 }}
-                                initial={last && !still ? { opacity: 0, y: 8, scale: 0.96 } : false} animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ ...SPRING, delay: 0.3 + qi * 0.12 + k * 0.035 }}
-                                className="h-11 rounded-full bg-brand-ink/[.05] px-5 text-[15px] font-medium transition-colors duration-200 hover:bg-brand-ink hover:text-white">
-                                {q.labels?.[o] ?? nice(o)}
-                              </motion.button>
-                            ))}
-                          </div>
-                        )}
+                  {x.examples && (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {x.examples.map((e) => (
+                        <button key={e} type="button" disabled={!last} onClick={() => { setDraft(e); setHeard(false); }}
+                          className="h-11 rounded-full bg-brand-ink/[.05] px-5 text-left text-[15px] font-medium transition-colors hover:bg-brand-ink hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8] disabled:pointer-events-none">
+                          {e}
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                  {last && !thinking && (spec.slots.garment && questions(spec).length === 0
-                    ? <Finale spec={spec} onSheet={() => setView("sheet")} onShop={() => setView("shop")} backBtn={backBtn} />
+                  )}
+                  {q && (last || !x.examples) && <Ask q={q} spec={spec} live={last && !thinking} still={still} onPick={(v) => pick(q, v)} onSkip={() => skip(q)} />}
+                  {last && !thinking && (done && !x.examples
+                    ? <Finale spec={spec} onSheet={() => go("sheet")} onShop={() => go("shop")} backBtn={backBtn} />
                     : (
                       <motion.div className="mt-8 flex flex-wrap gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
                         {backBtn}
                         {spec.slots.garment && <button className={pill} onClick={openBoard}>Add pictures</button>}
-                        {spec.slots.garment && <button className={pill} onClick={() => setView("shop")}>Ideas and shopping</button>}
+                        {spec.slots.garment && <button className={pill} onClick={() => go("sheet")}>Tailor sheet</button>}
+                        {spec.slots.garment && <button className={pill} onClick={() => go("shop")}>Ideas and shopping</button>}
                       </motion.div>
                     ))}
                 </div>
@@ -941,7 +1133,7 @@ export default function App() {
         <Order spec={spec} onEdit={edit} />
       </div>
       <div className="dock"><div className="wrap">
-        <div className="grow"><Composer onSend={send} voice={voice} busy={thinking} /></div>
+        <div className="grow">{composer(false, pending ? "Type your own answer, or anything to change" : "Add a detail or change anything")}</div>
       </div></div>
     </>
   );
