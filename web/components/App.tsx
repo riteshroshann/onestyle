@@ -13,6 +13,7 @@ import { understand } from "../lib/understand";
 const Board = dynamic(() => import("./Board"), { ssr: false });
 import { Pleats } from "./Pleats";
 import { SendToMaker } from "./market/SendToMaker";
+import { Mark } from "./site/Mark";
 
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
@@ -566,7 +567,7 @@ export default function App() {
   const NAV: [View, string][] = [["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
   const header = useMemo(() => (
     <header className="top"><div className="inner">
-      <a className="mark" href="/" aria-label="Bespoke home">Bespoke</a>
+      <a className="mark" href="/" aria-label="Bespoke home"><Mark className="size-5" /><span>Bespoke</span></a>
       <nav className="seg" aria-label="Sections">{NAV.map(([v, l]) => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{l}</button>)}</nav>
       <div className="right">{started && <button className="ghost" onClick={reset}>New design</button>}</div>
     </div></header>
@@ -582,10 +583,8 @@ export default function App() {
       {header}
       <main className="hero">
         <div className="row fade">
-          <h1>Describe it.<em>Wear it.</em></h1>
-          <div className="side">
-            <Pleats size={170} state={state} level={voice.level} />
-          </div>
+          <h1 className="display">Describe it.<br />Wear it.</h1>
+          {voice.live && <div className="side"><Pleats size={150} state={state} level={voice.level} /></div>}
         </div>
         <div className="brief">
           <Line onSend={send} voice={voice} autoFocus label="Your brief" />
