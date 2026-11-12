@@ -14,6 +14,7 @@ export const NOT_AVAILABLE = "That conversation is not available to you.";
 export const NOT_YOUR_REQUEST = "Only the maker on this request can change it.";
 export const NO_MAKER = "That maker could not be found.";
 export const TRY_AGAIN = "Something went wrong. Check your connection and try again.";
+export const CHECK_EMAIL = "Check your email to confirm your account, then sign in.";
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();
 

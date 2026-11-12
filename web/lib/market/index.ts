@@ -6,7 +6,7 @@ import type { Store } from "./types.ts";
 export { MarketError, STATUS_LABEL } from "./types.ts";
 export type { Craft, DesignRequest, DesignSnapshot, Message, MessageKind, Profile, RequestStatus, Role, SignUp, Store } from "./types.ts";
 export { MISSING_OPTIONS, missingLabel } from "./missing.ts";
-export { MAX_BODY } from "./rules.ts";
+export { CHECK_EMAIL, MAX_BODY } from "./rules.ts";
 
 let store: Store | undefined;
 

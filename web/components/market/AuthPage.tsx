@@ -1,7 +1,7 @@
 "use client";
 import { motion, useAnimationControls } from "motion/react";
 import { useEffect, useState } from "react";
-import { getStore, MarketError } from "@/lib/market";
+import { CHECK_EMAIL, getStore, MarketError } from "@/lib/market";
 import type { Craft, Role } from "@/lib/market";
 import { PHOTOS } from "@/lib/photos";
 import { homeFor } from "../site/Header";
@@ -16,7 +16,7 @@ const DOOR: Record<Role, { photo: string; alt: string; words: Record<Mode, strin
 export function Field({ label, ...input }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="group block">
-      <span className="text-[14px] font-semibold text-foreground/60 transition-colors group-focus-within:text-foreground">{label}</span>
+      <span className="text-[14px] font-medium text-foreground/60 transition-colors group-focus-within:text-foreground">{label}</span>
       <input {...input} className="mt-1 block h-12 w-full rounded-none border-0 border-b-2 border-foreground/15 bg-transparent text-[18px] font-medium outline-none transition-colors placeholder:text-foreground/25 focus:border-foreground" />
     </label>
   );
@@ -28,6 +28,10 @@ export function AuthPage({ role, mode }: { role: Role; mode: Mode }) {
   const [craft, setCraft] = useState<Craft>("Tailor");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  // the return address rides along when switching between sign in and create account
+  const [qs, setQs] = useState("");
+  useEffect(() => { setQs(window.location.search); }, []);
   const shake = useAnimationControls();
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
   // "next" may only point inside this site
@@ -50,6 +54,7 @@ export function AuthPage({ role, mode }: { role: Role; mode: Mode }) {
         : await store.signUp({ ...form, role, ...(role === "maker" ? { craft, specialties: form.makes.split(",").map((s) => s.trim()).filter(Boolean) } : {}) });
       leave(homeFor(me));
     } catch (err) {
+      if (err instanceof MarketError && err.message === CHECK_EMAIL) { setSent(true); setBusy(false); return; }
       setError(err instanceof MarketError ? err.message : "Something went wrong. Try again.");
       setBusy(false);
       void shake.start({ x: [0, -8, 8, -5, 5, 0], transition: { duration: 0.4 } });
@@ -66,9 +71,17 @@ export function AuthPage({ role, mode }: { role: Role; mode: Mode }) {
 
       <div className="flex flex-col justify-center px-6 py-16 md:px-16">
         <a href="/" aria-label="Bespoke home" className="display mb-12 text-[34px] text-foreground no-underline md:hidden">Bespoke</a>
+        {sent ? (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 160, damping: 24 }} className="mx-auto w-full max-w-sm" role="status">
+            <h1 className="display text-[48px]">Check your email.</h1>
+            <p className="mt-4 text-[17px] leading-[1.55] text-foreground/65">We sent a link to <span className="font-medium text-foreground">{form.email}</span>. Open it to confirm your account, then sign in here.</p>
+            <p className="mt-3 text-[15px] leading-[1.5] text-foreground/50">Nothing after a few minutes? Look in spam, or create the account again.</p>
+            <a href={`${door.base}/login/${qs}`} className="press mt-10 inline-flex h-14 w-full items-center justify-center rounded-full bg-foreground text-[17px] font-medium text-background no-underline">Go to sign in</a>
+          </motion.div>
+        ) : (
         <motion.form animate={shake} onSubmit={submit} className="mx-auto w-full max-w-sm" noValidate>
           <h1 className="display text-[48px]">{mode === "login" ? "Sign in" : "Create account"}</h1>
-          <p className="mt-2 text-[15px] font-semibold text-foreground/60">{role === "maker" ? "For designers and tailors" : "For customers"}</p>
+          <p className="mt-2 text-[15px] font-medium text-foreground/60">{role === "maker" ? "For designers and tailors" : "For customers"}</p>
 
           <div className="mt-10 space-y-6">
             {mode === "signup" && <Field label="Name" autoComplete="name" value={form.name} onChange={set("name")} required />}
@@ -78,11 +91,11 @@ export function AuthPage({ role, mode }: { role: Role; mode: Mode }) {
             {mode === "signup" && role === "maker" && (
               <>
                 <fieldset>
-                  <legend className="text-[14px] font-semibold text-foreground/60">You are a</legend>
+                  <legend className="text-[14px] font-medium text-foreground/60">You are a</legend>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {CRAFTS.map((c) => (
                       <button key={c} type="button" aria-pressed={craft === c} onClick={() => setCraft(c)}
-                        className="press h-11 rounded-full border-2 border-foreground/15 px-5 text-[15px] font-semibold aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:text-background">{c}</button>
+                        className="press h-11 rounded-full border-2 border-foreground/15 px-5 text-[15px] font-medium aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:text-background">{c}</button>
                     ))}
                   </div>
                 </fieldset>
@@ -91,17 +104,18 @@ export function AuthPage({ role, mode }: { role: Role; mode: Mode }) {
             )}
           </div>
 
-          {error && <p role="alert" className="mt-6 text-[15px] font-semibold text-destructive">{error}</p>}
+          {error && <p role="alert" className="mt-6 text-[15px] font-medium text-destructive">{error}</p>}
 
-          <button type="submit" disabled={busy} className="press mt-8 h-14 w-full rounded-full bg-foreground text-[17px] font-semibold text-background">
+          <button type="submit" disabled={busy} className="press mt-8 h-14 w-full rounded-full bg-foreground text-[17px] font-medium text-background">
             {busy ? "One moment" : mode === "login" ? "Sign in" : "Create account"}
           </button>
 
-          <p className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[15px] font-semibold">
-            <a href={`${door.base}/${mode === "login" ? "signup" : "login"}/`} className="text-foreground underline underline-offset-4">{mode === "login" ? "Create account" : "Sign in instead"}</a>
+          <p className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[15px] font-medium">
+            <a href={`${door.base}/${mode === "login" ? "signup" : "login"}/${qs}`} className="text-foreground underline underline-offset-4">{mode === "login" ? "Create account" : "Sign in instead"}</a>
             <a href={role === "maker" ? "/login/" : "/makers/login/"} className="text-foreground/60 underline underline-offset-4 hover:text-foreground">{role === "maker" ? "I am a customer" : "I am a maker"}</a>
           </p>
         </motion.form>
+        )}
       </div>
     </main>
   );

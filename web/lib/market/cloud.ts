@@ -4,7 +4,7 @@ import { supabase } from "../supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MarketError } from "./types.ts";
 import type { Craft, DesignRequest, DesignSnapshot, Message, MessageKind, Profile, RequestStatus, Role, SignUp, Store } from "./types.ts";
-import { BAD_LOGIN, EMAIL_TAKEN, NOT_AVAILABLE, NOT_SIGNED_IN, NOT_YOUR_REQUEST, NO_MAKER, TRY_AGAIN, checkSignUp, checkStatus, cleanBody, cleanNote, cleanSlots,
+import { BAD_LOGIN, CHECK_EMAIL, EMAIL_TAKEN, NOT_AVAILABLE, NOT_SIGNED_IN, NOT_YOUR_REQUEST, NO_MAKER, TRY_AGAIN, checkSignUp, checkStatus, cleanBody, cleanNote, cleanSlots,
   missingNote, statusNote, wrongDoor } from "./rules.ts";
 
 interface ProfileRow { id: string; role: Role; name: string; email: string; city: string; craft: Craft | null; specialties: string[] | null; bio: string | null }
@@ -123,7 +123,7 @@ export function createCloudStore(url: string, anonKey: string): Store {
       });
       if (error) throw authError(error);
       // With email confirmation switched on, Supabase creates the account but returns no session.
-      if (!data.session || !data.user) throw new MarketError("Check your email to confirm your account, then sign in.");
+      if (!data.session || !data.user) throw new MarketError(CHECK_EMAIL);
       const profile = await profileOf(data.user.id);
       if (!profile) throw new MarketError(TRY_AGAIN);
       return profile;
