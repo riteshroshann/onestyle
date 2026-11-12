@@ -8,6 +8,12 @@
     "api/understand.js": {
       "maxDuration": 15
     },
+    "api/next.js": {
+      "maxDuration": 12
+    },
+    "api/transcribe.js": {
+      "maxDuration": 25
+    },
     "api/assistant.js": {
       "maxDuration": 25
     },
