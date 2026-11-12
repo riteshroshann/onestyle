@@ -28,7 +28,7 @@ export function Header({ current, cta = true, tone = "light" }: { current?: stri
   const dark = tone === "dark";
   const link = cn("press rounded-full px-4 py-2 text-[15px] font-semibold no-underline", dark ? "text-white hover:bg-white/10" : "text-foreground hover:bg-secondary");
   return (
-    <header className={cn("fixed inset-x-0 top-0 z-40 border-b", dark ? "border-white/10 bg-brand-ink/75 backdrop-blur-xl" : "border-foreground/10 bg-white")}>
+    <header className={cn("fixed inset-x-0 top-0 z-40 border-b", dark ? "border-white/10 bg-brand-ink" : "border-foreground/10 bg-white")}>
       <div className="mx-auto flex h-[72px] max-w-[1440px] items-center gap-4 px-5 md:px-10">
         <a href="/" aria-label="Bespoke home" className={cn("display inline-flex items-center gap-2 text-[34px] no-underline", dark ? "text-white" : "text-foreground")}><Mark className="size-6" />Bespoke</a>
         <nav aria-label="Main" className="ml-auto flex items-center gap-1">
