@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { AskIcon } from "./AskIcon";
 import { Arrow, Dots, Reveal, SPRING } from "./Motion";
 
-interface Turn { role: "user" | "assistant"; content: string; sources?: string[]; failed?: boolean }
+interface Turn { role: "user" | "assistant"; content: string; sources?: string[]; links?: { label: string; href: string }[]; failed?: boolean }
 const STARTERS = ["How do I measure my bust?", "What is ease?", "How does the moodboard work?"];
 const UNAVAILABLE = "I could not reach the assistant. Check your connection and try again.";
 const OFF = "I am not switched on yet.";
@@ -23,7 +23,7 @@ async function ask(message: string, history: Turn[]): Promise<Turn> {
     });
     if (res.status === 501) return { role: "assistant", content: OFF, failed: true };
     const body = await res.json();
-    if (body.answer) return { role: "assistant", content: body.answer, sources: (body.sources ?? []).map((s: { title: string }) => s.title) };
+    if (body.answer) return { role: "assistant", content: body.answer, sources: (body.sources ?? []).map((s: { title: string }) => s.title), links: body.links ?? [] };
     return { role: "assistant", content: body.error ?? UNAVAILABLE, failed: true };
   } catch {
     return { role: "assistant", content: UNAVAILABLE, failed: true };
@@ -134,6 +134,18 @@ export function Assistant() {
                         )}>
                           {mine || t.failed ? t.content : <Reveal text={t.content} still={still} />}
                         </div>
+                        {t.links && t.links.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {t.links.map((l, k) => (
+                              <motion.a key={l.href} href={l.href} initial={{ opacity: 0, y: 6, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ ...SPRING, delay: still ? 0 : 0.35 + k * 0.06 }} whileTap={{ scale: 0.95 }}
+                                className={cn("inline-flex h-9 items-center rounded-full px-4 text-[13px] font-medium no-underline transition-colors",
+                                  k === 0 ? "bg-brand-ink text-white hover:bg-[#232c3b]" : "text-brand-ink ring-1 ring-black/10 hover:bg-black/[.04]")}>
+                                {l.label}
+                              </motion.a>
+                            ))}
+                          </div>
+                        )}
                         {t.sources && t.sources.length > 0 && (
                           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1.5 px-1 text-[12px] text-brand-ink/50">
                             From {t.sources.slice(0, 2).join(" and ")}

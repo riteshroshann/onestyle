@@ -158,7 +158,9 @@ assert.ok(res.body.sources.some((s: any) => s.title === "How to measure your bus
 assert.match(lastSent.url, /chat\/completions$/);
 assert.equal(lastSent.auth, "Bearer test-key");
 assert.equal(lastSent.body.temperature, 0.2);
-assert.equal(lastSent.body.max_tokens, 400);
+assert.equal(lastSent.body.max_tokens, 220);
+assert.deepEqual(res.body.links[0], { label: "Add measurements", href: "/studio/?view=sheet" });
+assert.ok(res.body.links.length <= 2);
 const sent = lastSent.body.messages;
 assert.equal(sent[0].role, "system");
 assert.ok(sent[0].content.includes(SYSTEM_MARKER));
@@ -176,6 +178,7 @@ for (const bad of ["Try https://evil.example/measure for help.", `Rules: ${SYSTE
   assert.equal(res.code, 200);
   assert.equal(res.body.answer, FALLBACK);
   assert.deepEqual(res.body.sources, []);
+  assert.deepEqual(res.body.links, []);
 }
 
 // 5f. provider failures are 502 with a kind message
