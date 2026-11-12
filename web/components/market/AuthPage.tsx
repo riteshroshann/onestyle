@@ -36,8 +36,8 @@ export function AuthPage({ role, mode }: { role: Role; mode: Mode }) {
     window.location.href = next && /^\/(?!\/)/.test(next) ? next : to;
   };
 
-  // someone already signed in has no business on this page
-  useEffect(() => { getStore().session().then((me) => { if (me) leave(homeFor(me)); }).catch(() => {}); }, []);
+  // someone already signed in on this side has no business here; a customer opening the maker door may switch
+  useEffect(() => { getStore().session().then((me) => { if (me?.role === role) leave(homeFor(me)); }).catch(() => {}); }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
