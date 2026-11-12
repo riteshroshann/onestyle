@@ -1,91 +1,209 @@
 "use client";
 // The help assistant in the corner. It answers only from Bespoke's own knowledge base; the rules live in api/assistant.js.
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { AskIcon } from "./AskIcon";
 
-interface Turn { role: "user" | "assistant"; content: string }
+interface Turn { role: "user" | "assistant"; content: string; sources?: string[]; failed?: boolean }
 const STARTERS = ["How do I measure my bust?", "What is ease?", "How does the moodboard work?"];
-const UNAVAILABLE = "I am not available right now. Try again in a moment.";
+const UNAVAILABLE = "I could not reach the assistant. Check your connection and try again.";
 const OFF = "I am not switched on yet.";
 // pages with their own bar along the bottom edge: the launcher sits above it
 const DOCKED = ["/studio", "/orders", "/makers"];
+const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 
-async function ask(message: string, history: Turn[]): Promise<string> {
+async function ask(message: string, history: Turn[]): Promise<Turn> {
   try {
-    const res = await fetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message, history }) });
-    if (res.status === 501) return OFF;
+    const res = await fetch("/api/assistant", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message, history: history.filter((t) => !t.failed).map(({ role, content }) => ({ role, content })) }),
+    });
+    if (res.status === 501) return { role: "assistant", content: OFF, failed: true };
     const body = await res.json();
-    return body.answer ?? body.error ?? UNAVAILABLE;
+    if (body.answer) return { role: "assistant", content: body.answer, sources: (body.sources ?? []).map((s: { title: string }) => s.title) };
+    return { role: "assistant", content: body.error ?? UNAVAILABLE, failed: true };
   } catch {
-    return UNAVAILABLE;
+    return { role: "assistant", content: UNAVAILABLE, failed: true };
   }
+}
+
+/** Assistant text arrives word by word, the way it would if it streamed. */
+function Reveal({ text, still }: { text: string; still: boolean }) {
+  if (still) return <>{text}</>;
+  const words = text.split(/(\s+)/);
+  return (
+    <>
+      {words.map((w, i) => (
+        <motion.span key={i} initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ duration: 0.35, delay: Math.min(i * 0.012, 1.2) }}>{w}</motion.span>
+      ))}
+    </>
+  );
+}
+
+function Dots() {
+  return (
+    <span className="flex h-5 items-center gap-1" role="status" aria-label="Thinking">
+      {[0, 1, 2].map((i) => (
+        <motion.span key={i} className="size-1.5 rounded-full bg-brand-ink/45"
+          animate={{ y: [0, -4, 0], opacity: [0.45, 1, 0.45] }} transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.14, ease: "easeInOut" }} />
+      ))}
+    </span>
+  );
 }
 
 export function Assistant() {
   const path = usePathname();
+  const still = !!useReducedMotion();
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
-  const end = useRef<HTMLLIElement>(null);
-  const input = useRef<HTMLInputElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const launcher = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { if (open) input.current?.focus(); }, [open]);
-  useEffect(() => { end.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [turns.length, thinking]);
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: still ? "auto" : "smooth" });
+  }, [turns.length, thinking, still]);
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape" && open) { setOpen(false); launcher.current?.focus(); } };
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
-  }, []);
+  }, [open]);
+  // the field grows with the question, up to four lines
+  useEffect(() => {
+    const el = input.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 112)}px`;
+  }, [draft]);
 
-  const send = async (text: string) => {
+  const send = async (text: string, base = turns) => {
     const message = text.trim();
     if (!message || thinking) return;
-    const history = turns;
-    setTurns([...history, { role: "user", content: message }]);
+    setTurns([...base, { role: "user", content: message }]);
     setDraft("");
     setThinking(true);
-    const answer = await ask(message, history);
-    setTurns((t) => [...t, { role: "assistant", content: answer }]);
+    const answer = await ask(message, base);
+    setTurns((t) => [...t, answer]);
     setThinking(false);
+    input.current?.focus();
+  };
+  // a failed answer can be asked again in place
+  const retry = (i: number) => {
+    const question = turns[i - 1];
+    if (question?.role === "user") void send(question.content, turns.slice(0, i - 1));
   };
 
   const raised = DOCKED.some((p) => path.startsWith(p));
+  const ready = draft.trim().length > 0 && !thinking;
   return (
     <div className={cn("fixed right-4 z-50 flex flex-col items-end gap-3 md:right-6", raised ? "bottom-24" : "bottom-4 md:bottom-6")}>
       <AnimatePresence>
         {open && (
           <motion.div
             role="dialog" aria-label="Ask Bespoke"
-            initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 16, scale: 0.96 }}
-            transition={{ type: "spring", duration: 0.4, bounce: 0 }} style={{ transformOrigin: "bottom right" }}
-            className="flex h-[min(560px,70svh)] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_80px_-20px_rgba(0,0,0,.45)] ring-1 ring-black/10"
+            initial={{ opacity: 0, y: 24, scale: 0.92, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: 16, scale: 0.94, filter: "blur(4px)" }} transition={SPRING} style={{ transformOrigin: "bottom right" }}
+            className="flex h-[min(600px,calc(100svh-8rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[28px] bg-white/90 shadow-[0_30px_90px_-24px_rgba(13,17,23,.45)] ring-1 ring-black/[.06] backdrop-blur-2xl"
           >
-            <h2 className="display border-b border-foreground/10 px-5 py-4 text-[28px]">Ask</h2>
-            <ol aria-live="polite" className="flex-1 space-y-2 overflow-y-auto px-5 py-4">
-              {turns.length === 0 && STARTERS.map((s) => (
-                <li key={s}><button onClick={() => send(s)} className="press w-full rounded-xl bg-secondary px-4 py-3 text-left text-[15px] font-semibold hover:bg-[#ececec]">{s}</button></li>
-              ))}
-              {turns.map((t, i) => (
-                <motion.li key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("flex", t.role === "user" ? "justify-end" : "justify-start")}>
-                  <span className={cn("max-w-[86%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] font-medium leading-snug", t.role === "user" ? "rounded-br-sm bg-foreground text-background" : "rounded-bl-sm bg-secondary")}>{t.content}</span>
-                </motion.li>
-              ))}
-              {thinking && <li className="shimmer-text px-1 text-[15px] font-semibold">Thinking</li>}
-              <li ref={end} aria-hidden />
-            </ol>
-            <form onSubmit={(e) => { e.preventDefault(); void send(draft); }} className="flex gap-2 border-t border-foreground/10 p-3">
-              <input ref={input} value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Your question" placeholder="Ask about Bespoke" maxLength={600}
-                className="h-11 min-w-0 flex-1 rounded-full bg-secondary px-4 text-[15px] font-medium outline-none placeholder:text-foreground/40 focus:shadow-[0_0_0_2px_var(--foreground)]" />
-              <button type="submit" disabled={!draft.trim() || thinking} className="press h-11 rounded-full bg-foreground px-5 text-[15px] font-semibold text-background">Send</button>
+            <header className="flex items-center gap-3 px-5 pb-3 pt-4">
+              <AskIcon className="size-9 shrink-0 text-brand-ink" />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-[17px] font-medium leading-tight tracking-[-0.01em]">Ask</h2>
+                <p className="text-[13px] text-brand-ink/55">Answers from Bespoke's guides</p>
+              </div>
+              <AnimatePresence>
+                {turns.length > 0 && (
+                  <motion.button type="button" onClick={() => { setTurns([]); input.current?.focus(); }} disabled={thinking}
+                    initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={SPRING}
+                    className="press h-8 rounded-full px-3 text-[13px] font-medium text-brand-ink/70 transition-colors hover:bg-black/[.05] hover:text-brand-ink disabled:opacity-40">
+                    New chat
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </header>
+
+            <div ref={scroller} className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
+              {turns.length === 0 ? (
+                <div className="flex h-full flex-col justify-end gap-5 px-1 pb-1">
+                  <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.05 }}
+                    className="text-[26px] leading-[1.1] tracking-[-0.03em]">Hi. What are you<br />making today?</motion.p>
+                  <ul className="flex flex-col items-start gap-2">
+                    {STARTERS.map((s, i) => (
+                      <motion.li key={s} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.1 + i * 0.05 }}>
+                        <button type="button" onClick={() => send(s)}
+                          className="press rounded-full px-4 py-2 text-left text-[14px] text-brand-ink ring-1 ring-black/10 transition-[background-color,box-shadow,transform] duration-200 hover:bg-black/[.04] hover:ring-black/20 active:scale-[0.97]">
+                          {s}
+                        </button>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <ol aria-live="polite" className="flex flex-col gap-3 pt-1">
+                  {turns.map((t, i) => {
+                    const mine = t.role === "user";
+                    return (
+                      <motion.li key={i} layout="position" initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={SPRING}
+                        style={{ transformOrigin: mine ? "bottom right" : "bottom left" }} className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
+                        <div className={cn(
+                          "max-w-[85%] whitespace-pre-wrap px-4 py-2.5 text-[15px] leading-[1.45]",
+                          mine ? "rounded-[20px] rounded-br-[6px] bg-brand-ink text-white" : "rounded-[20px] rounded-bl-[6px] bg-[#f2f3f5] text-brand-ink",
+                          t.failed && "bg-[#fdf1f1] text-[#8a1c1c]",
+                        )}>
+                          {mine || t.failed ? t.content : <Reveal text={t.content} still={still} />}
+                        </div>
+                        {t.sources && t.sources.length > 0 && (
+                          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1.5 px-1 text-[12px] text-brand-ink/50">
+                            From {t.sources.slice(0, 2).join(" and ")}
+                          </motion.p>
+                        )}
+                        {t.failed && t.content !== OFF && (
+                          <button type="button" onClick={() => retry(i)} disabled={thinking}
+                            className="press mt-1.5 rounded-full px-2.5 py-1 text-[13px] font-medium text-brand-ink/70 transition-colors hover:bg-black/[.05] hover:text-brand-ink">
+                            Try again
+                          </button>
+                        )}
+                      </motion.li>
+                    );
+                  })}
+                  <AnimatePresence>
+                    {thinking && (
+                      <motion.li key="dots" initial={{ opacity: 0, y: 8, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={SPRING}
+                        style={{ transformOrigin: "bottom left" }} className="flex">
+                        <div className="rounded-[20px] rounded-bl-[6px] bg-[#f2f3f5] px-4 py-2.5"><Dots /></div>
+                      </motion.li>
+                    )}
+                  </AnimatePresence>
+                </ol>
+              )}
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); void send(draft); }} className="px-3 pb-3">
+              <div className="flex items-end gap-2 rounded-[24px] bg-[#f2f3f5] p-1.5 pl-4 ring-1 ring-transparent transition-[box-shadow,background-color] duration-200 focus-within:bg-white focus-within:shadow-[0_6px_20px_-10px_rgba(13,17,23,.25)] focus-within:ring-black/15">
+                <textarea ref={input} rows={1} value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={600}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(draft); } }}
+                  aria-label="Your question" placeholder="Ask about Bespoke"
+                  className="max-h-28 min-h-9 flex-1 resize-none bg-transparent py-2 text-[15px] leading-[1.35] outline-none placeholder:text-brand-ink/40" />
+                <motion.button type="submit" disabled={!ready} aria-label="Send"
+                  animate={{ scale: ready ? 1 : 0.88, opacity: ready ? 1 : 0.35 }} whileTap={{ scale: 0.9 }} transition={SPRING}
+                  className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-ink text-white">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="size-[18px]">
+                    <path d="M12 19V5M6 11l6-6 6 6" />
+                  </svg>
+                </motion.button>
+              </div>
             </form>
           </motion.div>
         )}
       </AnimatePresence>
-      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "Close Ask" : "Ask Bespoke"}
+      <button ref={launcher} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "Close Ask" : "Ask Bespoke"}
         className="press grid size-[68px] place-items-center text-brand-ink drop-shadow-[0_12px_20px_rgba(13,17,23,.32)] transition-[color,transform] duration-500 ease-[cubic-bezier(.34,1.56,.64,1)] hover:-translate-y-1 hover:scale-[1.07] hover:text-[#232c3b] active:scale-95">
         <AskIcon open={open} className="size-[68px]" />
       </button>
