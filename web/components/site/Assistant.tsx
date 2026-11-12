@@ -32,7 +32,9 @@ function designSummary(): string {
 const UNAVAILABLE = "I could not reach the assistant. Check your connection and try again.";
 const OFF = "I am not switched on yet.";
 // pages with their own bar along the bottom edge: the launcher sits above it
-const DOCKED = ["/studio", "/orders", "/makers"];
+const DOCKED = ["/studio"];
+// the inbox has its own composer in that corner, and Ask is for help with designing
+const HIDDEN = ["/orders", "/makers"];
 
 async function ask(message: string, history: Turn[]): Promise<Turn> {
   try {
@@ -98,6 +100,7 @@ export function Assistant() {
   };
 
   const raised = DOCKED.some((p) => path.startsWith(p));
+  if (HIDDEN.some((p) => path.startsWith(p))) return null;
   const ready = draft.trim().length > 0 && !thinking;
   return (
     <div className={cn("fixed right-4 z-50 flex flex-col items-end gap-3 md:right-6", raised ? "bottom-24" : "bottom-4 md:bottom-6")}>

@@ -4,6 +4,7 @@ import { Google_Sans } from "next/font/google";
 import { Assistant } from "../components/site/Assistant";
 import { Splash } from "../components/site/Splash";
 import { ToTop } from "../components/site/ToTop";
+import { Notifier } from "../components/market/Notifier";
 
 // Self-hosted at build time: no request to a font service when the page loads.
 const sans = Google_Sans({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-ui", display: "swap" });
@@ -47,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={sans.variable}>
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-        <Splash />{children}<ToTop /><Assistant />
+        <Splash />{children}<ToTop /><Assistant /><Notifier />
       </body>
     </html>
   );
