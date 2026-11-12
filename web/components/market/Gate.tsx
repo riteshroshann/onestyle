@@ -8,7 +8,7 @@ import { Workspace } from "./Workspace";
 function MakerLanding() {
   return (
     <>
-      <Header current="/makers/" cta={false} audience="maker" />
+      <Header current="/makers/" audience="maker" />
       <main className="relative grid min-h-[100svh] place-items-center overflow-hidden bg-foreground px-6 pt-[72px] text-center text-white">
         <img src={PHOTOS.seamstress.src} alt={PHOTOS.seamstress.alt} className="absolute inset-0 size-full object-cover opacity-45 grayscale" />
         <div className="relative">

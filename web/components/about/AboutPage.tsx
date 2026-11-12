@@ -69,14 +69,11 @@ export function AboutPage() {
                 <p>Bespoke is the bridge between the two. Say it however it comes to you, and get back something a maker can cut from, without a single word lost on the way.</p>
               </blockquote>
               <p className="mt-10 text-[15px] text-white/60">Ritesh Roshan, founder</p>
+              <div className="mt-14"><Cta href="/studio/?new" size="lg" tone="light">Start a design</Cta></div>
             </motion.div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1440px] px-5 py-28 md:px-10 md:py-40">
-          <motion.h2 {...rise} className="display text-[clamp(44px,6vw,104px)] leading-[0.95]">Say it.<br />We will cut it.</motion.h2>
-          <motion.div {...rise} transition={{ ...SOFT, delay: 0.1 }} className="mt-12"><Cta href="/studio/?new" size="lg">Start a design</Cta></motion.div>
-        </section>
       </main>
       <Footer />
     </div>

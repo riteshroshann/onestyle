@@ -192,7 +192,7 @@ export function Workspace({ me }: { me: Profile }) {
 
   return (
     <>
-      <Header current={maker ? "/makers/" : undefined} cta={false} audience={maker ? "maker" : "customer"} />
+      <Header current={maker ? "/makers/" : undefined} audience={maker ? "maker" : "customer"} />
       <main className="grid h-[100svh] pt-[72px] md:grid-cols-[minmax(280px,360px)_1fr]">
         <aside className={cn("flex min-h-0 flex-col border-foreground/10 md:border-r", current && "hidden md:flex")}>
           <h2 className="display px-5 pb-5 pt-8 text-[44px] md:px-8">{maker ? "Inbox" : "Requests"}</h2>

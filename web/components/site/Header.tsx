@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { getStore } from "@/lib/market";
 import type { Profile } from "@/lib/market";
 import { cn } from "@/lib/utils";
-import { Cta } from "./Cta";
 import { SPRING } from "./Motion";
 
 const LINKS = [
@@ -60,7 +59,7 @@ export function useSession() {
   return me;
 }
 
-export function Header({ current, cta = true, tone = "light", audience = "customer" }: { current?: string; cta?: boolean; tone?: "light" | "dark"; audience?: "customer" | "maker" }) {
+export function Header({ current, tone = "light", audience = "customer" }: { current?: string; tone?: "light" | "dark"; audience?: "customer" | "maker" }) {
   // makers never need the customer studio in their nav, and sign in at their own door
   const links = audience === "maker" ? LINKS.filter((l) => l.href !== "/studio/") : LINKS;
   const signIn = audience === "maker" ? "/makers/login/" : "/login/";
@@ -81,7 +80,6 @@ export function Header({ current, cta = true, tone = "light", audience = "custom
           ))}
           {me === null && (audience === "maker" ? <a href={signIn} className={link}>Sign in</a> : <SignInMenu className={link} dark={dark} />)}
         </nav>
-        {cta && <div className="hidden sm:block"><Cta href="/studio/?new" tone={dark ? "light" : "dark"}>Start a design</Cta></div>}
       </div>
     </header>
   );
