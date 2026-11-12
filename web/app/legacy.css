@@ -43,13 +43,13 @@ a { color: inherit; }
 @media (max-width: 560px) { .mark { display: none; } .top .inner { grid-template-columns: 1fr auto; padding: 0 6px; height: 56px; } .seg { gap: 0; } .seg button { padding: 0 11px; } .ghost { padding: 0 10px; } }
 
 /* ---------------------------------------------------------------- hero */
-.hero { max-width: 1440px; margin: 0 auto; padding: clamp(96px, 12vw, 160px) 20px 96px; }
+.hero { max-width: 1440px; margin: 0 auto; padding: clamp(56px, 7vw, 104px) 20px 96px; }
 @media (min-width: 768px) { .hero { padding-inline: 40px; } }
 .hero .row { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
 .hero h1 { font-size: clamp(56px, 9vw, 160px); line-height: .92; margin: 0; }
 
 /* the brief */
-.brief { margin-top: clamp(64px, 7vw, 96px); max-width: 1040px; }
+.brief { margin-top: clamp(40px, 5vw, 56px); max-width: 1040px; }
 
 /* ---------------------------------------------------------------- conversation */
 .fitting { display: grid; grid-template-columns: minmax(0, 1fr) calc(400px * var(--s)); gap: clamp(calc(32px * var(--s)), 5vw, calc(80px * var(--s))); max-width: calc(1440px * var(--s)); margin: 0 auto; padding: calc(44px * var(--s)) var(--gutter) 0; }

@@ -24,6 +24,11 @@ type Msg =
 type View = "talk" | "board" | "sheet" | "shop";
 
 const PLACEHOLDER = "A pastel blue kurti for my farewell";
+const TALK_STEPS: [string, string][] = [
+  ["Describe it", "Type or speak: the garment, the occasion, colours, anything you already know."],
+  ["Answer a few questions", "Tap an answer for what is missing. Change any detail on the right whenever you like."],
+  ["Take it to a maker", "Get a tailor sheet in English or Hindi, or send it to a maker on Bespoke."],
+];
 const SLOT_TAG: Record<string, string> = {
   garment: "GARMENT", "neckline.shape": "NECKLINE", "sleeve.style": "SLEEVE", "sleeve.length": "LENGTH", "sleeve.fit": "FIT",
   "bodice.fit": "FIT", "lower.fit": "FIT", "lower.silhouette": "SILHOUETTE", "garment.length": "LENGTH", fabric: "FABRIC",
@@ -210,7 +215,7 @@ function Composer({ onSend, voice, big, busy }: {
 
   const send = () => { const t = text.trim(); if (t && ready) { onSend(t); setText(""); } };
   const controls = (
-    <div className="flex shrink-0 items-center gap-1.5">
+    <div className="ml-auto flex shrink-0 items-center gap-1.5">
       {voice.supported && big && <LangSwitch voice={voice} />}
       {voice.supported && (
         <motion.button type="button" whileTap={{ scale: 0.9 }} transition={SPRING} onClick={() => (voice.live ? voice.stop() : voice.start())}
@@ -694,13 +699,27 @@ export default function App() {
             ))}
           </h1>
         </div>
+        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.22 }}
+          className="mt-8 max-w-[52ch] text-[clamp(17px,1.4vw,20px)] leading-[1.5] text-brand-ink/60">
+          Tell us the garment you want, the way you would tell a friend, in English or Hinglish. We ask what is missing and turn it into a sheet any tailor can follow.
+        </motion.p>
         <motion.div className="brief" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.28 }}>
           <label htmlFor="brief" className="sr-only">Your brief</label>
           <Composer big onSend={send} voice={voice} busy={thinking} />
-          <motion.div className="mt-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+          <ol className="mt-12 grid max-w-[1040px] gap-6 sm:grid-cols-3">
+            {TALK_STEPS.map(([title, text], i) => (
+              <motion.li key={title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.45 + i * 0.07 }}
+                className="border-t border-brand-ink/10 pt-4">
+                <span className="text-[13px] font-medium text-brand-ink/40">{i + 1}</span>
+                <p className="mt-1 text-[16px] font-medium">{title}</p>
+                <p className="mt-1 max-w-[34ch] text-[14px] leading-[1.5] text-brand-ink/55">{text}</p>
+              </motion.li>
+            ))}
+          </ol>
+          <motion.div className="mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
             <button type="button" onClick={openBoard}
               className="h-11 px-1 text-[15px] font-medium underline decoration-brand-ink/25 underline-offset-[6px] transition-[text-decoration-color] hover:decoration-brand-ink">
-              Start from pictures instead
+              Have pictures instead? Start with a moodboard
             </button>
           </motion.div>
         </motion.div>
