@@ -47,8 +47,6 @@ a { color: inherit; }
 @media (min-width: 768px) { .hero { padding-inline: 40px; } }
 .hero .row { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
 .hero h1 { font-size: clamp(56px, 9vw, 160px); line-height: .92; margin: 0; }
-.hero .side { padding-bottom: 12px; }
-@media (max-width: 767px) { .hero .side { display: none; } }
 
 /* the brief */
 .brief { margin-top: clamp(64px, 7vw, 96px); max-width: 1040px; }
@@ -194,7 +192,6 @@ a { color: inherit; }
 @media (max-width: 980px) {
   .hero .row { grid-template-columns: 1fr; }
   .hero h1 em { padding-left: .35em; }
-  .hero .side { flex-direction: row; align-items: center; }
   .fitting { grid-template-columns: 1fr; padding-top: calc(28px * var(--s)); }
   .dock { right: 0; padding: calc(14px * var(--s)) var(--gutter) calc(18px * var(--s)); }
   .order { position: static; max-height: none; margin-bottom: calc(180px * var(--s)); }

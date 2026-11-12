@@ -107,17 +107,6 @@
   .shimmer-text { color: var(--muted-foreground); background: none; }
 }
 
-/* ---------------------------------------------------------------- pleats (the voice mark) */
-.pleats { display: flex; align-items: center; justify-content: center; gap: 6%; flex: none; }
-.pleats i {
-  display: block; width: 3.2%; min-width: 2px; height: calc(34% + 46% * var(--bow)); border-radius: 999px; background: var(--foreground);
-  transform-origin: center; animation: pleat 3.6s ease-in-out infinite; animation-delay: calc(var(--i) * -0.22s);
-  --lo: .72; --hi: 1;
-}
-.pleats[data-state="listening"] i { animation-duration: .9s; animation-delay: calc(var(--i) * -0.09s); --lo: .35; --hi: calc(.7 + var(--level) * .6); }
-.pleats[data-state="thinking"] i { animation-duration: 1.2s; animation-delay: calc(var(--i) * -0.1s); --lo: .25; --hi: 1; }
-@keyframes pleat { 0%, 100% { transform: scaleY(var(--lo)); } 50% { transform: scaleY(var(--hi)); } }
-@media (prefers-reduced-motion: reduce) { .pleats i { animation: none; } }
 
 /* a phrase the engine understood: underlined like a row of stitches */
 .stitched { text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .14em; }

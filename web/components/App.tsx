@@ -12,7 +12,6 @@ import { isCommonWord, loadTagger, tag } from "../lib/models";
 import { understand } from "../lib/understand";
 
 const Board = dynamic(() => import("./Board"), { ssr: false });
-import { Pleats } from "./Pleats";
 import { SendToMaker } from "./market/SendToMaker";
 import { Mark } from "./site/Mark";
 import { Arrow, Dots, Reveal, SOFT, SPRING } from "./site/Motion";
@@ -24,11 +23,6 @@ type Msg =
 type View = "talk" | "board" | "sheet" | "shop";
 
 const PLACEHOLDER = "A pastel blue kurti for my farewell";
-const SUGGESTIONS = [
-  "An ivory sherwani for my brother's wedding, mandarin collar, no heavy work",
-  "Lehenga chahiye shaadi ke liye, maroon, gota patti, ghera bahut zyada",
-  "A navy sweatshirt and joggers set for the cold",
-];
 const SLOT_TAG: Record<string, string> = {
   garment: "GARMENT", "neckline.shape": "NECKLINE", "sleeve.style": "SLEEVE", "sleeve.length": "LENGTH", "sleeve.fit": "FIT",
   "bodice.fit": "FIT", "lower.fit": "FIT", "lower.silhouette": "SILHOUETTE", "garment.length": "LENGTH", fabric: "FABRIC",
@@ -57,10 +51,6 @@ function load<T>(k: string, d: T): T {
   try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; }
 }
 function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } }
-
-export function Silk({ size = 200, state = "idle", level = 0 }: { size?: number; state?: string; level?: number }) {
-  return <div className="silk" data-state={state} style={{ ["--size" as any]: `${size}px`, ["--level" as any]: level }} aria-hidden><i /></div>;
-}
 
 // ------------------------------------------------------------------ voice
 // Two engines. The browser's speech service is instant where it works (Chrome, Edge, Safari). Brave ships the
@@ -192,9 +182,9 @@ function LangSwitch({ voice }: { voice: ReturnType<typeof useVoice> }) {
   );
 }
 
-/** The brief: grows with the words, speaks, and types a chosen example in before sending it. */
-function Composer({ onSend, voice, big, busy, queued, onQueued }: {
-  onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; big?: boolean; busy?: boolean; queued?: string | null; onQueued?: () => void;
+/** The brief: grows with the words and can be spoken instead of typed. */
+function Composer({ onSend, voice, big, busy }: {
+  onSend: (t: string) => void; voice: ReturnType<typeof useVoice>; big?: boolean; busy?: boolean;
 }) {
   const still = !!useReducedMotion();
   const [text, setText] = useState("");
@@ -216,17 +206,6 @@ function Composer({ onSend, voice, big, busy, queued, onQueued }: {
     const t = setInterval(() => setTip((i) => (i + 1) % EXAMPLES.length), 3400);
     return () => clearInterval(t);
   }, [shown, still]);
-  useEffect(() => {
-    if (!queued) return;
-    if (still) { onSend(queued); onQueued?.(); return; }
-    let n = 0;
-    const t = setInterval(() => {
-      n += 2;
-      setText(queued.slice(0, n));
-      if (n >= queued.length) { clearInterval(t); setTimeout(() => { onSend(queued); setText(""); onQueued?.(); }, 260); }
-    }, 16);
-    return () => clearInterval(t);
-  }, [queued]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = () => { const t = text.trim(); if (t && ready) { onSend(t); setText(""); } };
   const controls = (
@@ -254,7 +233,7 @@ function Composer({ onSend, voice, big, busy, queued, onQueued }: {
         className={cn("bg-white ring-1 transition-[--tw-ring-color] duration-200", focus ? "ring-brand-ink/25" : "ring-brand-ink/10 hover:ring-brand-ink/20",
           big ? "rounded-[32px] p-3 pl-7" : "flex items-end gap-2 rounded-[28px] p-1.5 pl-6")}>
         <div className="relative flex-1">
-          <textarea ref={area} id={big ? "brief" : undefined} rows={1} value={shown} readOnly={voice.live || !!queued} maxLength={600}
+          <textarea ref={area} id={big ? "brief" : undefined} rows={1} value={shown} readOnly={voice.live} maxLength={600}
             onChange={(e) => setText(e.target.value)} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} autoFocus={big}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
             aria-label="Describe the garment"
@@ -275,7 +254,7 @@ function Composer({ onSend, voice, big, busy, queued, onQueued }: {
             <AnimatePresence mode="wait" initial={false}>
               <motion.p key={voice.status || (text ? "keys" : "none")} role="status" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="hidden min-w-0 truncate text-[14px] text-brand-ink/50 sm:block">
-                {voice.status || (text && !queued ? "Enter to send, Shift and Enter for a new line" : "")}
+                {voice.status || (text ? "Enter to send, Shift and Enter for a new line" : "")}
               </motion.p>
             </AnimatePresence>
             {controls}
@@ -666,11 +645,9 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const still = !!useReducedMotion();
-  const [queued, setQueued] = useState<string | null>(null);
   const started = msgs.length > 0;
   const backBtn = past.length > 0 && !thinking
     ? <button className={pill} onClick={back} aria-label="Go back one step"><span aria-hidden className="mr-1 text-[18px] leading-none">‹</span>Back</button> : null;
-  const state = voice.live ? "listening" : thinking ? "thinking" : "idle";
   const NAV: [View, string][] = [["talk", "Talk"], ["board", "Board"], ["sheet", "Sheet"], ["shop", "Shop"]];
   const header = useMemo(() => (
     <header className="top"><div className="inner">
@@ -712,33 +689,16 @@ export default function App() {
               </span>
             ))}
           </h1>
-          <AnimatePresence>
-            {voice.live && (
-              <motion.div className="side" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={SPRING}>
-                <Pleats size={150} state={state} level={voice.level} />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
         <motion.div className="brief" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.28 }}>
           <label htmlFor="brief" className="sr-only">Your brief</label>
-          <Composer big onSend={send} voice={voice} busy={thinking} queued={queued} onQueued={() => setQueued(null)} />
-          <ul className="mt-6 flex flex-wrap items-center gap-2">
-            {SUGGESTIONS.map((x, i) => (
-              <motion.li key={x} className="max-w-full" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.42 + i * 0.06 }}>
-                <button type="button" disabled={!!queued} onClick={() => setQueued(x)}
-                  className="press block h-11 max-w-full truncate rounded-full bg-brand-ink/[.045] px-5 text-left text-[15px] transition-[background-color,transform] duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:-translate-y-0.5 hover:bg-brand-ink/[.08] active:scale-[0.97] disabled:opacity-50">
-                  {x}
-                </button>
-              </motion.li>
-            ))}
-            <motion.li initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-              <button type="button" onClick={() => setView("board")}
-                className="h-11 px-3 text-[15px] font-medium underline decoration-brand-ink/25 underline-offset-[6px] transition-[text-decoration-color] hover:decoration-brand-ink">
-                Start from pictures instead
-              </button>
-            </motion.li>
-          </ul>
+          <Composer big onSend={send} voice={voice} busy={thinking} />
+          <motion.div className="mt-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+            <button type="button" onClick={() => setView("board")}
+              className="h-11 px-1 text-[15px] font-medium underline decoration-brand-ink/25 underline-offset-[6px] transition-[text-decoration-color] hover:decoration-brand-ink">
+              Start from pictures instead
+            </button>
+          </motion.div>
         </motion.div>
       </main>
     </>
@@ -805,7 +765,6 @@ export default function App() {
         <Order spec={spec} onEdit={edit} />
       </div>
       <div className="dock"><div className="wrap">
-        <AnimatePresence>{voice.live && <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}><Pleats size={52} state="listening" level={voice.level} /></motion.div>}</AnimatePresence>
         <div className="grow"><Composer onSend={send} voice={voice} busy={thinking} /></div>
       </div></div>
     </>
