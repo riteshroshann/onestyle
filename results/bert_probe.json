@@ -1,0 +1,151 @@
+{
+ "task": "layer-wise probing and attention of the deployed MiniLM tagger (int8 ONNX)",
+ "seed": 13,
+ "n_probe_train_words": 27804,
+ "n_probe_test_words": 406,
+ "n_types": 22,
+ "probe": "linear softmax on standardised first-subword vectors (300 AdamW steps); train on synthetic requests, test on the 52 gold test requests",
+ "majority_class_accuracy": 0.3054,
+ "layers": [
+  {
+   "layer": 0,
+   "accuracy": 0.8473,
+   "macro_f1_over_types": 0.7905,
+   "control_accuracy": 0.803,
+   "selectivity": 0.0443
+  },
+  {
+   "layer": 1,
+   "accuracy": 0.8596,
+   "macro_f1_over_types": 0.8132,
+   "control_accuracy": 0.7734,
+   "selectivity": 0.0862
+  },
+  {
+   "layer": 2,
+   "accuracy": 0.8842,
+   "macro_f1_over_types": 0.8292,
+   "control_accuracy": 0.7734,
+   "selectivity": 0.1108
+  },
+  {
+   "layer": 3,
+   "accuracy": 0.8645,
+   "macro_f1_over_types": 0.8297,
+   "control_accuracy": 0.7389,
+   "selectivity": 0.1256
+  },
+  {
+   "layer": 4,
+   "accuracy": 0.8941,
+   "macro_f1_over_types": 0.8565,
+   "control_accuracy": 0.7044,
+   "selectivity": 0.1897
+  },
+  {
+   "layer": 5,
+   "accuracy": 0.9039,
+   "macro_f1_over_types": 0.8689,
+   "control_accuracy": 0.6823,
+   "selectivity": 0.2217
+  },
+  {
+   "layer": 6,
+   "accuracy": 0.867,
+   "macro_f1_over_types": 0.8224,
+   "control_accuracy": 0.6502,
+   "selectivity": 0.2167
+  },
+  {
+   "layer": 7,
+   "accuracy": 0.8695,
+   "macro_f1_over_types": 0.8238,
+   "control_accuracy": 0.6256,
+   "selectivity": 0.2438
+  },
+  {
+   "layer": 8,
+   "accuracy": 0.8793,
+   "macro_f1_over_types": 0.8012,
+   "control_accuracy": 0.5788,
+   "selectivity": 0.3005
+  },
+  {
+   "layer": 9,
+   "accuracy": 0.8867,
+   "macro_f1_over_types": 0.8166,
+   "control_accuracy": 0.5788,
+   "selectivity": 0.3079
+  },
+  {
+   "layer": 10,
+   "accuracy": 0.8892,
+   "macro_f1_over_types": 0.818,
+   "control_accuracy": 0.6133,
+   "selectivity": 0.2759
+  },
+  {
+   "layer": 11,
+   "accuracy": 0.8941,
+   "macro_f1_over_types": 0.8236,
+   "control_accuracy": 0.5665,
+   "selectivity": 0.3276
+  },
+  {
+   "layer": 12,
+   "accuracy": 0.8941,
+   "macro_f1_over_types": 0.8276,
+   "control_accuracy": 0.5567,
+   "selectivity": 0.3374
+  }
+ ],
+ "attention_value_to_cue": {
+  "n_value_words": 58,
+  "mean_lift_by_layer": [
+   0.869,
+   0.265,
+   0.218,
+   0.439,
+   0.406,
+   0.489,
+   0.423,
+   0.55,
+   0.303,
+   0.414,
+   0.324,
+   0.261
+  ],
+  "top_heads": [
+   {
+    "layer": 7,
+    "head": 5,
+    "lift": 1.519,
+    "mean_attention_on_cues": 0.224
+   },
+   {
+    "layer": 5,
+    "head": 1,
+    "lift": 1.516,
+    "mean_attention_on_cues": 0.224
+   },
+   {
+    "layer": 7,
+    "head": 0,
+    "lift": 1.466,
+    "mean_attention_on_cues": 0.217
+   },
+   {
+    "layer": 0,
+    "head": 4,
+    "lift": 1.307,
+    "mean_attention_on_cues": 0.193
+   },
+   {
+    "layer": 0,
+    "head": 10,
+    "lift": 1.292,
+    "mean_attention_on_cues": 0.191
+   }
+  ]
+ }
+}

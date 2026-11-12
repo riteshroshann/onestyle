@@ -106,5 +106,23 @@ TextRank beats the lead baseline on ROUGE-1 and ROUGE-L only within noise, and e
 |---|---|---|---|---|
 | Template system (deployed) | 64.1 | 76.7 | 79.3 (74.1 to 84.4) | 0.42 |
 | opus-mt-en-hi (Helsinki-NLP, 75M parameters, beam 4) | 4.1 | 22.2 | 24.0 (20.0 to 28.6) | 0.00 |
+| BERT (inside the deployed MiniLM tagger) | `engine/bespoke/apps/bert_probe.py` | Shows what the shipped int8 model knows at each layer and which heads look at part words | `results/bert_probe.json` | Study of the deployed model (read-only) |
 
 A generic MT model has no tailoring vocabulary: it reads "Avoid" as "stay away", "Neckline" as a name, "sweetheart" as "जानेमन" and mangles the numbers. The template system's remaining misses are register choices (for example "ज़री" against "ज़री का काम") and one real defect: the Avoid row prints "नहीं चाहिए: कढ़ाई नहीं", saying "not wanted" twice, because `sheetLines` in `web/lib/engine/describe.ts` appends "नहीं" to each value under a label that already means "not wanted". The fix for the owner of that file is to drop the `${...} नहीं` suffix (or change the label to "बिना"). Exact match by part is in the result; Avoid and Back neck are 0 for that reason and for wording. Not tested: IndicTrans2 or a larger model, which do not fit this machine's budget of time; a human fluency judgement.
+
+## BERT: a look inside the deployed MiniLM
+
+`python scripts/apps.py bert-probe`, about 40 s. The probe runs on the int8 ONNX graph in `web/public/models/bespoke-tagger` with each layer's output and attention softmax added as extra outputs, so it describes the weights the browser runs.
+
+Layer-wise probing: a linear classifier on each layer's first-subword vector predicts a word's entity type (21 types and O). It trains on 27,804 words from 1,500 synthetic requests and is scored on the 406 words of the 52 gold test requests. A control task (each word type gets a random label) measures how much the probe can memorise; selectivity is accuracy minus control accuracy (Hewitt and Liang, 2019). Majority class (O) is 0.305.
+
+| Layer | 0 (embeddings) | 2 | 4 | 5 | 8 | 12 |
+|---|---|---|---|---|---|---|
+| Probe accuracy | 0.847 | 0.884 | 0.894 | 0.904 | 0.879 | 0.894 |
+| Macro F1 over types | 0.791 | 0.829 | 0.857 | 0.869 | 0.801 | 0.828 |
+| Control accuracy | 0.803 | 0.773 | 0.704 | 0.682 | 0.579 | 0.557 |
+| Selectivity | 0.044 | 0.111 | 0.190 | 0.222 | 0.301 | 0.337 |
+
+Even the embedding layer gets 0.85 because the gold words are mostly ontology words the model saw in training, but the probe there is mostly memorising words: selectivity is 0.04. Accuracy peaks in the middle (layer 5, 0.904) and flattens; selectivity keeps rising to the last layer (0.34), so later layers organise words by entity type rather than by identity. With 406 test words, differences of two or three points between layers are within noise; the trend in selectivity is not.
+
+Attention: for the 58 value words (fit, length, dimension, sleeve style, silhouette, neckline) that share a request with a part or location cue word (82 gold dev and test requests), the share of attention that lands on the cue words, divided by the share uniform attention would give them. No head attaches values to parts: the layer averages are all below 1 (attention goes to neighbours and the special tokens), and the best heads (layer 7 head 5, layer 5 head 1) reach 1.5 times uniform, with 22% of their attention on cue words. Attachment is left to the rule-based binder, which is consistent with the syntax result above. Per-layer lifts and the top five heads are in the result.

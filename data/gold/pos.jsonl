@@ -1,0 +1,60 @@
+{"id": "pos-01", "tokens": ["i", "want", "a", "pastel", "blue", "kurti", "for", "my", "farewell", ",", "elegant", "not", "too", "flashy"], "tags": ["PRON", "VERB", "DET", "ADJ", "ADJ", "NOUN", "ADP", "DET", "NOUN", "PUNCT", "ADJ", "PART", "ADV", "ADJ"]}
+{"id": "pos-02", "tokens": ["kurti", "chahiye", ",", "waist", "pe", "fitted", ",", "neeche", "se", "thoda", "loose"], "tags": ["NOUN", "AUX", "PUNCT", "NOUN", "ADP", "ADJ", "PUNCT", "ADV", "ADP", "ADV", "ADJ"]}
+{"id": "pos-03", "tokens": ["v", "neck", "thoda", "deep", "rakhna"], "tags": ["NOUN", "NOUN", "ADV", "ADJ", "VERB"]}
+{"id": "pos-04", "tokens": ["make", "the", "sleeves", "puff", "and", "elbow", "length"], "tags": ["VERB", "DET", "NOUN", "ADJ", "CCONJ", "NOUN", "NOUN"]}
+{"id": "pos-05", "tokens": ["no", "embroidery", "please", ",", "simple", "cotton", "for", "office"], "tags": ["DET", "NOUN", "INTJ", "PUNCT", "ADJ", "NOUN", "ADP", "NOUN"]}
+{"id": "pos-06", "tokens": ["looking", "for", "a", "maroon", "lehenga", "with", "gota", "patti", "for", "my", "cousin's", "wedding"], "tags": ["VERB", "ADP", "DET", "ADJ", "NOUN", "ADP", "NOUN", "NOUN", "ADP", "DET", "NOUN", "NOUN"]}
+{"id": "pos-07", "tokens": ["anarkali", "in", "georgette", ",", "floor", "length", ",", "kalidar", "with", "zari", "on", "the", "hem"], "tags": ["NOUN", "ADP", "NOUN", "PUNCT", "NOUN", "NOUN", "PUNCT", "ADJ", "ADP", "NOUN", "ADP", "DET", "NOUN"]}
+{"id": "pos-08", "tokens": ["blouse", "ka", "gala", "aage", "se", "gol", "aur", "peeche", "se", "deep"], "tags": ["NOUN", "ADP", "NOUN", "ADV", "ADP", "ADJ", "CCONJ", "ADV", "ADP", "ADJ"]}
+{"id": "pos-09", "tokens": ["mustard", "nahi", "chahiye", ",", "peach", "or", "mint", "chalega"], "tags": ["NOUN", "PART", "AUX", "PUNCT", "NOUN", "CCONJ", "NOUN", "VERB"]}
+{"id": "pos-10", "tokens": ["a", "short", "black", "dress", "with", "puff", "sleeves", "and", "a", "square", "neck"], "tags": ["DET", "ADJ", "ADJ", "NOUN", "ADP", "ADJ", "NOUN", "CCONJ", "DET", "ADJ", "NOUN"]}
+{"id": "pos-11", "tokens": ["neckline", "deeper", "than", "#1", "but", "less", "than", "#2"], "tags": ["NOUN", "ADJ", "ADP", "NUM", "CCONJ", "ADV", "ADP", "NUM"]}
+{"id": "pos-12", "tokens": ["sleeves", "like", "pic", "2", ",", "colour", "like", "the", "first", "one"], "tags": ["NOUN", "ADP", "NOUN", "NUM", "PUNCT", "NOUN", "ADP", "DET", "ADJ", "PRON"]}
+{"id": "pos-13", "tokens": ["length", "42", "inch", ",", "side", "slits", "8", "inches"], "tags": ["NOUN", "NUM", "NOUN", "PUNCT", "NOUN", "NOUN", "NUM", "NOUN"]}
+{"id": "pos-14", "tokens": ["straight", "cut", "kurta", "in", "linen", ",", "relaxed", "fit", ",", "mandarin", "collar"], "tags": ["ADJ", "NOUN", "NOUN", "ADP", "NOUN", "PUNCT", "ADJ", "NOUN", "PUNCT", "NOUN", "NOUN"]}
+{"id": "pos-15", "tokens": ["sangeet", "ke", "liye", "kuch", "indo", "western", "chahiye", ",", "bright", "pink", "with", "mirror", "work"], "tags": ["NOUN", "ADP", "ADP", "DET", "ADJ", "ADJ", "AUX", "PUNCT", "ADJ", "ADJ", "ADP", "NOUN", "NOUN"]}
+{"id": "pos-16", "tokens": ["sharara", "set", "in", "rani", "pink", "with", "sequins"], "tags": ["NOUN", "NOUN", "ADP", "ADJ", "ADJ", "ADP", "NOUN"]}
+{"id": "pos-17", "tokens": ["full", "sleeves", "but", "loose", "at", "the", "wrist"], "tags": ["ADJ", "NOUN", "CCONJ", "ADJ", "ADP", "DET", "NOUN"]}
+{"id": "pos-18", "tokens": ["co-ord", "set", "in", "printed", "rayon", "for", "daily", "wear"], "tags": ["NOUN", "NOUN", "ADP", "ADJ", "NOUN", "ADP", "ADJ", "NOUN"]}
+{"id": "pos-19", "tokens": ["chikankari", "kurta", "in", "white", ",", "straight", "and", "knee", "length"], "tags": ["NOUN", "NOUN", "ADP", "ADJ", "PUNCT", "ADJ", "CCONJ", "NOUN", "NOUN"]}
+{"id": "pos-20", "tokens": ["something", "minimal", "and", "feminine", "for", "a", "date", ",", "lavender", "maybe"], "tags": ["PRON", "ADJ", "CCONJ", "ADJ", "ADP", "DET", "NOUN", "PUNCT", "NOUN", "ADV"]}
+{"id": "pos-21", "tokens": ["bodice", "fitted", "and", "skirt", "part", "flared", "fit", "and", "flare", "type"], "tags": ["NOUN", "ADJ", "CCONJ", "NOUN", "NOUN", "ADJ", "NOUN", "CCONJ", "NOUN", "NOUN"]}
+{"id": "pos-22", "tokens": ["saree", "blouse", "with", "sweetheart", "neckline", "and", "cap", "sleeves"], "tags": ["NOUN", "NOUN", "ADP", "NOUN", "NOUN", "CCONJ", "NOUN", "NOUN"]}
+{"id": "pos-23", "tokens": ["back", "bahut", "deep", "mat", "karna"], "tags": ["NOUN", "ADV", "ADJ", "PART", "VERB"]}
+{"id": "pos-24", "tokens": ["palazzo", "white", "cotton", ",", "kurti", "yellow", "floral"], "tags": ["NOUN", "ADJ", "NOUN", "PUNCT", "NOUN", "ADJ", "ADJ"]}
+{"id": "pos-25", "tokens": ["high", "neck", "velvet", "gown", "for", "reception"], "tags": ["ADJ", "NOUN", "NOUN", "NOUN", "ADP", "NOUN"]}
+{"id": "pos-26", "tokens": ["thoda", "shimmer", "chahiye", "but", "not", "heavy"], "tags": ["DET", "NOUN", "AUX", "CCONJ", "PART", "ADJ"]}
+{"id": "pos-27", "tokens": ["neck", "7", "inch", "deep", "in", "front"], "tags": ["NOUN", "NUM", "NOUN", "ADJ", "ADP", "NOUN"]}
+{"id": "pos-28", "tokens": ["nehru", "jacket", "in", "silk", "for", "diwali", ",", "bandhani", "lining"], "tags": ["PROPN", "NOUN", "ADP", "NOUN", "ADP", "PROPN", "PUNCT", "NOUN", "NOUN"]}
+{"id": "pos-29", "tokens": ["ombre", "chiffon", "dress", ",", "midi", ",", "bell", "sleeves"], "tags": ["NOUN", "NOUN", "NOUN", "PUNCT", "ADJ", "PUNCT", "NOUN", "NOUN"]}
+{"id": "pos-30", "tokens": ["kurti", "ankle", "length", "mat", "banana", ",", "knee", "tak", "theek", "hai"], "tags": ["NOUN", "NOUN", "NOUN", "PART", "VERB", "PUNCT", "NOUN", "ADP", "ADJ", "AUX"]}
+{"id": "pos-31", "tokens": ["mujhe", "haldi", "ke", "liye", "peela", "sharara", "chahiye", "with", "gota", "work"], "tags": ["PRON", "NOUN", "ADP", "ADP", "ADJ", "NOUN", "AUX", "ADP", "NOUN", "NOUN"]}
+{"id": "pos-32", "tokens": ["a-line", "kurtee", "in", "pastel", "green", ",", "three", "quarter", "sleeves"], "tags": ["ADJ", "NOUN", "ADP", "ADJ", "ADJ", "PUNCT", "NUM", "NOUN", "NOUN"]}
+{"id": "pos-33", "tokens": ["boat", "neck", "crop", "top", "and", "flared", "skirt", "for", "navratri"], "tags": ["NOUN", "NOUN", "NOUN", "NOUN", "CCONJ", "ADJ", "NOUN", "ADP", "PROPN"]}
+{"id": "pos-34", "tokens": ["sleeveless", "anarkalli", "with", "deep", "v", "and", "net", "dupatta"], "tags": ["ADJ", "NOUN", "ADP", "ADJ", "NOUN", "CCONJ", "NOUN", "NOUN"]}
+{"id": "pos-35", "tokens": ["i", "dont", "want", "prints", ",", "plain", "navy", "silk", "only"], "tags": ["PRON", "AUX", "VERB", "NOUN", "PUNCT", "ADJ", "ADJ", "NOUN", "ADV"]}
+{"id": "pos-36", "tokens": ["waist", "par", "tight", "nahi", ",", "thoda", "comfortable", "rakho"], "tags": ["NOUN", "ADP", "ADJ", "PART", "PUNCT", "ADV", "ADJ", "VERB"]}
+{"id": "pos-37", "tokens": ["georget", "salwar", "suit", "with", "chikenkari", "on", "the", "yoke"], "tags": ["NOUN", "NOUN", "NOUN", "ADP", "NOUN", "ADP", "DET", "NOUN"]}
+{"id": "pos-38", "tokens": ["organza", "dupatta", "with", "pearl", "work", "border", ",", "ivory", "kurta"], "tags": ["NOUN", "NOUN", "ADP", "NOUN", "NOUN", "NOUN", "PUNCT", "ADJ", "NOUN"]}
+{"id": "pos-39", "tokens": ["lehenga", "ghera", "bahut", "zyada", "chahiye", ",", "heavy", "zardozi"], "tags": ["NOUN", "NOUN", "ADV", "ADV", "AUX", "PUNCT", "ADJ", "NOUN"]}
+{"id": "pos-40", "tokens": ["shirt", "in", "linen", ",", "half", "sleeves", ",", "regular", "fit", "for", "office"], "tags": ["NOUN", "ADP", "NOUN", "PUNCT", "ADJ", "NOUN", "PUNCT", "ADJ", "NOUN", "ADP", "NOUN"]}
+{"id": "pos-41", "tokens": ["sherwani", "ivory", "with", "gold", "thread", "work", "for", "my", "wedding"], "tags": ["NOUN", "ADJ", "ADP", "ADJ", "NOUN", "NOUN", "ADP", "DET", "NOUN"]}
+{"id": "pos-42", "tokens": ["kaftan", "style", "kurti", "loose", "and", "airy", "for", "summer"], "tags": ["NOUN", "NOUN", "NOUN", "ADJ", "CCONJ", "ADJ", "ADP", "NOUN"]}
+{"id": "pos-43", "tokens": ["dhoti", "pants", "with", "a", "short", "kurta", "in", "khadi"], "tags": ["NOUN", "NOUN", "ADP", "DET", "ADJ", "NOUN", "ADP", "NOUN"]}
+{"id": "pos-44", "tokens": ["neckline", "same", "as", "#3", "but", "shallower", "than", "#3"], "tags": ["NOUN", "ADJ", "ADP", "NUM", "CCONJ", "ADJ", "ADP", "NUM"]}
+{"id": "pos-45", "tokens": ["sleeves", "pic", "1", "jaisi", ",", "colour", "photo", "2", "jaisa"], "tags": ["NOUN", "NOUN", "NUM", "ADP", "PUNCT", "NOUN", "NOUN", "NUM", "ADP"]}
+{"id": "pos-46", "tokens": ["skirt", "floor", "length", "with", "tassels", "at", "the", "hem"], "tags": ["NOUN", "NOUN", "NOUN", "ADP", "NOUN", "ADP", "DET", "NOUN"]}
+{"id": "pos-47", "tokens": ["jumpsuit", "in", "olive", "crepe", ",", "wide", "legs", ",", "belted", "at", "the", "waist"], "tags": ["NOUN", "ADP", "ADJ", "NOUN", "PUNCT", "ADJ", "NOUN", "PUNCT", "VERB", "ADP", "DET", "NOUN"]}
+{"id": "pos-48", "tokens": ["a", "classy", "black", "gown", "with", "off", "shoulder", "neckline", "and", "mermaid", "cut"], "tags": ["DET", "ADJ", "ADJ", "NOUN", "ADP", "ADJ", "NOUN", "NOUN", "CCONJ", "NOUN", "NOUN"]}
+{"id": "pos-49", "tokens": ["maroon", "velvet", "blouse", "elbow", "sleeves", ",", "back", "deep", "with", "potli", "buttons"], "tags": ["ADJ", "NOUN", "NOUN", "NOUN", "NOUN", "PUNCT", "NOUN", "ADJ", "ADP", "NOUN", "NOUN"]}
+{"id": "pos-50", "tokens": ["kurti", "hip", "length", "for", "college", ",", "checks", "in", "blue", "and", "white"], "tags": ["NOUN", "NOUN", "NOUN", "ADP", "NOUN", "PUNCT", "NOUN", "ADP", "ADJ", "CCONJ", "ADJ"]}
+{"id": "pos-51", "tokens": ["lehnga", "choli", "for", "mehndi", "in", "parrot", "green", "with", "mirror", "and", "tassels"], "tags": ["NOUN", "NOUN", "ADP", "NOUN", "ADP", "NOUN", "ADJ", "ADP", "NOUN", "CCONJ", "NOUN"]}
+{"id": "pos-52", "tokens": ["angrakha", "style", "kurta", "cotton", "block", "print"], "tags": ["NOUN", "NOUN", "NOUN", "NOUN", "NOUN", "NOUN"]}
+{"id": "pos-53", "tokens": ["v", "neck", "nahi", ",", "round", "neck", "chahiye"], "tags": ["NOUN", "NOUN", "PART", "PUNCT", "ADJ", "NOUN", "AUX"]}
+{"id": "pos-54", "tokens": ["sleeves", "bahut", "loose", "nahi", ",", "semi", "fitted", "theek", "hai"], "tags": ["NOUN", "ADV", "ADJ", "PART", "PUNCT", "ADV", "ADJ", "ADJ", "AUX"]}
+{"id": "pos-55", "tokens": ["pastel", "lavender", "dress", "flowyy", "and", "dreamy", "for", "my", "birthday"], "tags": ["ADJ", "ADJ", "NOUN", "ADJ", "CCONJ", "ADJ", "ADP", "DET", "NOUN"]}
+{"id": "pos-56", "tokens": ["keyhole", "neck", "at", "the", "back", "with", "a", "tassel"], "tags": ["NOUN", "NOUN", "ADP", "DET", "NOUN", "ADP", "DET", "NOUN"]}
+{"id": "pos-57", "tokens": ["straight", "pants", "in", "beige", "linen", ",", "relaxed"], "tags": ["ADJ", "NOUN", "ADP", "ADJ", "NOUN", "PUNCT", "ADJ"]}
+{"id": "pos-58", "tokens": ["deep", "u", "neck", "chaahiye", "blouse", "mein"], "tags": ["ADJ", "NOUN", "NOUN", "AUX", "NOUN", "ADP"]}
+{"id": "pos-59", "tokens": ["gown", "champagne", "satin", "floor", "length", ",", "minimal"], "tags": ["NOUN", "ADJ", "NOUN", "NOUN", "NOUN", "PUNCT", "ADJ"]}
+{"id": "pos-60", "tokens": ["organzaa", "saree", "blouse", "with", "puffy", "sleeves"], "tags": ["NOUN", "NOUN", "NOUN", "ADP", "ADJ", "NOUN"]}
