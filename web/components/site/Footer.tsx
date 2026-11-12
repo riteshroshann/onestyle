@@ -22,7 +22,13 @@ export function Footer() {
             </nav>
           ))}
         </div>
-        <p aria-hidden="true" className="display mt-20 select-none whitespace-nowrap -ml-[0.05em] pb-[0.06em] text-[clamp(88px,25.2vw,386px)] leading-[0.95] tracking-[-0.06em] md:mt-28">Bespoke</p>
+        {/* the wordmark rides a gentle downward curve; a round-joined outline in the same ink puffs the letters up */}
+        <svg aria-hidden="true" viewBox="0 0 1000 250" className="mt-16 block w-full select-none overflow-visible md:mt-24">
+          <path id="footer-arc" d="M10 150Q500 250 990 150" fill="none" />
+          <text className="fill-brand-ink stroke-brand-ink" style={{ fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: 228, letterSpacing: "-0.01em", strokeWidth: 12, strokeLinejoin: "round", paintOrder: "stroke" }}>
+            <textPath href="#footer-arc" startOffset="50%" textAnchor="middle" textLength="975" lengthAdjust="spacing">Bespoke</textPath>
+          </text>
+        </svg>
       </div>
       <div className="mt-6 border-t border-brand-ink/10 md:mt-10">
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-8 gap-y-3 px-5 py-7 pr-24 text-[14px] text-brand-ink/65 md:px-10 md:pr-28">
