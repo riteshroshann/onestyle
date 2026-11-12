@@ -46,6 +46,26 @@
 <li><b>Information retrieval</b>: BM25 over the guides, with a calibrated grounding threshold.</li>
 <li><b>Retrieval-augmented generation with guardrails</b>: input screening, redaction, fenced context and output checks.</li>
 <li><b>Speech to text</b>: the browser's recogniser, or Whisper on the device.</li></ul></div></div></section>
+  <section id="vision"><div class="wrap cols"><h2 class="reveal">Reading pictures</h2><div class="reveal"><p>The moodboard is read by <b>CLIP</b> (ViT-B/32), the open vision-language model from OpenAI, released under the MIT licence. Bespoke runs Xenova's int8 ONNX conversion of it inside the browser through Transformers.js (Apache 2.0), as a zero-shot classifier: the model scores a picture against sentences such as <code>a garment with three quarter sleeves</code> and says which fits best. Nothing is trained on the customer's pictures, and the pictures never leave the device.</p>
+<p>CLIP itself is used as published. What Bespoke adds is everything around it, which is what turns a general image model into a reader of a tailoring board:</p>
+<ol class="steps">
+<li><b>The board as a graph.</b> The Excalidraw scene becomes pictures numbered in reading order, circles that sit inside a picture, and notes bound to a picture by an arrow or by being next to it. <code>not this colour</code> is a negative note.</li>
+<li><b>Prompts written for tailoring.</b> Each slot has its own set of plain sentences: colours, prints, garment types, sleeve lengths, silhouettes, embellishment, and four neckline depths tied to inches (4.5, 6, 7.5 and 9).</li>
+<li><b>Whole pictures for what they show well, circles for detail.</b> From a whole picture only garment type, colour and print are read. Sleeves and necklines come only from a part the customer circles, cropped and scored on its own.</li>
+<li><b>Salience and polarity.</b> A picture someone wrote about or circled counts fully; an untouched one counts half. A negative note flips the sign, so a strong reading becomes an exclusion.</li>
+<li><b>Pooling with a bar to clear.</b> Readings across pictures are combined with weighted, signed log-linear pooling. A value is used only if it reaches 0.55 and leads the next one by 0.2, and picture evidence is capped at 0.6 so a customer's words always win.</li>
+<li><b>Comparisons into inches.</b> <code>deeper than #1 but less than #2</code> becomes an interval from the depths read off those pictures, with the proposal toward the shallow end, or a question if the pictures contradict each other.</li></ol>
+<p class="muted">Next on the plan: FashionSigLIP attribute heads in place of zero-shot CLIP, trained on a fashion catalogue, for finer details from whole pictures.</p></div></div></section>
+  <section id="bda" class="dark"><div class="wrap cols"><h2 class="reveal">Big data analytics</h2><div class="reveal"><p>The text analytics runs on every request in the browser. The big data side is the layer underneath it: building the data the models learn from, holding it to one schema, and learning from many people at once what one conversation cannot.</p>
+<h3>Built now</h3>
+<ul class="steps"><li><b>A generated training corpus</b> of 12,000 labelled requests from templates, attribute bags in random order and distractor words, with a separate synthetic set of 1,000 for tuning and 82 hand-written requests held out for scoring.</li>
+<li><b>Weak labels from a retail catalogue.</b> The data step reads the 44,000-row Myntra product catalogue (Kaggle's Fashion Product Images) and turns its product names and attributes into labelled requests when the file is present.</li>
+<li><b>One schema for everything.</b> The ontology is the contract every component reads: 21 tags, every surface form, Hindi terms, ease and depth tables and the cost of each question.</li>
+<li><b>Evaluation that says how sure it is.</b> Strict span F1 with 95% bootstrap intervals over requests, so a small test set is never mistaken for a large one.</li>
+<li><b>An event log by design.</b> Every design is a fold over typed updates, already the shape of an event stream, and requests, messages, boards and designs are stored in Postgres behind row-level security.</li></ul>
+<h3>Next, in the plan</h3>
+<p>Designs, answers and orders are written as events to a lake of Parquet files partitioned by day, next to the public H&amp;M and Amazon fashion datasets. Spark DataFrame jobs clean and join them, and their execution plans are kept as evidence of how the work splits across executors. MLlib pipelines then learn what one customer cannot teach: TF-IDF and Word2Vec over request text to find new words for the ontology, FP-Growth over finished designs to find attributes that go together, and ALS over customers and attributes to suggest fabrics and colours.</p>
+<p class="muted">The exit test for that phase is that its suggestions beat a popularity baseline on held-out orders. Until it passes, these docs describe it as planned, not built.</p></div></div></section>
   <section id="run"><div class="wrap cols"><h2 class="reveal">Run it</h2><div class="reveal"><pre><code>git clone https://github.com/riteshroshann/onestyle
 cd onestyle/web
 bun install

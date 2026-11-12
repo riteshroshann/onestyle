@@ -8,6 +8,8 @@ const GUIDES = [
   { label: "How it is built", value: "developers/" },
   { label: "The tagging ladder", value: "developers/#ladder" },
   { label: "Text analytics", value: "developers/#text-analytics" },
+  { label: "Reading pictures", value: "developers/#vision" },
+  { label: "Big data", value: "developers/#bda" },
   { label: "MCP server", value: "mcp/" },
   { label: "Contributing", value: "contributing/" },
 ];
