@@ -1,5 +1,5 @@
 "use client";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Excalidraw, MainMenu, convertToExcalidrawElements } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
@@ -10,8 +10,15 @@ import { loadVision, tag, zeroShot } from "../lib/models";
 import { Reading } from "./board/Reading";
 import type { ReadingState } from "./board/Reading";
 import { HaloDropzone } from "./ui/halo-dropzone";
+import { BoardsMenu } from "./board/BoardsMenu";
+import { SOFT, SPRING } from "./site/Motion";
+import { loadScene, saveScene, thumbnail } from "../lib/boards";
 
-const KEY = "bespoke.board";
+const STEPS: [string, string][] = [
+  ["Drop pictures", "Garments you love, one look per picture works best."],
+  ["Mark what matters", "Circle a detail, or add a note such as \"this neckline\" or \"not this colour\"."],
+  ["Read the board", "We pick out colour, print, neckline and more, and add them to your design."],
+];
 const isLabel = (e: any) => e.customData?.bespokeLabel || (e.type === "text" && /^#\d+$/.test((e.text ?? "").trim()));
 const TILE = 340; // height of a dropped picture on the canvas
 const MAX_SIDE = 1280; // pictures are shrunk before they are kept, so the board fits in this device's storage
@@ -30,7 +37,8 @@ async function shrink(file: File): Promise<{ dataURL: string; w: number; h: numb
 
 const idle: ReadingState = { phase: "loading", loaded: 0, pictures: [], active: null, findings: {}, status: "", usable: false, error: "" };
 
-export default function Board({ onEvidence, comparisons }: {
+export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons }: {
+  boardId: string; onOpen: (id: string) => void; onNew: () => void;
   onEvidence: (u: Update[], note: string) => void;
   comparisons: { slot: string; cmp: string; ref: string }[];
 }) {
@@ -38,14 +46,19 @@ export default function Board({ onEvidence, comparisons }: {
   const [hint, setHint] = useState("");
   const [reading, setReading] = useState<ReadingState | null>(null);
   const outcome = useRef<{ ups: Update[]; note: string } | null>(null);
-  const [initial] = useState(() => { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch { return null; } });
+  const [initial] = useState(() => loadScene(boardId));
+  const cover = useRef<{ fileId?: string; src?: string }>({});
   const saveTimer = useRef<any>(null);
   const [empty, setEmpty] = useState(() => !initial?.elements?.length);
 
   const persist = (elements: readonly any[], files: any) => {
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      try { localStorage.setItem(KEY, JSON.stringify({ elements: elements.filter((e) => !e.isDeleted), files })); } catch { /* quota: the board still works, it just is not remembered */ }
+    saveTimer.current = setTimeout(async () => {
+      const kept = elements.filter((e) => !e.isDeleted);
+      const first = kept.find((e) => e.type === "image" && files?.[e.fileId]);
+      if (first && first.fileId !== cover.current.fileId) cover.current = { fileId: first.fileId, src: await thumbnail(files[first.fileId].dataURL) };
+      // a full device keeps the board on screen; it just cannot be remembered
+      if (!saveScene(boardId, kept, files, cover.current.src)) setHint("This device is out of space, so this board will not be kept. Remove an old board to make room.");
     }, 800);
   };
 
@@ -158,20 +171,49 @@ export default function Board({ onEvidence, comparisons }: {
           <MainMenu.DefaultItems.ChangeCanvasBackground />
         </MainMenu>
       </Excalidraw>
-      {empty && !reading && (
-        <div className="pointer-events-none absolute inset-0 z-[3] grid place-items-center px-6">
-          <div className="pointer-events-auto w-full max-w-xl text-center">
-            <h2 className="display mb-8 text-[clamp(48px,6vw,88px)]">Moodboard</h2>
-            <HaloDropzone
-              accept="image/*" multiple onFiles={addPictures} successResetMs={1200} showSuccessThumbnails={false}
-              emptyLabel="Drop pictures" successLabel="Added" formatHint={null}
-            />
-          </div>
-        </div>
-      )}
-      <div className="boardbar">
-        {hint && <span role="alert">{hint}</span>}
-        <button className="btn" onClick={analyse}>Read the board</button>
+      <div className="absolute left-[64px] top-4 z-[4]"><BoardsMenu current={boardId} onOpen={onOpen} onNew={onNew} /></div>
+      <AnimatePresence>
+        {empty && !reading && (
+          <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}
+            className="pointer-events-none absolute inset-0 z-[3] grid place-items-center overflow-y-auto px-5 pb-28 pt-20">
+            <div className="pointer-events-auto w-full max-w-[640px]">
+              <motion.h2 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.05 }}
+                className="display text-[clamp(44px,6vw,80px)]">Pin what you love.</motion.h2>
+              <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.12 }}
+                className="mt-4 max-w-[46ch] text-[17px] leading-[1.5] text-brand-ink/60">
+                A board shows what words cannot. Add pictures, point at the details, and we turn them into your design.
+              </motion.p>
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.2 }} className="mt-8">
+                <HaloDropzone accept="image/*" multiple onFiles={addPictures} successResetMs={1200} showSuccessThumbnails={false}
+                  emptyLabel="Drop pictures here, or click to choose" successLabel="Added" formatHint="JPG, PNG or WebP" />
+              </motion.div>
+              <ol className="mt-8 grid gap-5 sm:grid-cols-3">
+                {STEPS.map(([title, text], i) => (
+                  <motion.li key={title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.3 + i * 0.07 }}>
+                    <span className="text-[13px] font-medium text-brand-ink/40">{i + 1}</span>
+                    <p className="mt-1 text-[15px] font-medium">{title}</p>
+                    <p className="mt-1 text-[14px] leading-[1.45] text-brand-ink/55">{text}</p>
+                  </motion.li>
+                ))}
+              </ol>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="absolute inset-x-0 bottom-6 z-[5] flex justify-center px-4 max-md:bottom-[84px]">
+        <motion.div layout transition={SPRING}
+          className="flex max-w-full items-center gap-3 rounded-full bg-white/85 py-2 pl-5 pr-2 shadow-[0_18px_50px_-20px_rgba(13,17,23,.35)] ring-1 ring-black/[.06] backdrop-blur-2xl">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span key={hint || (empty ? "empty" : "full")} role={hint ? "alert" : "status"} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2 }}
+              className={hint ? "text-[14px] text-[#b5121b]" : "text-[14px] text-brand-ink/60"}>
+              {hint || (empty ? "Start with a picture" : "Circle a detail or add a note, then read")}
+            </motion.span>
+          </AnimatePresence>
+          <motion.button type="button" onClick={analyse} disabled={empty} whileTap={{ scale: 0.95 }} transition={SPRING}
+            className="h-11 shrink-0 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white transition-[background-color,opacity] hover:bg-[#232c3b] disabled:opacity-35">
+            Read the board
+          </motion.button>
+        </motion.div>
       </div>
       <AnimatePresence>{reading && <Reading state={reading} onUse={use} onClose={close} />}</AnimatePresence>
     </div>

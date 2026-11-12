@@ -16,6 +16,7 @@ import { SendToMaker } from "./market/SendToMaker";
 import { Mark } from "./site/Mark";
 import { Arrow, Dots, Reveal, SOFT, SPRING } from "./site/Motion";
 import { cn } from "@/lib/utils";
+import { newBoardId } from "../lib/boards";
 
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
@@ -572,6 +573,9 @@ export default function App() {
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
   const [view, setView] = useState<View>("talk");
+  const [boardId, setBoardId] = useState(newBoardId);
+  // the board opens blank from anywhere in the studio; earlier boards are one click away in its history
+  const openBoard = () => { setBoardId(newBoardId()); setView("board"); };
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
   const [thinking, setThinking] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -654,7 +658,7 @@ export default function App() {
       <a className="mark" href="/" aria-label="Bespoke home"><Mark className="size-5" /><span>Bespoke</span></a>
       <nav className="seg" aria-label="Sections">
         {NAV.map(([v, l]) => (
-          <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
+          <button key={v} aria-pressed={view === v} onClick={() => (v === "board" ? openBoard() : setView(v))}>
             {view === v && <motion.span layoutId="studio-tab" transition={SPRING} className="absolute inset-0 rounded-full bg-brand-ink" />}
             <span className="relative">{l}</span>
           </button>
@@ -673,7 +677,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ), [view, started]);
 
-  if (view === "board") return (<>{header}<Board onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
+  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} /></>);
 
@@ -694,7 +698,7 @@ export default function App() {
           <label htmlFor="brief" className="sr-only">Your brief</label>
           <Composer big onSend={send} voice={voice} busy={thinking} />
           <motion.div className="mt-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
-            <button type="button" onClick={() => setView("board")}
+            <button type="button" onClick={openBoard}
               className="h-11 px-1 text-[15px] font-medium underline decoration-brand-ink/25 underline-offset-[6px] transition-[text-decoration-color] hover:decoration-brand-ink">
               Start from pictures instead
             </button>
@@ -744,7 +748,7 @@ export default function App() {
                     : (
                       <motion.div className="mt-8 flex flex-wrap gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
                         {backBtn}
-                        {spec.slots.garment && <button className={pill} onClick={() => setView("board")}>Add pictures</button>}
+                        {spec.slots.garment && <button className={pill} onClick={openBoard}>Add pictures</button>}
                         {spec.slots.garment && <button className={pill} onClick={() => setView("shop")}>Ideas and shopping</button>}
                       </motion.div>
                     ))}

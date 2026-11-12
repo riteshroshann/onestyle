@@ -167,7 +167,6 @@ a { color: inherit; }
 
 /* moodboard */
 .boardwrap { position: fixed; inset: 84px 0 0 0; }
-.boardbar { position: absolute; z-index: 5; left: 50%; bottom: calc(26px * var(--s)); transform: translateX(-50%); display: flex; flex-wrap: wrap; gap: calc(10px * var(--s)); align-items: center; padding: calc(10px * var(--s)) calc(10px * var(--s)) calc(10px * var(--s)) calc(20px * var(--s)); border-radius: calc(999px * var(--s)); background: rgba(255,255,255,.9); backdrop-filter: blur(calc(20px * var(--s))); box-shadow: 0 calc(12px * var(--s)) calc(40px * var(--s)) calc(-12px * var(--s)) rgba(0,0,0,.25); font-size: calc(15px * var(--s)); color: var(--ink-2); max-width: calc(100vw - calc(32px * var(--s))); }
 .boardwelcome { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; pointer-events: none; text-align: center; padding: 0 calc(24px * var(--s)); }
 .boardwelcome h3 { font-family: var(--display); font-weight: 500; font-size: clamp(calc(34px * var(--s)), 4vw, calc(56px * var(--s))); line-height: 1; margin: 0 0 calc(14px * var(--s)); letter-spacing: -.02em; font-optical-sizing: none; font-variation-settings: "opsz" 6; }
 .boardwelcome p { font-size: calc(18px * var(--s)); margin: 0; max-width: 32em; color: var(--ink-2); }
@@ -205,9 +204,6 @@ a { color: inherit; }
   .send { flex: 1; }
 }
 @media (max-width: 700px) {
-  .boardbar { left: calc(12px * var(--s)); right: calc(12px * var(--s)); transform: none; bottom: calc(86px * var(--s)); max-width: none; border-radius: calc(22px * var(--s)); padding: calc(12px * var(--s)); justify-content: center; }
-  .boardbar span { flex-basis: 100%; text-align: center; font-size: calc(14px * var(--s)); }
-  .boardbar .btn { flex: 1; justify-content: center; }
 }
 @media (max-width: 560px) {
   .boardwrap { inset: 68px 0 0 0; }
