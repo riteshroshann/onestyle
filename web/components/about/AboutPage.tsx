@@ -3,7 +3,20 @@ import { motion } from "motion/react";
 import { Cta } from "../site/Cta";
 import { Footer } from "../site/Footer";
 import { Header } from "../site/Header";
-import { SOFT } from "../site/Motion";
+import dynamic from "next/dynamic";
+import { SOFT, SPRING } from "../site/Motion";
+
+// three.js runs only in the browser
+const Lanyard = dynamic(() => import("./Lanyard"), { ssr: false, loading: () => null });
+
+const SOCIAL = [
+  { label: "GitHub", handle: "riteshroshann", href: "https://github.com/riteshroshann",
+    icon: "M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z" },
+  { label: "X", handle: "@RiteshRoshann", href: "https://x.com/RiteshRoshann",
+    icon: "M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.78L17.75 3Zm-1.08 16.17h1.7L7.4 4.74H5.58l11.09 14.43Z" },
+  { label: "LinkedIn", handle: "ritesh-roshan-sahoo", href: "https://www.linkedin.com/in/ritesh-roshan-sahoo/",
+    icon: "M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z" },
+];
 
 const PARTS: { title: string; text: string; href: string; go: string }[] = [
   { title: "Talk", text: "Say what you want in your own words, English or Hinglish, typed or spoken. The studio asks only for what is missing.", href: "/studio/?new", go: "Start a design" },
@@ -57,6 +70,33 @@ export function AboutPage() {
                 </motion.article>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="border-t border-brand-ink/10">
+          <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-20 md:grid-cols-12 md:px-10 md:py-28">
+            <motion.div {...rise} className="relative h-[560px] overflow-hidden rounded-[36px] bg-[#f4f5f7] md:col-span-6 md:h-[640px]">
+              <Lanyard frontImage="/lanyard/card-front.jpg" backImage="/lanyard/card-back.jpg" strapImage="/lanyard/band.png"
+                strapColor="#0d1117" finish="glossy" size={0.62} strapLength={0.55} breeze={0.4} />
+              <p className="pointer-events-none absolute inset-x-0 bottom-5 text-center text-[13px] text-brand-ink/40">Drag the card. Flip it over.</p>
+            </motion.div>
+            <motion.div {...rise} transition={{ ...SOFT, delay: 0.08 }} className="md:col-span-5 md:col-start-8">
+              <h2 className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em]">The developer</h2>
+              <p className="mt-6 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
+                Ritesh Roshan designed and built Bespoke end to end: the text analytics pipeline that reads English and Hinglish, the tagger it trained and ships in the browser, the studio, the marketplace and this site.
+              </p>
+              <div className="mt-10 flex flex-wrap gap-3">
+                {SOCIAL.map((s, i) => (
+                  <motion.a key={s.label} href={s.href} target="_blank" rel="noreferrer" whileHover={{ y: -3 }} whileTap={{ scale: 0.96 }}
+                    initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ ...SPRING, delay: 0.15 + i * 0.06 }}
+                    className={`group inline-flex h-14 items-center gap-3 rounded-full pl-5 pr-6 text-[16px] font-medium no-underline transition-[background-color,box-shadow] ${i === 0 ? "bg-brand-ink text-white hover:bg-[#232c3b]" : "text-brand-ink ring-1 ring-brand-ink/15 hover:bg-brand-ink/[.04] hover:ring-brand-ink/30"}`}>
+                    <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true"><path d={s.icon} /></svg>
+                    {s.label}
+                    <span className="text-[13px] opacity-50 transition-transform group-hover:translate-x-0.5">{s.handle}</span>
+                  </motion.a>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </section>
 
