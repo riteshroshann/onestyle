@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { getStore } from "@/lib/market";
 import type { Profile } from "@/lib/market";
 import { cn } from "@/lib/utils";
+import { InboxLink, Notifier } from "../market/Notifier";
 import { SPRING } from "./Motion";
 
 const LINKS = [
@@ -79,9 +80,11 @@ export function Header({ current, tone = "light", audience = "customer" }: { cur
           {links.map((l) => (
             <a key={l.href} href={l.href} aria-current={current === l.href ? "page" : undefined} className={cn(link, "hidden aria-[current=page]:bg-secondary sm:block", dark && "aria-[current=page]:bg-white/10")}>{l.label}</a>
           ))}
+          {me && <InboxLink dark={dark} />}
           {me === null && (audience === "maker" ? <a href={signIn} className={link}>Log in</a> : <SignInMenu className={link} dark={dark} />)}
         </nav>
       </div>
+      <Notifier />
     </header>
   );
 }
