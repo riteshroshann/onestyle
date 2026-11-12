@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="folder.css">
 </head>
 <body>
 <header class="top"><nav aria-label="Docs">
@@ -24,6 +25,14 @@
     <p class="lede reveal">Bespoke listens to how people really describe clothes, in English or Hinglish, typed or spoken, reads the pictures they love, asks only for what is missing, and writes it all down as a sheet any tailor can cut from.</p>
     <div class="actions reveal"><a class="cta" href="guide.html">Read the guide</a><a class="cta ghost" href="developers.html">How it is built</a></div>
   </div>
+
+  <section id="find" class="find">
+    <div class="wrap">
+      <h2 class="reveal">Pick a guide</h2>
+      <p class="muted reveal">Open the folder and choose where to start. The notes float, and you can drag them around.</p>
+      <div id="folder" class="folder-stage" aria-label="Guides"></div>
+    </div>
+  </section>
 
   <section id="what">
     <div class="wrap cols">
@@ -61,5 +70,6 @@
 
 <footer><div class="wrap row"><span><b style="color:#38bdf8;font-weight:500">&gt;&lt;</b> Bespoke · Engineered by Ritesh Roshan</span><span><a href="https://onestyle-tawny.vercel.app/">Product</a> · <a href="https://github.com/riteshroshann/onestyle">GitHub</a></span></div></footer>
 <script src="app.js"></script>
+<script type="module" src="folder.js"></script>
 </body>
 </html>

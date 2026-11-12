@@ -135,3 +135,9 @@ footer a { text-decoration: none; } footer a:hover { color: var(--ink); }
 .code pre { white-space: pre-wrap; overflow-wrap: anywhere; padding-right: 92px; }
 .code .copy { top: 12px; right: 12px; }
 @media (hover: none) { .code .copy { opacity: 1; } }
+
+/* the guides folder on the overview: room above it for the notes to rise into */
+.find .wrap { text-align: center; }
+.find p { margin-left: auto; margin-right: auto; }
+.folder-stage { display: flex; justify-content: center; padding-top: 180px; min-height: 360px; }
+@media (max-width: 600px) { .folder-stage { padding-top: 240px; } }

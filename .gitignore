@@ -19,3 +19,4 @@ docs/report/fonts/*.ttc
 engine/looks/*.log
 mcp/node_modules/
 web/bun.lock
+site/src/node_modules/
