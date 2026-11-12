@@ -1,0 +1,1057 @@
+{
+ "task": "NER, exact-match entities, 21 types",
+ "seed": 13,
+ "interval": "bootstrap over requests, 1000 resamples",
+ "model": "web/public/models/bespoke-tagger (int8 ONNX, as served to the browser)",
+ "splits": {
+  "dev": {
+   "n_requests": 30,
+   "n_entities": 133,
+   "systems": {
+    "gazetteer": {
+     "micro": {
+      "precision": 0.9481,
+      "recall": 0.9624,
+      "f1": 0.9552
+     },
+     "per_type": {
+      "CMP": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 2
+      },
+      "COLOUR": {
+       "precision": 0.9167,
+       "recall": 0.9167,
+       "f1": 0.9167,
+       "support": 12
+      },
+      "DIM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "EMBELL": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 7
+      },
+      "FABRIC": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 8
+      },
+      "FIT": {
+       "precision": 0.8,
+       "recall": 0.8,
+       "f1": 0.8,
+       "support": 5
+      },
+      "GARMENT": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 17
+      },
+      "INT": {
+       "precision": 0.8,
+       "recall": 1.0,
+       "f1": 0.8889,
+       "support": 4
+      },
+      "LENGTH": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 9
+      },
+      "LOC": {
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571,
+       "support": 3
+      },
+      "NECKLINE": {
+       "precision": 0.8333,
+       "recall": 0.8333,
+       "f1": 0.8333,
+       "support": 6
+      },
+      "NEG": {
+       "precision": 0.8,
+       "recall": 0.8,
+       "f1": 0.8,
+       "support": 5
+      },
+      "NUM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 3
+      },
+      "OCCASION": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 8
+      },
+      "PART": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 16
+      },
+      "PATTERN": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "REF": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "SHADE": {
+       "precision": 1.0,
+       "recall": 0.5,
+       "f1": 0.6667,
+       "support": 2
+      },
+      "SILHOUETTE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 5
+      },
+      "SLEEVE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 3
+      },
+      "STYLE": {
+       "precision": 0.8571,
+       "recall": 1.0,
+       "f1": 0.9231,
+       "support": 6
+      }
+     },
+     "f1_ci95": [
+      0.9065,
+      0.9921
+     ],
+     "confusion": {
+      "O": {
+       "INT": 2,
+       "LOC": 2,
+       "STYLE": 1,
+       "NEG": 1,
+       "FIT": 1,
+       "NECKLINE": 1
+      },
+      "SHADE": {
+       "COLOUR": 1
+      }
+     }
+    },
+    "model_only": {
+     "micro": {
+      "precision": 0.7714,
+      "recall": 0.812,
+      "f1": 0.7912
+     },
+     "per_type": {
+      "CMP": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 2
+      },
+      "COLOUR": {
+       "precision": 0.8462,
+       "recall": 0.9167,
+       "f1": 0.88,
+       "support": 12
+      },
+      "DIM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "EMBELL": {
+       "precision": 0.7778,
+       "recall": 1.0,
+       "f1": 0.875,
+       "support": 7
+      },
+      "FABRIC": {
+       "precision": 0.875,
+       "recall": 0.875,
+       "f1": 0.875,
+       "support": 8
+      },
+      "FIT": {
+       "precision": 0.8,
+       "recall": 0.8,
+       "f1": 0.8,
+       "support": 5
+      },
+      "GARMENT": {
+       "precision": 0.8235,
+       "recall": 0.8235,
+       "f1": 0.8235,
+       "support": 17
+      },
+      "INT": {
+       "precision": 0.75,
+       "recall": 0.75,
+       "f1": 0.75,
+       "support": 4
+      },
+      "LENGTH": {
+       "precision": 0.5556,
+       "recall": 0.5556,
+       "f1": 0.5556,
+       "support": 9
+      },
+      "LOC": {
+       "precision": 0.6667,
+       "recall": 0.6667,
+       "f1": 0.6667,
+       "support": 3
+      },
+      "NECKLINE": {
+       "precision": 0.8,
+       "recall": 0.6667,
+       "f1": 0.7273,
+       "support": 6
+      },
+      "NEG": {
+       "precision": 1.0,
+       "recall": 0.8,
+       "f1": 0.8889,
+       "support": 5
+      },
+      "NUM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 3
+      },
+      "OCCASION": {
+       "precision": 0.75,
+       "recall": 0.75,
+       "f1": 0.75,
+       "support": 8
+      },
+      "PART": {
+       "precision": 0.6842,
+       "recall": 0.8125,
+       "f1": 0.7429,
+       "support": 16
+      },
+      "PATTERN": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "REF": {
+       "precision": 0.8,
+       "recall": 1.0,
+       "f1": 0.8889,
+       "support": 4
+      },
+      "SHADE": {
+       "precision": 1.0,
+       "recall": 0.5,
+       "f1": 0.6667,
+       "support": 2
+      },
+      "SILHOUETTE": {
+       "precision": 0.375,
+       "recall": 0.6,
+       "f1": 0.4615,
+       "support": 5
+      },
+      "SLEEVE": {
+       "precision": 1.0,
+       "recall": 0.6667,
+       "f1": 0.8,
+       "support": 3
+      },
+      "STYLE": {
+       "precision": 0.7143,
+       "recall": 0.8333,
+       "f1": 0.7692,
+       "support": 6
+      }
+     },
+     "f1_ci95": [
+      0.7059,
+      0.8693
+     ],
+     "confusion": {
+      "LENGTH": {
+       "PART": 3
+      },
+      "O": {
+       "INT": 2,
+       "OCCASION": 2,
+       "PART": 2,
+       "STYLE": 1,
+       "GARMENT": 1,
+       "FIT": 1,
+       "SILHOUETTE": 1,
+       "EMBELL": 1,
+       "COLOUR": 1,
+       "LENGTH": 1
+      },
+      "PART": {
+       "GARMENT": 2,
+       "SILHOUETTE": 1,
+       "O": 1
+      },
+      "SLEEVE": {
+       "SILHOUETTE": 1
+      },
+      "STYLE": {
+       "FABRIC": 1
+      },
+      "NECKLINE": {
+       "REF": 1,
+       "PART": 1
+      },
+      "LOC": {
+       "O": 1
+      },
+      "OCCASION": {
+       "GARMENT": 1,
+       "O": 1
+      },
+      "SHADE": {
+       "COLOUR": 1
+      },
+      "GARMENT": {
+       "SILHOUETTE": 1,
+       "O": 1
+      },
+      "SILHOUETTE": {
+       "O": 1
+      },
+      "INT": {
+       "EMBELL": 1
+      },
+      "NEG": {
+       "STYLE": 1
+      }
+     }
+    },
+    "browser_path": {
+     "micro": {
+      "precision": 0.9209,
+      "recall": 0.9624,
+      "f1": 0.9412
+     },
+     "per_type": {
+      "CMP": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 2
+      },
+      "COLOUR": {
+       "precision": 0.8462,
+       "recall": 0.9167,
+       "f1": 0.88,
+       "support": 12
+      },
+      "DIM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "EMBELL": {
+       "precision": 0.875,
+       "recall": 1.0,
+       "f1": 0.9333,
+       "support": 7
+      },
+      "FABRIC": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 8
+      },
+      "FIT": {
+       "precision": 0.8,
+       "recall": 0.8,
+       "f1": 0.8,
+       "support": 5
+      },
+      "GARMENT": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 17
+      },
+      "INT": {
+       "precision": 0.8,
+       "recall": 1.0,
+       "f1": 0.8889,
+       "support": 4
+      },
+      "LENGTH": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 9
+      },
+      "LOC": {
+       "precision": 0.75,
+       "recall": 1.0,
+       "f1": 0.8571,
+       "support": 3
+      },
+      "NECKLINE": {
+       "precision": 0.8333,
+       "recall": 0.8333,
+       "f1": 0.8333,
+       "support": 6
+      },
+      "NEG": {
+       "precision": 0.8,
+       "recall": 0.8,
+       "f1": 0.8,
+       "support": 5
+      },
+      "NUM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 3
+      },
+      "OCCASION": {
+       "precision": 0.8,
+       "recall": 1.0,
+       "f1": 0.8889,
+       "support": 8
+      },
+      "PART": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 16
+      },
+      "PATTERN": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "REF": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "SHADE": {
+       "precision": 1.0,
+       "recall": 0.5,
+       "f1": 0.6667,
+       "support": 2
+      },
+      "SILHOUETTE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 5
+      },
+      "SLEEVE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 3
+      },
+      "STYLE": {
+       "precision": 0.8571,
+       "recall": 1.0,
+       "f1": 0.9231,
+       "support": 6
+      }
+     },
+     "f1_ci95": [
+      0.893,
+      0.9781
+     ],
+     "confusion": {
+      "O": {
+       "INT": 2,
+       "OCCASION": 2,
+       "LOC": 2,
+       "STYLE": 1,
+       "NEG": 1,
+       "FIT": 1,
+       "NECKLINE": 1,
+       "EMBELL": 1,
+       "COLOUR": 1
+      },
+      "SHADE": {
+       "COLOUR": 1
+      }
+     }
+    }
+   }
+  },
+  "test": {
+   "n_requests": 52,
+   "n_entities": 245,
+   "systems": {
+    "gazetteer": {
+     "micro": {
+      "precision": 0.9534,
+      "recall": 0.9184,
+      "f1": 0.9356
+     },
+     "per_type": {
+      "CMP": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 6
+      },
+      "COLOUR": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 24
+      },
+      "DIM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 6
+      },
+      "EMBELL": {
+       "precision": 0.9091,
+       "recall": 0.7692,
+       "f1": 0.8333,
+       "support": 13
+      },
+      "FABRIC": {
+       "precision": 1.0,
+       "recall": 0.9091,
+       "f1": 0.9524,
+       "support": 22
+      },
+      "FIT": {
+       "precision": 1.0,
+       "recall": 0.9167,
+       "f1": 0.9565,
+       "support": 12
+      },
+      "GARMENT": {
+       "precision": 0.9302,
+       "recall": 0.8696,
+       "f1": 0.8989,
+       "support": 46
+      },
+      "INT": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 6
+      },
+      "LENGTH": {
+       "precision": 1.0,
+       "recall": 0.9231,
+       "f1": 0.96,
+       "support": 13
+      },
+      "LOC": {
+       "precision": 0.6667,
+       "recall": 1.0,
+       "f1": 0.8,
+       "support": 2
+      },
+      "NECKLINE": {
+       "precision": 1.0,
+       "recall": 0.9,
+       "f1": 0.9474,
+       "support": 10
+      },
+      "NEG": {
+       "precision": 0.8571,
+       "recall": 0.8571,
+       "f1": 0.8571,
+       "support": 7
+      },
+      "NUM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 2
+      },
+      "OCCASION": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 15
+      },
+      "PART": {
+       "precision": 0.84,
+       "recall": 0.913,
+       "f1": 0.875,
+       "support": 23
+      },
+      "PATTERN": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 9
+      },
+      "REF": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 7
+      },
+      "SHADE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "SILHOUETTE": {
+       "precision": 0.875,
+       "recall": 0.7,
+       "f1": 0.7778,
+       "support": 10
+      },
+      "SLEEVE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 3
+      },
+      "STYLE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 5
+      }
+     },
+     "f1_ci95": [
+      0.8981,
+      0.9665
+     ],
+     "confusion": {
+      "O": {
+       "PART": 4,
+       "LOC": 2,
+       "EMBELL": 1,
+       "NEG": 1
+      },
+      "GARMENT": {
+       "O": 3
+      },
+      "FABRIC": {
+       "O": 2
+      },
+      "EMBELL": {
+       "O": 2
+      },
+      "SILHOUETTE": {
+       "GARMENT": 2
+      },
+      "FIT": {
+       "O": 1
+      },
+      "PART": {
+       "LOC": 1,
+       "SILHOUETTE": 1
+      },
+      "NECKLINE": {
+       "O": 1
+      },
+      "LENGTH": {
+       "GARMENT": 1
+      }
+     }
+    },
+    "model_only": {
+     "micro": {
+      "precision": 0.8238,
+      "recall": 0.7633,
+      "f1": 0.7924
+     },
+     "per_type": {
+      "CMP": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 6
+      },
+      "COLOUR": {
+       "precision": 0.6786,
+       "recall": 0.7917,
+       "f1": 0.7308,
+       "support": 24
+      },
+      "DIM": {
+       "precision": 1.0,
+       "recall": 0.6667,
+       "f1": 0.8,
+       "support": 6
+      },
+      "EMBELL": {
+       "precision": 0.7143,
+       "recall": 0.7692,
+       "f1": 0.7407,
+       "support": 13
+      },
+      "FABRIC": {
+       "precision": 1.0,
+       "recall": 0.7727,
+       "f1": 0.8718,
+       "support": 22
+      },
+      "FIT": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 12
+      },
+      "GARMENT": {
+       "precision": 0.8421,
+       "recall": 0.6957,
+       "f1": 0.7619,
+       "support": 46
+      },
+      "INT": {
+       "precision": 1.0,
+       "recall": 0.8333,
+       "f1": 0.9091,
+       "support": 6
+      },
+      "LENGTH": {
+       "precision": 0.7857,
+       "recall": 0.8462,
+       "f1": 0.8148,
+       "support": 13
+      },
+      "LOC": {
+       "precision": 0.5,
+       "recall": 0.5,
+       "f1": 0.5,
+       "support": 2
+      },
+      "NECKLINE": {
+       "precision": 0.875,
+       "recall": 0.7,
+       "f1": 0.7778,
+       "support": 10
+      },
+      "NEG": {
+       "precision": 0.75,
+       "recall": 0.8571,
+       "f1": 0.8,
+       "support": 7
+      },
+      "NUM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 2
+      },
+      "OCCASION": {
+       "precision": 1.0,
+       "recall": 0.6667,
+       "f1": 0.8,
+       "support": 15
+      },
+      "PART": {
+       "precision": 0.9091,
+       "recall": 0.8696,
+       "f1": 0.8889,
+       "support": 23
+      },
+      "PATTERN": {
+       "precision": 1.0,
+       "recall": 0.7778,
+       "f1": 0.875,
+       "support": 9
+      },
+      "REF": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 7
+      },
+      "SHADE": {
+       "precision": 0.0,
+       "recall": 0.0,
+       "f1": 0.0,
+       "support": 4
+      },
+      "SILHOUETTE": {
+       "precision": 0.3333,
+       "recall": 0.5,
+       "f1": 0.4,
+       "support": 10
+      },
+      "SLEEVE": {
+       "precision": 0.5,
+       "recall": 0.3333,
+       "f1": 0.4,
+       "support": 3
+      },
+      "STYLE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 5
+      }
+     },
+     "f1_ci95": [
+      0.7348,
+      0.845
+     ],
+     "confusion": {
+      "SHADE": {
+       "COLOUR": 4
+      },
+      "GARMENT": {
+       "SILHOUETTE": 4,
+       "LENGTH": 2,
+       "EMBELL": 1,
+       "SLEEVE": 1,
+       "O": 1
+      },
+      "PART": {
+       "SILHOUETTE": 3
+      },
+      "FABRIC": {
+       "O": 3,
+       "GARMENT": 2
+      },
+      "O": {
+       "EMBELL": 2,
+       "PART": 2,
+       "NEG": 1,
+       "SILHOUETTE": 1,
+       "NECKLINE": 1
+      },
+      "OCCASION": {
+       "O": 2,
+       "COLOUR": 1,
+       "NEG": 1,
+       "LENGTH": 1
+      },
+      "DIM": {
+       "SILHOUETTE": 2
+      },
+      "SLEEVE": {
+       "SILHOUETTE": 2,
+       "SHADE": 1
+      },
+      "SILHOUETTE": {
+       "GARMENT": 2
+      },
+      "NECKLINE": {
+       "SILHOUETTE": 2,
+       "COLOUR": 1
+      },
+      "PATTERN": {
+       "COLOUR": 1,
+       "O": 1
+      },
+      "INT": {
+       "EMBELL": 1
+      },
+      "LOC": {
+       "O": 1
+      },
+      "EMBELL": {
+       "O": 1
+      },
+      "LENGTH": {
+       "GARMENT": 1
+      }
+     }
+    },
+    "browser_path": {
+     "micro": {
+      "precision": 0.9547,
+      "recall": 0.9469,
+      "f1": 0.9508
+     },
+     "per_type": {
+      "CMP": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 6
+      },
+      "COLOUR": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 24
+      },
+      "DIM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 6
+      },
+      "EMBELL": {
+       "precision": 0.9231,
+       "recall": 0.9231,
+       "f1": 0.9231,
+       "support": 13
+      },
+      "FABRIC": {
+       "precision": 1.0,
+       "recall": 0.9545,
+       "f1": 0.9767,
+       "support": 22
+      },
+      "FIT": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 12
+      },
+      "GARMENT": {
+       "precision": 0.9333,
+       "recall": 0.913,
+       "f1": 0.9231,
+       "support": 46
+      },
+      "INT": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 6
+      },
+      "LENGTH": {
+       "precision": 1.0,
+       "recall": 0.9231,
+       "f1": 0.96,
+       "support": 13
+      },
+      "LOC": {
+       "precision": 0.6667,
+       "recall": 1.0,
+       "f1": 0.8,
+       "support": 2
+      },
+      "NECKLINE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 10
+      },
+      "NEG": {
+       "precision": 0.8571,
+       "recall": 0.8571,
+       "f1": 0.8571,
+       "support": 7
+      },
+      "NUM": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 2
+      },
+      "OCCASION": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 15
+      },
+      "PART": {
+       "precision": 0.84,
+       "recall": 0.913,
+       "f1": 0.875,
+       "support": 23
+      },
+      "PATTERN": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 9
+      },
+      "REF": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 7
+      },
+      "SHADE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 4
+      },
+      "SILHOUETTE": {
+       "precision": 0.875,
+       "recall": 0.7,
+       "f1": 0.7778,
+       "support": 10
+      },
+      "SLEEVE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 3
+      },
+      "STYLE": {
+       "precision": 1.0,
+       "recall": 1.0,
+       "f1": 1.0,
+       "support": 5
+      }
+     },
+     "f1_ci95": [
+      0.9158,
+      0.9798
+     ],
+     "confusion": {
+      "O": {
+       "PART": 4,
+       "LOC": 2,
+       "EMBELL": 1,
+       "NEG": 1
+      },
+      "SILHOUETTE": {
+       "GARMENT": 2
+      },
+      "PART": {
+       "LOC": 1,
+       "SILHOUETTE": 1
+      },
+      "FABRIC": {
+       "O": 1
+      },
+      "GARMENT": {
+       "O": 1
+      },
+      "LENGTH": {
+       "GARMENT": 1
+      }
+     }
+    }
+   }
+  }
+ }
+}

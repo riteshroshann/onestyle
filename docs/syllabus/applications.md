@@ -5,6 +5,7 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 | Topic | Code | What it does for the product | Result | Status |
 |---|---|---|---|---|
 | Syntax (attachment of values to garment parts) | `web/scripts/eval-binding.mjs`, gold `data/gold/binding.jsonl` | Scores `bind()` in `web/lib/engine/spec.ts`: which value attaches to which part ("sleeve par loose" is a sleeve fit) | `results/binding.json` | Used in the product (the binder is deployed); study of it |
+| Named entity recognition | `engine/bespoke/apps/ner.py` | Per-type report of the tagger that feeds the binder, for the gazetteer, the int8 ONNX model alone and the browser path | `results/ner.json` | Used in the product (the browser path is what ships) |
 
 ## Syntax: attachment of values to parts
 
@@ -26,3 +27,9 @@ const breaks = tokens.map((t, i) => CLAUSE_BREAK.has(t) && !(t === "par" && part
 ```
 
 Not fixed by it, and visible in the `misses` list of the result: a clause keeps the context of its first part cue ("kamar pe fitted hip pe loose" puts both fits on the bodice, with "pe" not a break), context does not carry across a break ("sleeves full par loose nahi"), and "gale par 7 inch gehra" binds the number to garment length.
+
+## Named entity recognition
+
+`python scripts/apps.py ner`, about 12 s. Held-out gold: 52 test requests with 245 entities (the 30 dev requests, 133 entities, are in the file too). Exact-match span F1 over 21 entity types, bootstrap interval over requests. The ONNX file is the one the browser loads (int8 MiniLM, constrained Viterbi, then the merge rule of `web/lib/models.ts`: gazetteer spans win, model spans fill gaps), run here with onnxruntime on CPU, so the browser path is reproduced, not re-timed in a browser.
+
+Test split micro F1: gazetteer 0.936 (0.898 to 0.967), model alone 0.792 (0.735 to 0.845), browser path 0.951 (0.916 to 0.980). The merge helps by 1.5 points, within the noise of 52 requests. Per-type F1, support and the confusion table are in `results/ner.json`. The weak types on test are SILHOUETTE (0.78, 10 entities), LOC (0.80, 2), NEG (0.86, 7) and PART (0.88, 23); the main confusions are part words missed (O for PART, 4 tokens) and silhouette words read as garments (2). The gazetteer was tuned while the gold was written (ontology 1.1 relabelled gold lines), so its score is optimistic; the model never saw gold.
