@@ -210,7 +210,7 @@ export function Workspace({ me }: { me: Profile }) {
             {requests && (
               <div>
                 <p className="display text-[clamp(44px,6vw,88px)]">{requests.length ? "Pick a request." : "Nothing yet."}</p>
-                {!requests.length && !maker && <div className="mt-8 flex justify-center"><Cta href="/studio/" size="lg">Start a design</Cta></div>}
+                {!requests.length && !maker && <div className="mt-8 flex justify-center"><Cta href="/studio/?new" size="lg">Start a design</Cta></div>}
               </div>
             )}
           </div>

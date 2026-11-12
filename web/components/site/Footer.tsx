@@ -1,7 +1,7 @@
 import { Mark } from "./Mark";
 
 const COLUMNS = [
-  { title: "Make", links: [{ href: "/studio/", label: "Studio" }, { href: "/studio/", label: "Start a design" }, { href: "/orders/", label: "My requests" }] },
+  { title: "Make", links: [{ href: "/studio/", label: "Studio" }, { href: "/studio/?new", label: "Start a design" }, { href: "/orders/", label: "My requests" }] },
   { title: "Bespoke", links: [{ href: "/makers/", label: "For makers" }, { href: "/login/", label: "Sign in" }, { href: "/licenses.txt", label: "Credits" }] },
 ];
 

@@ -41,7 +41,7 @@ export function Header({ current, cta = true, tone = "light" }: { current?: stri
           ))}
           {me === null && <a href="/login/" className={link}>Sign in</a>}
         </nav>
-        {cta && <div className="hidden sm:block"><Cta href="/studio/" tone={dark ? "light" : "dark"}>Start a design</Cta></div>}
+        {cta && <div className="hidden sm:block"><Cta href="/studio/?new" tone={dark ? "light" : "dark"}>Start a design</Cta></div>}
       </div>
     </header>
   );

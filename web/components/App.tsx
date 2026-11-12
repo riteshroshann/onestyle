@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript } from "../lib/engine/lexicon";
@@ -552,6 +552,12 @@ export default function App() {
   const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
   const fromBoard = (ups: Update[], note: string) => { remember(); const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
   const reset = () => { if (msgs.length) remember(); setSpec(emptySpec()); setMsgs([]); setView("talk"); };
+  // "Start a design" links here with ?new: open on a blank design, with the last one still a Back away
+  useLayoutEffect(() => {
+    if (!new URLSearchParams(location.search).has("new")) return;
+    reset();
+    history.replaceState(null, "", location.pathname);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const started = msgs.length > 0;
   const backBtn = past.length > 0 && !thinking
