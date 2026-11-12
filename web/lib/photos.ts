@@ -20,14 +20,3 @@ export const PHOTOS = {
   sari: p("107", "A woven silk sari with a patterned border", "Silk sari. The Art Institute of Chicago."),
 } satisfies Record<string, Photo>;
 
-// Colour photographs of Indian bridal craft, CC0 via Rawpixel. Sources in public/licenses.txt.
-const c = (id: string, alt: string, caption: string): Photo => ({ src: `/photos/colour/${id}.jpg`, alt, caption });
-
-export const COLOUR = {
-  twirl: c("twirl", "A dancer mid-turn in a pink lehenga with a blue and gold border", "Pink lehenga, mid-turn."),
-  namaste: c("namaste", "Hands with mehndi pressed together over a red and gold bridal sari", "Red and gold."),
-  hem: c("hem", "Feet with mehndi beneath a red sari hem worked in gold", "An embroidered hem."),
-  bangles: c("bangles", "A bride's wrists stacked with red bangles over a sequinned sari", "Bangles and sequins."),
-  paisley: c("paisley", "Folded silk with a gold paisley print over a vivid dyed ground", "Paisley on silk."),
-  machine: c("machine", "A sewing machine foot stitching through coloured cloth", "At the machine."),
-} satisfies Record<string, Photo>;
