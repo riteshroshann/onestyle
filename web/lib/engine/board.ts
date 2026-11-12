@@ -9,11 +9,14 @@ export interface BoardNote { id: string; text: string; target: BoardImage | Boar
 export interface Board { images: BoardImage[]; regions: BoardRegion[]; notes: BoardNote[] }
 export interface ImageEvidence { slot: string; dist: Record<string, number> }
 
+/** Elements Bespoke writes on the board itself: picture numbers and inspiration notes. They are never read back as the customer's own marks. */
+export const isOurs = (e: any) => !!(e?.customData?.bespokeLabel || e?.customData?.bespokeNote);
+
 const NEG_RE = /\b(no|not|nahi|nahin|mat|avoid|without|don'?t|never)\b|❌|✗/i;
 
 /** Build the board graph from Excalidraw elements and files. Images are numbered in reading order. */
 export function readBoard(elements: readonly any[], files: Record<string, any>): Board {
-  const live = elements.filter((e) => !e.isDeleted);
+  const live = elements.filter((e) => !e.isDeleted && !isOurs(e));
   const images: BoardImage[] = live
     .filter((e) => e.type === "image" && e.fileId && files[e.fileId])
     .map((e) => ({ id: e.id, n: 0, x: e.x, y: e.y, w: e.width, h: e.height, dataURL: files[e.fileId].dataURL }))
@@ -30,7 +33,7 @@ export function readBoard(elements: readonly any[], files: Record<string, any>):
   images.forEach((i) => byId.set(i.id, i));
   regions.forEach((r) => byId.set(r.id, r));
   const notes: BoardNote[] = [];
-  for (const t of live.filter((e) => e.type === "text" && !e.customData?.bespokeLabel)) {
+  for (const t of live.filter((e) => e.type === "text")) {
     const text: string = t.originalText ?? t.text ?? "";
     const container = t.containerId ? live.find((e) => e.id === t.containerId) : null;
     const owners = [t.id, container?.id].filter(Boolean);
@@ -91,16 +94,14 @@ export type BoardEvent =
 
 export interface BoardResult { updates: Update[]; perImage: Record<number, Record<string, [string, number]>>; depth: Record<number, number>; notes: { text: string; target: string }[] }
 
-/** Score every element, pool per slot with salience weights and polarity, and turn note comparisons into intervals. */
-export async function analyseBoard(board: Board, score: (img: string, prompts: string[]) => Promise<number[]>,
-  tagText: (t: string) => Promise<{ tokens: string[]; spans: any[] }>, progress: (s: string) => void, emit: (e: BoardEvent) => void = () => {}): Promise<BoardResult> {
+type TagText = (t: string) => Promise<{ tokens: string[]; spans: any[] }>;
+
+/** The customer's notes alone: their words as updates, plus which pictures they point at and which they reject. */
+export async function readNotes(board: Board, tagText: TagText) {
   const updates: Update[] = [];
   const weight = new Map<number, number>();
   const polarity = new Map<number, Map<string, number>>();
-  const label = (t: BoardImage | BoardRegion | null) => (!t ? "board" : "n" in t ? `#${t.n}` : `circle on #${t.image.n}`);
   for (const im of board.images) weight.set(im.n, 0.5);
-
-  // notes first: they decide salience and polarity
   for (const note of board.notes) {
     const img = note.target ? ("n" in note.target ? note.target : note.target.image) : null;
     const mentioned = slotsMentioned(note.text);
@@ -117,6 +118,15 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
       updates.push(...bind(tokens, spans, "note" as Source, 0.85));
     }
   }
+  return { updates, weight, polarity };
+}
+
+/** Score every element, pool per slot with salience weights and polarity, and turn note comparisons into intervals. */
+export async function analyseBoard(board: Board, score: (img: string, prompts: string[]) => Promise<number[]>,
+  tagText: TagText, progress: (s: string) => void, emit: (e: BoardEvent) => void = () => {}): Promise<BoardResult> {
+  // notes first: they decide salience and polarity
+  const { updates, weight, polarity } = await readNotes(board, tagText);
+  const label = (t: BoardImage | BoardRegion | null) => (!t ? "board" : "n" in t ? `#${t.n}` : `circle on #${t.image.n}`);
 
   // every image: one distribution per slot
   const perImage: BoardResult["perImage"] = {};
@@ -211,3 +221,103 @@ export function resolveComparisons(comps: { slot: string; cmp: string; ref: stri
 
 export const words = tokenize;
 export const ontologySlots = ONTO.slots;
+
+// ------------------------------------------------------------------ inspiration from the picture reader (api/vision.js)
+
+/** A picture as the reader saw it: what it shows and what a garment could borrow. */
+export interface PictureIdeas {
+  n: number; shows: string; borrow: string;
+  palette: { name: string; hex: string; base?: string }[];
+  mood: string[]; motifs: string[];
+  pattern: string[]; "lower.silhouette": string[]; fabric: string[]; embellishment: string[]; style: string[];
+}
+/** One garment idea; every slot value is an ontology canonical. */
+export interface Idea { title: string; why: string; colour?: string[]; [slot: string]: string | string[] | undefined }
+export interface Inspiration { pictures: PictureIdeas[]; leftOut: number[]; direction: { summary: string; ideas: Idea[] } }
+
+// pictures suggest, words decide: image evidence never rises above this
+export const IMAGE_CAP = 0.6;
+const SLOT_TAG: Record<string, string> = {
+  garment: "GARMENT", colour: "COLOUR", pattern: "PATTERN", embellishment: "EMBELL", fabric: "FABRIC",
+  "lower.silhouette": "SILHOUETTE", "neckline.shape": "NECKLINE", "sleeve.style": "SLEEVE", style: "STYLE", occasion: "OCCASION",
+};
+const LISTED = new Set(["colour", "pattern", "embellishment", "style", "occasion"]);
+// a circle on a picture is finer evidence than a model's look at the whole picture
+const FINE_SLOTS = new Set(REGION_SLOTS);
+const HEX_RE = /^#[0-9a-f]{6}$/;
+const TEXT_RE = /^[^<>{}[\]`\\]*$/;
+const URL_RE = /https?:\/\/|www\.|\.(com|net|org|io|in|ai|co)\b/i;
+
+/** True when a value is a canonical in the ontology for that slot. */
+export const known = (slot: string, value: unknown) =>
+  typeof value === "string" && !!SLOT_TAG[slot] && Object.prototype.hasOwnProperty.call(ONTO.lexicon[SLOT_TAG[slot]], value);
+const short = (s: unknown, max: number) => (typeof s === "string" && TEXT_RE.test(s) && !URL_RE.test(s) ? s.replace(/\s+/g, " ").trim().slice(0, max) : "");
+const list = (slot: string, v: unknown, n = 4) => (Array.isArray(v) ? [...new Set(v.filter((x) => known(slot, x)))].slice(0, n) as string[] : []);
+const texts = (v: unknown, max: number, n = 4) => (Array.isArray(v) ? v.map((x) => short(x, max)).filter(Boolean).slice(0, n) : []);
+
+/** The reader's reply checked again on this side: the server is trusted for nothing that reaches the design. */
+export function checkInspiration(raw: any, sent: number[]): Inspiration {
+  const ok = new Set(sent);
+  const pictures: PictureIdeas[] = (Array.isArray(raw?.pictures) ? raw.pictures : [])
+    .filter((p: any) => p && ok.has(p.n))
+    .map((p: any) => ({
+      n: p.n, shows: short(p.shows, 90), borrow: short(p.borrow, 160),
+      palette: (Array.isArray(p.palette) ? p.palette : [])
+        .filter((c: any) => typeof c?.hex === "string" && HEX_RE.test(c.hex) && short(c.name, 28))
+        .slice(0, 5).map((c: any) => (known("colour", c.base) ? { name: short(c.name, 28), hex: c.hex, base: c.base } : { name: short(c.name, 28), hex: c.hex })),
+      mood: texts(p.mood, 28), motifs: texts(p.motifs, 32),
+      pattern: list("pattern", p.pattern), "lower.silhouette": list("lower.silhouette", p["lower.silhouette"]), fabric: list("fabric", p.fabric),
+      embellishment: list("embellishment", p.embellishment), style: list("style", p.style),
+    }));
+  const ideas: Idea[] = (Array.isArray(raw?.direction?.ideas) ? raw.direction.ideas : []).slice(0, 4).flatMap((i: any) => {
+    const title = short(i?.title, 48);
+    if (!title) return [];
+    const idea: Idea = { title, why: short(i.why, 150) };
+    for (const slot of Object.keys(SLOT_TAG)) {
+      if (slot === "colour") { const c = list("colour", i.colour, 3); if (c.length) idea.colour = c; }
+      else if (known(slot, i[slot])) idea[slot] = i[slot];
+    }
+    return [idea];
+  });
+  const leftOut = (Array.isArray(raw?.leftOut) ? raw.leftOut : []).filter((n: unknown) => typeof n === "number" && ok.has(n));
+  return { pictures, leftOut, direction: { summary: short(raw?.direction?.summary, 170), ideas } };
+}
+
+const ev = (value: string, p: number, evidence: string) => ({ value, p: Math.min(IMAGE_CAP, p), src: "image" as Source, evidence });
+
+/** The design updates one idea stands for: suggestions only, at most IMAGE_CAP sure. */
+export function ideaUpdates(idea: Idea): Update[] {
+  const out: Update[] = [];
+  const why = `board direction: ${idea.title}`;
+  for (const slot of Object.keys(SLOT_TAG)) {
+    const v = idea[slot];
+    for (const value of Array.isArray(v) ? v : v ? [v] : []) {
+      if (!known(slot, value)) continue;
+      out.push({ op: LISTED.has(slot) ? "add" : "set", slot, value: ev(value, slot === "garment" ? 0.5 : 0.55, why) } as Update);
+    }
+  }
+  return out;
+}
+
+/**
+ * One list of updates from the customer's notes, the on-device reading and the picture reader's chosen idea.
+ * Notes (words) beat pictures on any slot they touch; a circle read on the device beats the model on fine slots;
+ * otherwise the model's idea wins its slots. Agreement nudges sureness up, never past IMAGE_CAP.
+ */
+export function mergeUpdates(device: Update[], model: Update[], circled: boolean): Update[] {
+  const worded = new Set(device.filter((u) => u.value.src !== "image").map((u) => u.slot));
+  const excluded = new Set(device.filter((u) => u.op === "exclude").map((u) => `${u.slot}=${u.value.value}`));
+  const kept = device.filter((u) => u.value.src !== "image" || u.op === "exclude"); // words and "not this" always stand
+  const fine = (slot: string) => circled && FINE_SLOTS.has(slot);
+  const deviceImage = device.filter((u) => u.value.src === "image" && u.op !== "exclude" && !worded.has(u.slot));
+  const modelSlots = new Set(model.map((u) => u.slot));
+  const out = [...kept];
+  for (const u of deviceImage) if (fine(u.slot) || !modelSlots.has(u.slot)) out.push({ ...u, value: { ...u.value, p: Math.min(IMAGE_CAP, u.value.p) } });
+  for (const u of model) {
+    if (worded.has(u.slot) || excluded.has(`${u.slot}=${u.value.value}`)) continue;
+    if (fine(u.slot) && deviceImage.some((d) => d.slot === u.slot)) continue;
+    const agree = deviceImage.some((d) => d.slot === u.slot && d.value.value === u.value.value);
+    out.push({ ...u, value: { ...u.value, p: Math.min(IMAGE_CAP, u.value.p + (agree ? 0.05 : 0)) } });
+  }
+  return out;
+}

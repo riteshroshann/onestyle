@@ -10,6 +10,9 @@
     },
     "api/assistant.js": {
       "maxDuration": 25
+    },
+    "api/vision.js": {
+      "maxDuration": 25
     }
   },
   "git": {
