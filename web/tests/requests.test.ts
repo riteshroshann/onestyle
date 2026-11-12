@@ -161,7 +161,7 @@ check("sherwani for a brother's wedding", () => {
 check("who it is for shapes the searches", () => {
   const s = run("a navy hoodie for my husband");
   assert.equal(wearerOf(s), "men");
-  assert.match(links(s).query, /^men's navy hoodie/);
+  assert.match(links(s).query, /^men navy hoodie/);
   assert.equal(wearerOf(run("a black kurti")), "women");
   assert.equal(wearerOf(run("a grey sweatshirt")), "anyone");
   assert.doesNotMatch(links(run("a black kurti")).query, /women's/);

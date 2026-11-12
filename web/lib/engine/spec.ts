@@ -4,7 +4,7 @@ import type { Span } from "./lexicon.ts";
 
 export type Source = "words" | "note" | "image" | "profile" | "answer" | "edit" | "model";
 export interface Value { value: string; p: number; src: Source; evidence: string; inches?: number; intensity?: string }
-export interface Update { op: "set" | "exclude" | "add" | "replace" | "compare" | "note"; slot: string; value: Value; ref?: string; cmp?: string }
+export interface Update { op: "set" | "exclude" | "add" | "replace" | "compare" | "note" | "asked"; slot: string; value: Value; ref?: string; cmp?: string }
 export interface Spec {
   version: number;
   slots: Record<string, Value>;
@@ -12,6 +12,7 @@ export interface Spec {
   excluded: { slot: string; value: string; evidence: string }[];
   comparisons: { slot: string; cmp: string; ref: string; evidence: string }[];
   notes?: string[];                          // details outside the ontology, kept verbatim for the tailor
+  asked?: string[];                          // slots already put to the customer, answered or skipped; never asked again
   history: Update[];
 }
 export interface Question { slot: string; text: string; options: string[]; labels?: Record<string, string>; cost: number }
@@ -82,7 +83,9 @@ export function bind(tokens: string[], spans: Span[], src: Source, p = 0.9): Upd
   }
   const clauses: Span[][] = [[]];
   let cut = 0;
-  const breaks = tokens.map((t) => CLAUSE_BREAK.has(t));
+  // "par" is "but" between clauses and "on" after a part ("sleeve par loose", like "sleeve pe loose")
+  const cueEnds = new Set(spans.filter((s) => ["PART", "LOC", "SLEEVE", "NECKLINE"].includes(s.tag)).map((s) => s.end));
+  const breaks = tokens.map((t, i) => CLAUSE_BREAK.has(t) && !(t === "par" && cueEnds.has(i)));
   for (const s of spans) {
     while (cut < s.start) { if (breaks[cut]) clauses.push([]); cut++; }
     clauses[clauses.length - 1].push(s);
@@ -138,7 +141,7 @@ export function bind(tokens: string[], spans: Span[], src: Source, p = 0.9): Upd
         case "NUM": {
           // "20 years old", "age 20", "size 32" describe the person, not the garment
           const after = tokens.slice(s.end, s.end + 2).join(" "), before = tokens[s.start - 1] ?? "";
-          if (/^(years?|yrs?|yo|saal|sal|baras|old)\b/.test(after) || /^(age|aged|umar|umr|size)$/.test(before)) break;
+          if (/^(years?|yrs?|yo|saal|sal|baras|old|hoon|hun|hu)\b/.test(after) || /^(age|aged|umar|umr|size|am|im|i'm)$/.test(before)) break;
           const inches = num(tokens, s);
           const slot = ctx === "neckline" ? "neckline.depth" : ctx === "back" ? "back.depth" : ctx === "sleeve" ? "sleeve.length"
             : ctx === "slit" ? "slit.length" : "garment.length";
@@ -231,6 +234,8 @@ export function apply(spec: Spec, ups: Update[]): Spec {
       next.excluded = next.excluded.filter((e) => !(e.slot === u.slot && e.value === u.value.value));
     } else if (u.op === "compare") {
       next.comparisons = [...next.comparisons, { slot: u.slot, cmp: u.cmp!, ref: u.ref!, evidence: u.value.evidence }];
+    } else if (u.op === "asked") {
+      if (!(next.asked ?? []).includes(u.slot)) next.asked = [...(next.asked ?? []), u.slot];
     } else if (u.op === "note") {
       const n = u.value.value.trim();
       if (n && !next.notes!.some((x) => x.toLowerCase() === n.toLowerCase())) next.notes!.push(n);
@@ -279,6 +284,7 @@ function questionFor(slot: string, spec: Spec): Omit<Question, "cost"> | null {
       return knit ? { slot, text: "Which neckline?", options: ["crew", "hooded", "turtle", "v"], labels: { crew: "crew neck", hooded: "hood", turtle: "turtle neck", v: "V neck" } }
         : { slot, text: "Which neckline?", options: ["round", "v", "boat", "square", "sweetheart", "mandarin"], labels: { v: "V" } };
     case "neckline.depth": return { slot, text: "How deep should the neckline be? It can be deepened at the trial, never raised.", options: ["shallow", "moderate", "deep"] };
+    case "back.depth": return { slot, text: "And at the back, how deep?", options: ["shallow", "moderate", "deep", "plunging"] };
     case "sleeve.length": return { slot, text: "How long should the sleeves be?", options: ["sleeveless", "elbow", "three-quarter", "full"] };
     case "bodice.fit":
       return knit ? { slot, text: fams.has("set") ? "How should the top fit?" : "How should it fit?", options: ["semi-fitted", "relaxed", "loose"], labels: { "semi-fitted": "regular", loose: "oversized" } }
@@ -299,25 +305,116 @@ function questionFor(slot: string, spec: Spec): Omit<Question, "cost"> | null {
   return null;
 }
 
-/** Ask about the slots a tailor needs first for this kind of garment, at most three per turn. */
-export function questions(spec: Spec, budget = 3): Question[] {
-  if (!spec.slots.garment) return [{ ...questionFor("garment", spec)!, cost: 10 }];
+// ------------------------------------------------------------------ which question next
+// Each open slot is scored by expected value: what a wrong guess costs (ONTO.slots[*].cost, or the profile
+// costs below) x how unsure we are (1 - confidence) x how much it matters for this garment and occasion.
+// Earlier slots in a family's list matter more to a tailor ("neckline before sleeve" on a blouse).
+
+const NO_DEPTH = ["crew", "hooded", "turtle", "mandarin", "collar", "high"];
+const DRESSY = new Set(["wedding", "sangeet", "mehendi", "reception", "festive"]);
+const BLOUSES = new Set(["saree blouse", "crop top", "corset"]);
+
+/** Confidence that a slot is already known, 0 to 1. */
+function confidence(spec: Spec, slot: string): number {
+  if (slot === "wearer") return spec.slots.wearer || isGendered(spec.slots.garment?.value) ? 1 : 0;
+  if (LIST_SLOTS.has(slot)) return Math.max(0, ...(spec.lists[slot] ?? []).map((v) => v.p));
+  return spec.slots[slot]?.p ?? 0;
+}
+
+/** A slot waits for the one it depends on: depth only once the neckline shape is settled or set aside. */
+function blocked(spec: Spec, slot: string): boolean {
+  if (slot === "neckline.depth" || slot === "back.depth") {
+    // closed collars have no depth to choose, and men's kurtas and shirts open on a standard placket
+    if (NO_DEPTH.includes(spec.slots["neckline.shape"]?.value ?? "") || wearerOf(spec) === "men") return true;
+    if (slot === "neckline.depth" && spec.comparisons.some((c) => c.slot === slot)) return true;
+    return !spec.slots["neckline.shape"] && !(spec.asked ?? []).includes("neckline.shape");
+  }
+  return false;
+}
+
+/** The garment slots a tailor needs for this design, in the family's order. */
+function garmentSlots(spec: Spec): string[] {
   const asks: string[] = [];
   for (const f of families(spec)) for (const s of (ONTO.family_questions[f] ?? []) as string[]) if (!asks.includes(s)) asks.push(s);
-  const out: Question[] = [];
-  for (const slot of asks) {
-    const meta = ONTO.slots[slot] ?? { cost: 3 };
-    const have = LIST_SLOTS.has(slot) ? (spec.lists[slot]?.length ?? 0) > 0 : !!spec.slots[slot];
-    const conf = LIST_SLOTS.has(slot) ? Math.max(0, ...(spec.lists[slot] ?? []).map((v) => v.p)) : spec.slots[slot]?.p ?? 0;
-    if (have && conf >= 0.7) continue;
-    if (slot === "neckline.depth" && (spec.comparisons.some((c) => c.slot === slot) || ["crew", "hooded", "turtle", "mandarin", "collar", "high"].includes(spec.slots["neckline.shape"]?.value ?? ""))) continue;
-    const q = questionFor(slot, spec);
-    if (!q) continue;
-    const excluded = new Set(spec.excluded.filter((e) => e.slot === slot).map((e) => e.value));
-    out.push({ ...q, options: q.options.filter((o) => !excluded.has(o)), cost: meta.cost * (1 - conf) });
-  }
-  return out.slice(0, budget);
+  return asks;
 }
+
+function score(spec: Spec, slot: string, index: number): number {
+  const occ = (spec.lists.occasion ?? []).map((o) => o.value);
+  const dressy = occ.some((o) => DRESSY.has(o));
+  let w = 1.3 - 0.12 * index;                        // family order, most important first
+  if (slot === "fabric" && (seasonOf(spec) || dressy)) w *= 1.6;
+  if (slot === "embellishment" && dressy) w *= 2;
+  const cost = PROFILE_COST[slot] ?? ONTO.slots[slot]?.cost ?? 3;
+  return cost * (1 - confidence(spec, slot)) * Math.max(0.3, w);
+}
+
+/** Ask about the garment slots a tailor needs first for this kind of garment, best first. */
+export function questions(spec: Spec, budget = 3): Question[] {
+  if (!spec.slots.garment) return [{ ...questionFor("garment", spec)!, cost: 10 }];
+  const out: Question[] = [];
+  garmentSlots(spec).forEach((slot, i) => {
+    if ((spec.asked ?? []).includes(slot) || confidence(spec, slot) >= 0.7 || blocked(spec, slot)) return;
+    const q = questionFor(slot, spec);
+    if (!q) return;
+    const excluded = new Set(spec.excluded.filter((e) => e.slot === slot).map((e) => e.value));
+    out.push({ ...q, options: q.options.filter((o) => !excluded.has(o)), cost: score(spec, slot, i) });
+  });
+  return out.sort((a, b) => b.cost - a.cost).slice(0, budget);
+}
+
+// who wears it, how old, the occasion, the mood and the budget change the cut and every search
+const PROFILE_COST: Record<string, number> = { wearer: 9, age: 8, occasion: 5, style: 3, embellishment: 3, budget: 1.5 };
+export const AGES = ["kid", "teen", "20s", "30s", "40s", "50+"];
+export const BUDGETS = ["under 1000", "1000-3000", "3000-8000", "8000+"];
+
+function profileQuestion(slot: string, spec: Spec): Omit<Question, "cost"> | null {
+  const fam = family(spec);
+  switch (slot) {
+    case "wearer": return { slot, text: "Who is it for?", options: ["women", "men", "anyone"], labels: { women: "a woman", men: "a man", anyone: "anyone" } };
+    case "age": return { slot, text: "Roughly how old is the wearer? It changes the cut and what we search for.", options: AGES,
+      labels: { kid: "under 13", teen: "13 to 19", "20s": "20s", "30s": "30s", "40s": "40s", "50+": "50 and over" } };
+    case "occasion": return { slot, text: "What is it for?", options: fam === "knit_top" || fam === "bottom" ? ["casual", "office", "travel", "party", "winter", "gym"] : ["wedding", "festive", "party", "office", "casual", "farewell"] };
+    case "style": return { slot, text: "Which style feels like you?", options: ["traditional", "western", "minimal", "elegant", "indo-western"], labels: { traditional: "classic", western: "modern", "indo-western": "indo-western" } };
+    case "embellishment": return { slot, text: "Any work on it?", options: ["zari", "gota patti", "mirror work", "sequins", "chikankari", "thread work"] };
+    case "budget": return { slot, text: "Any budget in mind? This one is optional.", options: BUDGETS,
+      labels: { "under 1000": "under ₹1,000", "1000-3000": "₹1,000 to 3,000", "3000-8000": "₹3,000 to 8,000", "8000+": "over ₹8,000" } };
+  }
+  return null;
+}
+
+/** Every open question, garment and profile together, best first. The studio asks only the first. */
+export function ask(spec: Spec): Question[] {
+  if (!spec.slots.garment) return (spec.asked ?? []).includes("garment") ? [] : questions(spec);
+  const out = questions(spec, 99);
+  // a blouse is cut around the neck and back, so their depths rank just after the shape
+  if (BLOUSES.has(spec.slots.garment.value)) {
+    for (const slot of ["neckline.depth", "back.depth"]) {
+      if (out.some((q) => q.slot === slot) || (spec.asked ?? []).includes(slot) || confidence(spec, slot) >= 0.7 || blocked(spec, slot)) continue;
+      const q = questionFor(slot, spec);
+      if (q) out.push({ ...q, cost: score(spec, slot, slot === "neckline.depth" ? 0 : 1) });
+    }
+  }
+  const occ = (spec.lists.occasion ?? []).map((o) => o.value);
+  const extra = ["wearer", "age", "occasion", "style", "budget"];
+  if (occ.some((o) => DRESSY.has(o)) && family(spec) !== "knit_top") extra.push("embellishment");
+  for (const slot of extra) {
+    if (out.some((q) => q.slot === slot) || (spec.asked ?? []).includes(slot) || confidence(spec, slot) >= 0.7) continue;
+    const q = profileQuestion(slot, spec);
+    if (!q) continue;
+    // the profile goes first while it is unknown; occasion, style and budget slot in by value
+    const boost = slot === "wearer" ? 1.3 : slot === "age" ? 1.2 : slot === "occasion" ? 1.2 : 1;
+    const excluded = new Set(spec.excluded.filter((e) => e.slot === slot).map((e) => e.value));
+    out.push({ ...q, options: q.options.filter((o) => !excluded.has(o)), cost: (PROFILE_COST[slot] ?? 1) * boost * (1 - confidence(spec, slot)) });
+  }
+  return out.sort((a, b) => b.cost - a.cost);
+}
+
+/** The one question to ask now, or null when the design is complete enough. */
+export const nextQuestion = (spec: Spec): Question | null => ask(spec)[0] ?? null;
+
+/** Marks a slot as asked, so it is never put to the customer again. */
+export const asked = (slot: string): Update => ({ op: "asked", slot, value: { value: slot, p: 1, src: "answer", evidence: "asked" } });
 
 export function answer(slot: string, value: string): Update[] {
   return [{ op: LIST_SLOTS.has(slot) ? "add" : "set", slot, value: { value, p: 0.99, src: "answer", evidence: value } }];
@@ -328,16 +425,72 @@ export const words = (s: string) => tokenize(s);
 // ------------------------------------------------------------------ who it is for
 // Read from the words ("for my brother", "ladies", "men's") or, failing that, from the garment itself.
 // A possessive ("my brother's wedding") names whose event it is, not who wears the garment, so it does not count.
-const MEN = /\b(men'?s|mens|male|gents?|husband|brother|father|dad|papa|son|boyfriend|groom|dulha|ladka|ladke|bhai|bhaiya|boys?|him)\b(?!['’]s)/i;
-const WOMEN = /\b(women'?s|womens|ladies|female|wife|sister|mother|mom|mummy|daughter|girlfriend|bride|dulhan|ladki|didi|behen|girls?|her)\b(?!['’]s)/i;
+const MEN = /\b(men'?s|mens|man|male|guy|gents?|husband|brother|father|dad|papa|son|boyfriend|groom|dulha|ladka|ladke|bhai|bhaiya|boys?|him|mard|aadmi)\b(?!['’]s)/i;
+const WOMEN = /\b(women'?s|womens|woman|lady|ladies|female|wife|sister|mother|mom|mummy|daughter|girlfriend|bride|dulhan|ladki|didi|behen|girls?|her|aurat|mahila)\b(?!['’]s)/i;
 const MEN_GARMENTS = new Set(["sherwani", "nehru jacket"]);
-const WOMEN_GARMENTS = new Set(["anarkali", "salwar suit", "lehenga", "saree blouse", "saree", "dress", "gown", "skirt", "crop top", "corset", "bodysuit", "sharara", "palazzo", "churidar", "dupatta", "leggings"]);
+const WOMEN_GARMENTS = new Set(["kurti", "anarkali", "salwar suit", "lehenga", "saree blouse", "saree", "dress", "gown", "skirt", "crop top", "corset", "bodysuit", "sharara", "palazzo", "churidar", "dupatta", "leggings"]);
 
 export function wearerUpdates(text: string): Update[] {
   const m = MEN.test(text), w = WOMEN.test(text);
   if (m === w) return [];
   return [{ op: "set", slot: "wearer", value: { value: m ? "men" : "women", p: 0.95, src: "words", evidence: (text.match(m ? MEN : WOMEN) ?? [""])[0] } }];
 }
+/** An age in years to the range the studio works with. */
+export function ageRange(n: number): string | null {
+  if (!(n >= 1 && n <= 99)) return null;
+  return n < 13 ? "kid" : n < 20 ? "teen" : n < 30 ? "20s" : n < 40 ? "30s" : n < 50 ? "40s" : "50+";
+}
+
+// "I am 20", "20 saal", "age 20", "my 60 year old mother", "in my twenties", "teenager"
+const AGE_NUM = [
+  /\b(\d{1,2})\s*(?:-\s*)?(?:years?|yrs?|yo|y\/o|saal|sal|baras)\b/i,
+  /\b(?:i am|i'm|im|main|mai|age|aged|age is|umar|umr|umar hai)\s*(?:of\s*)?(\d{1,2})\b(?!\s*(?:feet|ft|foot|'|"|inch|inches|in\b|cm|kg|metres?|meters?|m\b|bust|waist|hips?|size))/i,
+];
+const AGE_WORD: [RegExp, string][] = [
+  [/\b(kids?|child|children|toddler|bachche?|bacchi?|bachi)\b/i, "kid"],
+  [/\b(teen|teens|teenager|teenage)\b/i, "teen"],
+  [/\b(twenties|20s)\b/i, "20s"], [/\b(thirties|30s)\b/i, "30s"], [/\b(forties|40s)\b/i, "40s"],
+  [/\b(fifties|sixties|seventies|50s|60s|70s|elderly|grandmother|grandfather|dadi|nani|dada|nana)\b/i, "50+"],
+];
+
+export function ageUpdates(text: string): Update[] {
+  for (const re of AGE_NUM) {
+    const m = text.match(re);
+    const r = m ? ageRange(parseInt(m[1], 10)) : null;
+    if (r) return [{ op: "set", slot: "age", value: { value: r, p: 0.95, src: "words", evidence: m![0].trim() } }];
+  }
+  for (const [re, r] of AGE_WORD) {
+    const m = text.match(re);
+    if (m) return [{ op: "set", slot: "age", value: { value: r, p: 0.9, src: "words", evidence: m[0] } }];
+  }
+  return [];
+}
+
+/** Who wears it and how old they are, read from the words. */
+export const profileUpdates = (text: string): Update[] => [...wearerUpdates(text), ...ageUpdates(text)];
+
+/** A typed reply to a profile question that the tagger cannot read: "20", "for my brother", "2000". */
+export function answerFromText(slot: string, text: string): Update[] {
+  const t = text.trim().toLowerCase();
+  if (slot === "age") {
+    const n = t.match(/^\s*(\d{1,2})\s*$/);
+    const r = n ? ageRange(parseInt(n[1], 10)) : null;
+    return r ? answer("age", r) : ageUpdates(text);
+  }
+  if (slot === "wearer") {
+    if (/^(me|myself|mere liye|mera|meri|for me)$/.test(t)) return [];
+    const w = wearerUpdates(text);
+    return w.map((u) => ({ ...u, value: { ...u.value, src: "answer" as Source, p: 0.99 } }));
+  }
+  if (slot === "budget") {
+    const n = t.replace(/[,₹]|rs\.?|inr|rupees?/g, "").match(/(\d+(?:\.\d+)?)\s*(k)?/);
+    if (!n) return [];
+    const v = parseFloat(n[1]) * (n[2] ? 1000 : 1);
+    return answer("budget", v < 1000 ? "under 1000" : v <= 3000 ? "1000-3000" : v <= 8000 ? "3000-8000" : "8000+");
+  }
+  return [];
+}
+
 export function wearerOf(spec: Spec): "men" | "women" | "anyone" {
   const w = spec.slots.wearer?.value;
   if (w === "men" || w === "women" || w === "anyone") return w;
@@ -347,6 +500,8 @@ export function wearerOf(spec: Spec): "men" | "women" | "anyone" {
   return "anyone";
 }
 export const isGendered = (g?: string) => !!g && (MEN_GARMENTS.has(g) || WOMEN_GARMENTS.has(g));
+/** Whom a garment's name already implies: a sherwani is for men, a lehenga for women. */
+export const impliedWearer = (g?: string): "men" | "women" | null => (!g ? null : MEN_GARMENTS.has(g) ? "men" : WOMEN_GARMENTS.has(g) ? "women" : null);
 
 /** The word to show for a garment: a kurti for a man, or one asked for as a kurta, is a kurta. */
 export function garmentName(spec: Spec): string {

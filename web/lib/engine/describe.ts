@@ -1,6 +1,6 @@
 // Human-facing text: the assistant's reply, the tailor sheet lines, and search links.
 import { ONTO, hindi } from "./lexicon.ts";
-import { depthInches, easeInches, familyOf, garmentName, isGendered, seasonOf, wearerOf } from "./spec.ts";
+import { depthInches, easeInches, familyOf, garmentName, impliedWearer, seasonOf, wearerOf } from "./spec.ts";
 import type { Spec, Value } from "./spec.ts";
 
 const TAG_OF: Record<string, string> = {
@@ -59,9 +59,28 @@ export function advice(spec: Spec): string {
   return "";
 }
 
+const AGE_EN: Record<string, string> = { "20s": " in their 20s", "30s": " in their 30s", "40s": " in their 40s", "50+": ", 50 or over" };
+const AGE_HI: Record<string, string> = { kid: "बच्चा", teen: "किशोर", "20s": "20 से 29 साल", "30s": "30 से 39 साल", "40s": "40 से 49 साल", "50+": "50 साल से ऊपर" };
+const PERSON: Record<string, Record<string, string>> = {
+  men: { kid: "a boy", teen: "a teenage boy", adult: "a man" },
+  women: { kid: "a girl", teen: "a teenage girl", adult: "a woman" },
+  anyone: { kid: "a child", teen: "a teenager", adult: "someone" },
+};
+
+/** Who wears it, in a few words: "a man in their 20s", "a woman", "a child". Null when nothing was said. */
+export function wearerText(spec: Spec): { en: string; hi: string } | null {
+  const w = spec.slots.wearer?.value, age = spec.slots.age?.value;
+  if (!w && !age) return null;
+  const who = PERSON[w ?? "anyone"] ?? PERSON.anyone;
+  const en = age === "kid" || age === "teen" ? who[age] : `${who.adult}${age ? AGE_EN[age] ?? "" : ""}`;
+  const hiWho = w === "men" ? "पुरुष" : w === "women" ? "महिला" : "";
+  const hi = [hiWho, age ? AGE_HI[age] : ""].filter(Boolean).join(", ") || "कोई भी";
+  return { en, hi };
+}
+
 export interface SheetLine { part: string; hiPart?: string; en: string; hi: string; from: string }
 export const PART_HI: Record<string, string> = { Garment: "पोशाक", "Neck depth": "गले की गहराई", "Sleeve length": "आस्तीन की लंबाई", Fit: "फ़िटिंग", Silhouette: "आकार", Print: "छपाई", Pieces: "हिस्से", Neckline: "गला", "Back neck": "पीछे का गला", Sleeve: "आस्तीन", Bodice: "ऊपरी भाग",
-  "Lower body": "निचला भाग", Length: "लंबाई", Fabric: "कपड़ा", Colour: "रंग", Finish: "सजावट", Avoid: "नहीं चाहिए", Notes: "टिप्पणी" };
+  "Lower body": "निचला भाग", Length: "लंबाई", Fabric: "कपड़ा", Colour: "रंग", Finish: "सजावट", Avoid: "नहीं चाहिए", Notes: "टिप्पणी", Wearer: "किसके लिए" };
 export interface Measurements { bust?: number; waist?: number; hip?: number; shoulder?: number; length?: number; sleeve?: number }
 
 export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
@@ -100,6 +119,8 @@ export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
   if (spec.excluded.length)
     out.push({ part: "Avoid", en: spec.excluded.map((e) => e.value).join(", "), hi: spec.excluded.map((e) => `${hindi(TAG_OF[e.slot] ?? "", e.value)} नहीं`).join(", "), from: spec.excluded.map((e) => `“${e.evidence}”`).join("; ") });
   if (spec.notes?.length) out.push({ part: "Notes", en: spec.notes.join("; "), hi: spec.notes.join("; "), from: "details in the customer's words" });
+  const who = wearerText(spec);
+  if (who) out.unshift({ part: "Wearer", en: who.en, hi: who.hi, from: from(spec.slots.wearer, spec.slots.age) || "the garment" });
   return out.map((l) => ({ ...l, hiPart: PART_HI[l.part] ?? l.part }));
 }
 
@@ -110,20 +131,64 @@ export function finished(spec: Spec, m: Measurements) {
 }
 
 // ----------------------------------------------------------------- search links (deep links only: no scraping, nothing stored)
+// Who the design is for decides every search: the word in the query and each shop's own gender filter, so a
+// design for a 20-year-old man never opens women's or kids' results.
+export interface Audience { who: "men" | "women" | "anyone"; kid: boolean; word: string }
+
+export function audience(spec: Spec): Audience {
+  const who = wearerOf(spec);
+  const kid = spec.slots.age?.value === "kid";
+  const word = kid ? (who === "men" ? "boys" : who === "women" ? "girls" : "kids") : who === "anyone" ? "" : who;
+  return { who, kid, word };
+}
+
+// shop vocabulary for the occasion and style; seasons and moods with no shop word are left out
+const OCCASION_WORD: Record<string, string> = { wedding: "wedding", sangeet: "party", mehendi: "festive", reception: "party", festive: "festive",
+  party: "party", office: "office", casual: "casual", winter: "winter", summer: "summer", gym: "sports", lounge: "lounge" };
+const STYLE_WORD: Record<string, string> = { traditional: "ethnic", "indo-western": "indo western", western: "western", minimal: "solid", boho: "boho",
+  vintage: "vintage", streetwear: "oversized", sporty: "sports", korean: "korean", "old money": "classic" };
+
 export function query(spec: Spec, opts: { withParts?: boolean } = {}): string {
   const s = spec.slots, l = spec.lists;
-  const who = wearerOf(spec);
+  const a = audience(spec);
+  const occ = (l.occasion ?? []).map((o) => OCCASION_WORD[o.value]).find(Boolean) ?? "";
+  // an older wearer with no stated mood gets classic cuts rather than trend pieces
+  const mood = (l.style ?? []).map((v) => STYLE_WORD[v.value]).find(Boolean) ?? (s.age?.value === "50+" ? "classic" : "");
   const words = [
-    who !== "anyone" && !isGendered(s.garment?.value) ? (who === "men" ? "men's" : "women's") : "",
+    // "kurti" already says women; a kurta for a man still needs "men"
+    a.kid || impliedWearer(s.garment?.value) !== a.who ? a.word : "",
     ...(l.shade ?? []).slice(0, 1).map((v) => v.value), ...(l.colour ?? []).slice(0, 1).map((v) => v.value),
     s["lower.silhouette"] && s["lower.silhouette"].value !== "anarkali" ? nice(s["lower.silhouette"].value) : "",
-    s.fabric?.value, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value), ...(l.components ?? []).map((c) => nice(c.value)), s.garment ? nice(garmentName(spec)) : "outfit", seasonOf(spec) === "winter" ? "winter" : "",
+    s.fabric?.value, occ === "winter" ? "" : occ, mood, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value),
+    ...(l.components ?? []).map((c) => nice(c.value)), s.garment ? nice(garmentName(spec)) : "outfit", occ === "winter" ? "winter" : "",
   ];
   if (opts.withParts) {
     if (s["neckline.shape"]) words.push(`${nice(s["neckline.shape"].value)} neck`);
     if (s["sleeve.style"]) words.push(`${s["sleeve.style"].value} sleeves`);
   }
-  return words.filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  return [...new Set(words.filter(Boolean).join(" ").replace(/\s+/g, " ").trim().split(" "))].join(" ");
+}
+
+const BUDGET_PAISE: Record<string, string> = { "under 1000": "0-100000", "1000-3000": "100000-300000", "3000-8000": "300000-800000", "8000+": "800000-" };
+
+/** Each shop's search, narrowed with its own gender filter where it has one. */
+export function shopLinks(spec: Spec, q = query(spec)) {
+  const e = encodeURIComponent;
+  const a = audience(spec);
+  const g = a.kid ? (a.who === "men" ? "boys" : a.who === "women" ? "girls" : "") : a.who === "anyone" ? "" : a.who;
+  const cap = g ? g[0].toUpperCase() + g.slice(1) : "";
+  const myntra = g ? `&f=${e(`Gender:${g}`)}` : "";
+  const ajio = g ? `query=${e(`:relevance:genderfilter:${cap}`)}&` : "";
+  const flipkart = g ? `&p%5B%5D=${e(`facets.ideal_for%5B%5D=${cap}`)}` : "";
+  const price = spec.slots.budget ? BUDGET_PAISE[spec.slots.budget.value] : "";
+  const amazon = `&i=apparel${price ? `&rh=${e(`p_36:${price}`)}` : ""}`;
+  return [
+    { label: "Myntra", domain: "myntra.com", url: `https://www.myntra.com/${e(q.replace(/\s+/g, "-"))}?rawQuery=${e(q)}${myntra}`, filtered: !!g },
+    { label: "Ajio", domain: "ajio.com", url: `https://www.ajio.com/search/?${ajio}text=${e(q)}`, filtered: !!g },
+    { label: "Amazon", domain: "amazon.in", url: `https://www.amazon.in/s?k=${e(q)}${amazon}`, filtered: false },
+    { label: "Flipkart", domain: "flipkart.com", url: `https://www.flipkart.com/search?q=${e(q)}${flipkart}`, filtered: !!g },
+    { label: "Nykaa Fashion", domain: "nykaafashion.com", url: `https://www.nykaafashion.com/catalogsearch/result/?q=${e(q)}`, filtered: false },
+  ];
 }
 
 export function links(spec: Spec) {
@@ -136,13 +201,7 @@ export function links(spec: Spec) {
   return {
     query: q,
     pinterest: [...new Set(ideas)].slice(0, 6).map((t) => ({ label: t, url: `https://www.pinterest.com/search/pins/?q=${e(t)}` })),
-    shops: [
-      { label: "Myntra", domain: "myntra.com", url: `https://www.myntra.com/${e(q.replace(/\s+/g, "-"))}?rawQuery=${e(q)}` },
-      { label: "Ajio", domain: "ajio.com", url: `https://www.ajio.com/search/?text=${e(q)}` },
-      { label: "Amazon", domain: "amazon.in", url: `https://www.amazon.in/s?k=${e(q)}` },
-      { label: "Flipkart", domain: "flipkart.com", url: `https://www.flipkart.com/search?q=${e(q)}` },
-      { label: "Nykaa Fashion", domain: "nykaafashion.com", url: `https://www.nykaafashion.com/catalogsearch/result/?q=${e(q)}` },
-    ],
+    shops: shopLinks(spec, q),
     fabric: spec.slots.fabric ? [
       { label: `${spec.lists.colour?.[0]?.value ?? ""} ${spec.slots.fabric.value} fabric`.trim(), url: `https://www.amazon.in/s?k=${e(`${spec.lists.colour?.[0]?.value ?? ""} ${spec.slots.fabric.value} fabric by the metre`)}` },
     ] : [],
