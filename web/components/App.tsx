@@ -17,6 +17,8 @@ import { Mark } from "./site/Mark";
 import { Arrow, Dots, Reveal, SOFT, SPRING } from "./site/Motion";
 import { cn } from "@/lib/utils";
 import { newBoardId } from "../lib/boards";
+import { currentDesignId, forgetDeviceCopy, latestDesign, newDesignId, readSession, saveDesign, setCurrentDesignId, writeSession } from "../lib/designs";
+import { supabase } from "../lib/supabase";
 
 type Msg =
   | { role: "me"; text: string; tokens: string[]; spans: Span[] }
@@ -53,10 +55,9 @@ const FAMILY_TITLE: Record<string, string> = {
   bottom: "Pants, skirts and bottoms", set: "Sets", drape: "Sarees and dupattas",
 };
 
-function load<T>(k: string, d: T): T {
-  try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; }
-}
-function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } }
+// the open design lives for this tab only; the account keeps it across devices (lib/designs.ts)
+const load = readSession;
+const save = writeSession;
 
 // ------------------------------------------------------------------ voice
 // Two engines. The browser's speech service is instant where it works (Chrome, Edge, Safari). Brave ships the
@@ -705,6 +706,9 @@ function Finale({ spec, onSheet, onShop, backBtn }: { spec: Spec; onSheet: () =>
 export default function App() {
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
+  const [designId, setDesignId] = useState(currentDesignId);
+  // a signed-in person opening a fresh tab gets their latest design back; until we know, the page waits
+  const [resuming, setResuming] = useState(() => !!supabase() && !readSession<Msg[]>("bespoke.msgs", []).length && !new URLSearchParams(location.search).has("new"));
   const [view, setView] = useState<View>("talk");
   const [boardId, setBoardId] = useState(newBoardId);
   // the board opens blank from anywhere in the studio; earlier boards are one click away in its history
@@ -726,7 +730,17 @@ export default function App() {
   useEffect(() => { save("bespoke.past", past); }, [past]);
 
   useEffect(() => { loadTagger(() => {}); }, []);
-  useEffect(() => { save("bespoke.spec", spec); save("bespoke.msgs", msgs); save("bespoke.meas", m); }, [spec, msgs, m]);
+  useEffect(() => {
+    save("bespoke.spec", spec); save("bespoke.msgs", msgs); save("bespoke.meas", m);
+    if (!resuming) saveDesign(designId, { spec, msgs, meas: m }, phrase(spec));
+  }, [spec, msgs, m, designId, resuming]);
+  useEffect(() => {
+    forgetDeviceCopy();
+    if (!resuming) return;
+    latestDesign().then((d) => {
+      if (d) { setSpec(d.spec as Spec); setMsgs(d.msgs as Msg[]); setM(d.meas as Measurements); setDesignId(d.id); setCurrentDesignId(d.id); }
+    }).catch(() => {}).finally(() => setResuming(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs]);
   useEffect(() => { window.scrollTo({ top: 0 }); }, [view]);
 
@@ -771,7 +785,12 @@ export default function App() {
   };
   const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
   const fromBoard = (ups: Update[], note: string) => { remember(); const next = apply(spec, ups); setSpec(next); reply(next, ups, note); setView("talk"); };
-  const reset = () => { if (msgs.length) remember(); setSpec(emptySpec()); setMsgs([]); setView("talk"); };
+  const reset = () => {
+    if (msgs.length) remember();
+    const id = newDesignId();
+    setDesignId(id); setCurrentDesignId(id);
+    setSpec(emptySpec()); setMsgs([]); setView("talk");
+  };
   // links in: ?new opens a blank design (the last one still a Back away), ?view=board|sheet|shop opens that page
   useLayoutEffect(() => {
     const q = new URLSearchParams(location.search);
@@ -813,6 +832,10 @@ export default function App() {
   if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => setView("talk")} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => setView("talk")} /></>);
+
+  if (resuming) return (
+    <>{header}<main className="hero"><motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[17px] text-brand-ink/50">Opening your last design</motion.p></main></>
+  );
 
   if (!started) return (
     <>
