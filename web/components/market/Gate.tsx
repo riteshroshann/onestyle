@@ -14,7 +14,7 @@ function MakerLanding() {
         <div className="relative">
           <h1 className="display text-[clamp(64px,12vw,200px)]">Your studio.</h1>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <a href="/makers/login/" className="press inline-flex h-14 items-center rounded-full bg-white px-9 text-[17px] font-semibold text-black no-underline hover:bg-white/90">Sign in</a>
+            <a href="/makers/login/" className="press inline-flex h-14 items-center rounded-full bg-white px-9 text-[17px] font-semibold text-black no-underline hover:bg-white/90">Log in</a>
             <a href="/makers/signup/" className="press inline-flex h-14 items-center rounded-full border-2 border-white px-9 text-[17px] font-semibold text-white no-underline hover:bg-white hover:text-black">Join as a maker</a>
           </div>
         </div>

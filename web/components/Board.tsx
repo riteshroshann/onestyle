@@ -191,7 +191,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons 
             <motion.span key={saving ? "saving" : home} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
               className="hidden items-center gap-2 text-[13px] text-brand-ink/50 sm:flex">
               <span className={saving ? "size-1.5 animate-pulse rounded-full bg-brand-ink/40" : "size-1.5 rounded-full bg-[#22c55e]"} aria-hidden="true" />
-              {saving ? "Saving" : home === "cloud" ? "Saved to your account" : <>Saved on this device. <a href="/login/?next=/studio/?view=board" className="font-medium text-brand-ink underline decoration-brand-ink/25 underline-offset-4 hover:decoration-brand-ink">Sign in</a> to keep it everywhere.</>}
+              {saving ? "Saving" : home === "cloud" ? "Saved to your account" : <>Saved on this device. <a href="/login/?next=/studio/?view=board" className="font-medium text-brand-ink underline decoration-brand-ink/25 underline-offset-4 hover:decoration-brand-ink">Log in</a> to keep it everywhere.</>}
             </motion.span>
           )}
         </AnimatePresence>

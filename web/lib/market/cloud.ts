@@ -55,6 +55,9 @@ function created<T>(result: { data: T | null; error: unknown }): T {
   return row;
 }
 
+// the confirmation link opens the right login page, which signs the person straight in
+const confirmedAt = (role: Role) => `${location.origin}${role === "maker" ? "/makers" : ""}/login/?confirmed=1`;
+
 export function createCloudStore(url: string, anonKey: string): Store {
   const db: SupabaseClient = supabase(url, anonKey)!;
 
@@ -119,7 +122,7 @@ export function createCloudStore(url: string, anonKey: string): Store {
       const c = checkSignUp(input);
       const { data, error } = await db.auth.signUp({
         email: c.email, password: c.password,
-        options: { data: { role: c.role, name: c.name, city: c.city, craft: c.craft ?? null, specialties: c.specialties ?? [], bio: c.bio ?? null } },
+        options: { emailRedirectTo: confirmedAt(c.role), data: { role: c.role, name: c.name, city: c.city, craft: c.craft ?? null, specialties: c.specialties ?? [], bio: c.bio ?? null } },
       });
       if (error) throw authError(error);
       // With email confirmation switched on, Supabase creates the account but returns no session.
@@ -139,6 +142,22 @@ export function createCloudStore(url: string, anonKey: string): Store {
         throw wrongDoor(profile.role);
       }
       return profile;
+    },
+
+    async resetPassword(email: string) {
+      const { error } = await db.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: `${location.origin}/reset/` });
+      if (error) throw authError(error);
+    },
+
+    async updatePassword(password: string) {
+      if (password.length < 8) throw new MarketError("Use a password of at least 8 characters.");
+      const { error } = await db.auth.updateUser({ password });
+      if (error) throw error.code === "same_password" ? new MarketError("Choose a password you have not used here before.") : authError(error);
+    },
+
+    async resendConfirmation(email: string, role: Role) {
+      const { error } = await db.auth.resend({ type: "signup", email: email.trim().toLowerCase(), options: { emailRedirectTo: confirmedAt(role) } });
+      if (error) throw authError(error);
     },
 
     async signOut() {

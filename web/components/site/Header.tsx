@@ -13,7 +13,7 @@ const LINKS = [
   { href: "/about/", label: "About" },
 ];
 
-/** "Sign in" on customer pages asks which door: a customer or a maker. */
+/** "Log in" on customer pages asks which door: a customer or a maker. */
 function SignInMenu({ className, dark }: { className: string; dark: boolean }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -28,10 +28,10 @@ function SignInMenu({ className, dark }: { className: string; dark: boolean }) {
   const doors = [["/login/", "I am a customer", "Design and order clothes"], ["/makers/login/", "I am a maker", "Receive and make requests"]];
   return (
     <div ref={root} className="relative">
-      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" className={cn(className, open && (dark ? "bg-white/10" : "bg-secondary"))}>Sign in</button>
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu" className={cn(className, open && (dark ? "bg-white/10" : "bg-secondary"))}>Log in</button>
       <AnimatePresence>
         {open && (
-          <motion.div role="menu" aria-label="Sign in as" initial={{ opacity: 0, y: -6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={SPRING}
+          <motion.div role="menu" aria-label="Log in as" initial={{ opacity: 0, y: -6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={SPRING}
             style={{ transformOrigin: "top right" }}
             className="absolute right-0 top-[48px] w-[260px] rounded-[22px] bg-white/90 p-1.5 shadow-[0_24px_60px_-20px_rgba(13,17,23,.35)] ring-1 ring-black/[.06] backdrop-blur-2xl">
             {doors.map(([href, title, note]) => (
@@ -60,7 +60,7 @@ export function useSession() {
 }
 
 export function Header({ current, tone = "light", audience = "customer" }: { current?: string; tone?: "light" | "dark"; audience?: "customer" | "maker" }) {
-  // makers never need the customer studio in their nav, and sign in at their own door
+  // makers never need the customer studio in their nav, and log in at their own door
   const links = audience === "maker" ? LINKS.filter((l) => l.href !== "/studio/") : LINKS;
   const signIn = audience === "maker" ? "/makers/login/" : "/login/";
   const me = useSession();
@@ -78,7 +78,7 @@ export function Header({ current, tone = "light", audience = "customer" }: { cur
           {links.map((l) => (
             <a key={l.href} href={l.href} aria-current={current === l.href ? "page" : undefined} className={cn(link, "hidden aria-[current=page]:bg-secondary sm:block", dark && "aria-[current=page]:bg-white/10")}>{l.label}</a>
           ))}
-          {me === null && (audience === "maker" ? <a href={signIn} className={link}>Sign in</a> : <SignInMenu className={link} dark={dark} />)}
+          {me === null && (audience === "maker" ? <a href={signIn} className={link}>Log in</a> : <SignInMenu className={link} dark={dark} />)}
         </nav>
       </div>
     </header>

@@ -41,11 +41,11 @@ export function SendToMaker({ spec, m, onClose }: { spec: Spec; m: Measurements;
       setBusy(false);
     }
   };
-  const title = me === null ? "Sign in to send it." : me?.role === "maker" ? "This is for customers." : "Choose a maker.";
+  const title = me === null ? "Log in to send it." : me?.role === "maker" ? "This is for customers." : "Choose a maker.";
   const lede = me === null
-    ? "Your design stays right here while you sign in or create an account, and you come straight back to this sheet."
+    ? "Your design stays right here while you log in or create an account, and you come straight back to this sheet."
     : me?.role === "maker"
-      ? "You are signed in as a maker. Sign in with a customer account to send designs, or print this sheet instead."
+      ? "You are signed in as a maker. Log in with a customer account to send designs, or print this sheet instead."
       : "They get your design, the sheet and your measurements, and you talk it through in one thread.";
 
   return (
@@ -67,7 +67,7 @@ export function SendToMaker({ spec, m, onClose }: { spec: Spec; m: Measurements;
 
         {me === null && (
           <div className="flex flex-wrap gap-3 px-7 pb-9 md:px-9">
-            <a href={`/login/?next=${encodeURIComponent(BACK)}`} className="press inline-flex h-12 items-center rounded-full bg-brand-ink px-7 text-[15px] font-medium text-white no-underline transition-colors hover:bg-[#232c3b]">Sign in</a>
+            <a href={`/login/?next=${encodeURIComponent(BACK)}`} className="press inline-flex h-12 items-center rounded-full bg-brand-ink px-7 text-[15px] font-medium text-white no-underline transition-colors hover:bg-[#232c3b]">Log in</a>
             <a href={`/signup/?next=${encodeURIComponent(BACK)}`} className="press inline-flex h-12 items-center rounded-full px-7 text-[15px] font-medium text-brand-ink no-underline ring-1 ring-brand-ink/15 transition-colors hover:bg-brand-ink/[.04]">Create an account</a>
           </div>
         )}

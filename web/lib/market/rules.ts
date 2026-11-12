@@ -9,12 +9,14 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const NOT_SIGNED_IN = "Sign in to continue.";
 export const BAD_LOGIN = "That email or password is not right.";
-export const EMAIL_TAKEN = "That email is already registered. Sign in instead.";
+export const EMAIL_TAKEN = "That email is already registered. Log in instead.";
 export const NOT_AVAILABLE = "That conversation is not available to you.";
 export const NOT_YOUR_REQUEST = "Only the maker on this request can change it.";
 export const NO_MAKER = "That maker could not be found.";
 export const TRY_AGAIN = "Something went wrong. Check your connection and try again.";
-export const CHECK_EMAIL = "Check your email to confirm your account, then sign in.";
+export const CHECK_EMAIL = "Check your email to confirm your account, then log in.";
+export const OFFLINE_EMAIL = "Email links need the online service, which is not connected here.";
+export const LINK_EXPIRED = "That link has expired or was already used. Send a new one below.";
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();
 

@@ -3,7 +3,7 @@
 import { MarketError } from "./types.ts";
 import type { DesignRequest, DesignSnapshot, Message, MessageKind, Profile, RequestStatus, Role, SignUp, Store } from "./types.ts";
 import { BAD_LOGIN, EMAIL_TAKEN, NOT_AVAILABLE, NOT_SIGNED_IN, NOT_YOUR_REQUEST, NO_MAKER, checkSignUp, checkStatus, cleanBody, cleanNote, cleanSlots,
-  missingNote, normalizeEmail, preview, statusNote, wrongDoor } from "./rules.ts";
+  missingNote, normalizeEmail, OFFLINE_EMAIL, preview, statusNote, wrongDoor } from "./rules.ts";
 
 export interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; removeItem(key: string): void }
 export interface Channel { postMessage(message: unknown): void; onmessage: ((event: MessageEvent) => void) | null }
@@ -163,6 +163,11 @@ export function createLocalStore(storage: StorageLike = browserStorage(), channe
       announceSession();
       announceChange();
     },
+
+    // this browser-only store has no email; the online service does these
+    async resetPassword() { throw new MarketError(OFFLINE_EMAIL); },
+    async updatePassword() { throw new MarketError(OFFLINE_EMAIL); },
+    async resendConfirmation() { throw new MarketError(OFFLINE_EMAIL); },
 
     async makers() {
       if (!currentAccount()) return [];

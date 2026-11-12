@@ -59,6 +59,12 @@ export interface Store {
   /** Signing in through the wrong door (a maker on the customer page) is refused with a pointer to the right one. */
   signIn(email: string, password: string, role: Role): Promise<Profile>;
   signOut(): Promise<void>;
+  /** Emails a link to set a new password; the link opens /reset/. */
+  resetPassword(email: string): Promise<void>;
+  /** Sets the password for the person the reset link signed in. */
+  updatePassword(password: string): Promise<void>;
+  /** Sends the confirmation email again, for a link that expired. */
+  resendConfirmation(email: string, role: Role): Promise<void>;
 
   makers(): Promise<Profile[]>;
   createRequest(makerId: string, design: DesignSnapshot, note: string): Promise<DesignRequest>;
