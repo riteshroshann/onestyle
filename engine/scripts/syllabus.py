@@ -22,6 +22,7 @@ TOPICS = {
     "tfidf": ("vectors_eval", "run_tfidf"),
     "ngram": ("ngram_eval", "run"),
     "embed": ("embed_eval", "run"),
+    "classic": ("classic", "run"),
 }
 
 
