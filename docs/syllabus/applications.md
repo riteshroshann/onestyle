@@ -47,5 +47,20 @@ Each system takes the best-scoring ontology form of the tag and answers only abo
 | Trigram Dice, tuned | 0.40 | 0.896 | 0.972 | 0.932 (0.882 to 0.973) | 10 |
 | Edit-distance similarity | 0.66 | 0.971 | 0.944 | 0.957 (0.917 to 0.986) | 3 |
 | Embedding cosine (bge-small-en-v1.5) | 0.72 | 0.828 | 0.747 | 0.785 (0.695 to 0.861) | 17 |
+| Question answering (help-chatbot retrieval) | `web/scripts/eval-retrieval.mjs`, `engine/bespoke/apps/qa.py`, gold `data/gold/retrieval.jsonl` | Scores the deployed BM25 and its "answer or abstain" rule; compares dense and hybrid retrieval | `results/retrieval.json`, `results/retrieval_dense.json` | Study of the deployed retriever; the hybrid is not shipped |
 
 Edit distance matches the shipped trigram rule on F1 (the intervals overlap widely at n = 99) and abstains on out-of-ontology words about three times as often (3 false grounds against 9). The embedding does worst: it is English-only and cannot see that "kurthi" is a spelling of "kurti". Proposal for the owner of `lexicon.ts`: keep trigram Dice, add an edit-similarity check of at least 0.66 before answering. The shipped errors (`deployed_errors` in the result) are mostly near words a tailor would also flag, such as "maximalist" read as minimal and "skintight" read as fitted. A few "false grounds" are arguable ("graduation ball" to farewell). The typos are synthetic, so real typing noise could behave differently.
+
+## Question answering: help-chatbot retrieval
+
+`node --experimental-strip-types scripts/eval-retrieval.mjs` (under 1 s) then `python scripts/apps.py qa` (about 30 s). Gold: 100 questions written against the 70-passage guide after it was fixed: 75 answerable (63 English, 12 Hinglish, each with one correct passage, phrased away from the guide's own wording), 10 off-topic and 15 near-topic ones the guide does not cover (refund, shipping, washing). One annotator, one correct passage per question, so a second reasonable passage counts as a miss. These questions are deliberately harder than the paraphrases in `web/tests/assistant.test.ts`, which sit close to the guide's wording.
+
+| Arm | Recall@1 | Recall@3 | Recall@5 | MRR |
+|---|---|---|---|---|
+| BM25, deployed (`retrieve.js`) | 0.547 (0.44 to 0.67) | 0.720 | 0.827 | 0.671 (0.59 to 0.76) |
+| Dense, bge-small-en-v1.5 | 0.533 (0.43 to 0.64) | 0.747 | 0.853 | 0.671 |
+| Hybrid, reciprocal rank fusion | 0.600 (0.48 to 0.71) | 0.827 | 0.907 | 0.728 (0.64 to 0.81) |
+
+n = 75 answerable questions, intervals are bootstrap over questions; the arms are within each other's intervals on Recall@1, so the only supported claim is that fusing the two does not hurt and probably helps at Recall@3 and @5. Python's BM25 MRR differs from the Node one in the third decimal because it also ranks the passages scoring zero.
+
+Answerability: the deployed rule answers when the top BM25 score is at least 2.5. On this set it answers 74 of 75 answerable questions (coverage 0.99) and also answers 16 of the 25 unanswerable ones (abstains on 36%): the false answers are three off-topic questions (laptop wifi, which phone, translate) and 13 near-topic ones whose top passage shares a word with the question, for example the silk-fabric passage for a question about washing a silk kurti (`false_answers` in the result). AUROC of the top score for answerable against unanswerable is 0.844 for BM25 and 0.859 for the dense cosine (25 negatives, so intervals are wide: 0.72 to 0.94 and 0.77 to 0.93). Raising the 2.5 threshold to about 4.7 would abstain on 80% of unanswerable questions but would also drop 17% of answerable ones (threshold chosen on the same questions, so optimistic). Whether to move it is a product choice.

@@ -1,0 +1,479 @@
+{
+ "task": "help-chatbot retrieval (BM25, web/lib/assistant/retrieve.js)",
+ "gold": "data/gold/retrieval.jsonl",
+ "n_questions": 100,
+ "n_answerable": 75,
+ "n_unanswerable": 25,
+ "questions_written_after_the_guide": "paraphrased away from the guide's wording; one annotator, one correct passage per question",
+ "seed": 13,
+ "interval": "bootstrap over questions, 1000 resamples",
+ "retrieval": {
+  "recall_at_1": 0.5467,
+  "recall_at_3": 0.72,
+  "recall_at_5": 0.8267,
+  "mrr": 0.6707,
+  "recall_at_1_ci95": [
+   0.44,
+   0.6667
+  ],
+  "mrr_ci95": [
+   0.5932,
+   0.7586
+  ],
+  "by_language": {
+   "english": {
+    "n": 63,
+    "recall_at_1": 0.5556,
+    "recall_at_3": 0.6984,
+    "recall_at_5": 0.8095,
+    "mrr": 0.6683
+   },
+   "hinglish": {
+    "n": 12,
+    "recall_at_1": 0.5,
+    "recall_at_3": 0.8333,
+    "recall_at_5": 0.9167,
+    "mrr": 0.6833
+   }
+  }
+ },
+ "answerability": {
+  "deployed_threshold": 2.5,
+  "deployed": {
+   "threshold": 2.5,
+   "answered_answerable": 74,
+   "answered_unanswerable": 16,
+   "abstained_on_unanswerable": 0.36,
+   "correct_top1_answers": 40,
+   "coverage": 0.9867
+  },
+  "sweep": [
+   {
+    "threshold": 1,
+    "answered_answerable": 75,
+    "answered_unanswerable": 16,
+    "abstained_on_unanswerable": 0.36,
+    "correct_top1_answers": 41,
+    "coverage": 1
+   },
+   {
+    "threshold": 1.5,
+    "answered_answerable": 75,
+    "answered_unanswerable": 16,
+    "abstained_on_unanswerable": 0.36,
+    "correct_top1_answers": 41,
+    "coverage": 1
+   },
+   {
+    "threshold": 2,
+    "answered_answerable": 75,
+    "answered_unanswerable": 16,
+    "abstained_on_unanswerable": 0.36,
+    "correct_top1_answers": 41,
+    "coverage": 1
+   },
+   {
+    "threshold": 2.5,
+    "answered_answerable": 74,
+    "answered_unanswerable": 16,
+    "abstained_on_unanswerable": 0.36,
+    "correct_top1_answers": 40,
+    "coverage": 0.9867
+   },
+   {
+    "threshold": 3,
+    "answered_answerable": 72,
+    "answered_unanswerable": 14,
+    "abstained_on_unanswerable": 0.44,
+    "correct_top1_answers": 39,
+    "coverage": 0.96
+   },
+   {
+    "threshold": 3.5,
+    "answered_answerable": 72,
+    "answered_unanswerable": 11,
+    "abstained_on_unanswerable": 0.56,
+    "correct_top1_answers": 39,
+    "coverage": 0.96
+   },
+   {
+    "threshold": 4,
+    "answered_answerable": 67,
+    "answered_unanswerable": 10,
+    "abstained_on_unanswerable": 0.6,
+    "correct_top1_answers": 38,
+    "coverage": 0.8933
+   },
+   {
+    "threshold": 5,
+    "answered_answerable": 59,
+    "answered_unanswerable": 5,
+    "abstained_on_unanswerable": 0.8,
+    "correct_top1_answers": 36,
+    "coverage": 0.7867
+   },
+   {
+    "threshold": 6,
+    "answered_answerable": 51,
+    "answered_unanswerable": 4,
+    "abstained_on_unanswerable": 0.84,
+    "correct_top1_answers": 35,
+    "coverage": 0.68
+   },
+   {
+    "threshold": 8,
+    "answered_answerable": 27,
+    "answered_unanswerable": 2,
+    "abstained_on_unanswerable": 0.92,
+    "correct_top1_answers": 22,
+    "coverage": 0.36
+   }
+  ],
+  "auroc_top_score": 0.8443,
+  "auroc_ci95": [
+   0.7307,
+   0.9341
+  ],
+  "off_topic_top_scores": [
+   0,
+   0,
+   0,
+   3.4168,
+   0,
+   0,
+   0,
+   3.9384,
+   2.8218,
+   0
+  ],
+  "near_topic_top_scores": [
+   0,
+   5.1589,
+   4.2935,
+   6.8528,
+   3.085,
+   4.0731,
+   4.2781,
+   0,
+   4.6364,
+   11.2401,
+   6.5329,
+   4.6026,
+   3.4364,
+   11.3667,
+   2.9228
+  ],
+  "deployed_prf_of_answering_correctly": {
+   "precision": 1,
+   "recall": 0.9756,
+   "f1": 0.9877,
+   "tp": 40,
+   "predicted": 40,
+   "gold": 41
+  }
+ },
+ "failures": [
+  {
+   "q": "who is this product made for",
+   "gold": "about/who-bespoke-is-for",
+   "got": "limits/what-bespoke-does-not-do",
+   "rank": null
+  },
+  {
+   "q": "kya main Hindi mein likh sakta hoon",
+   "gold": "about/languages-bespoke-understands",
+   "got": "sheet/english-and-hindi-sheets",
+   "rank": 2
+  },
+  {
+   "q": "shuru mein kya likhna chahiye",
+   "gold": "describing/describing-a-garment-start-with-the-garment",
+   "got": "describing/hinglish-examples-that-work-well",
+   "rank": 2
+  },
+  {
+   "q": "show me sample requests in plain English",
+   "gold": "describing/english-examples-that-work-well",
+   "got": "describing/details-bespoke-has-no-word-for",
+   "rank": 2
+  },
+  {
+   "q": "how do I exclude something from my design",
+   "gold": "describing/saying-what-you-do-not-want",
+   "got": "about/who-bespoke-is-for",
+   "rank": 21
+  },
+  {
+   "q": "mujhe embroidery nahi chahiye, ye kaise likhu",
+   "gold": "describing/saying-what-you-do-not-want",
+   "got": "describing/hinglish-examples-that-work-well",
+   "rank": 2
+  },
+  {
+   "q": "I made a wrong choice, can I go back a step",
+   "gold": "describing/changing-your-mind",
+   "got": "sheet/what-the-sheet-does-not-contain",
+   "rank": 2
+  },
+  {
+   "q": "why does it keep asking me questions with buttons",
+   "gold": "describing/what-bespoke-asks-you",
+   "got": "measuring/how-to-measure-your-waist",
+   "rank": 8
+  },
+  {
+   "q": "does it know hoodies, blazers and jumpsuits",
+   "gold": "glossary/glossary-western-garments",
+   "got": "describing/describing-a-garment-start-with-the-garment",
+   "rank": 2
+  },
+  {
+   "q": "which cloth is breathable for hot days",
+   "gold": "glossary/glossary-cotton-and-everyday-fabrics",
+   "got": "glossary/glossary-winter-fabrics",
+   "rank": 2
+  },
+  {
+   "q": "sardi ke liye kaunsa kapda theek rahega",
+   "gold": "glossary/glossary-winter-fabrics",
+   "got": "describing/hinglish-examples-that-work-well",
+   "rank": 2
+  },
+  {
+   "q": "kamar aur kulha ka matlab kya hai",
+   "gold": "glossary/glossary-body-and-part-words-in-hinglish",
+   "got": "measuring/how-to-measure-your-hip",
+   "rank": 5
+  },
+  {
+   "q": "kitne ka padega aur kab tak milega",
+   "gold": "limits/prices-and-delivery",
+   "got": "sheet/garment-length",
+   "rank": null
+  },
+  {
+   "q": "does a picture I pin act as a strict instruction",
+   "gold": "limits/pictures-are-suggestions",
+   "got": "moodboard/what-the-moodboard-is",
+   "rank": 2
+  },
+  {
+   "q": "can the app misunderstand what I wrote",
+   "gold": "limits/where-bespoke-can-be-wrong",
+   "got": "limits/what-bespoke-does-not-do",
+   "rank": null
+  },
+  {
+   "q": "what kind of questions will this chat answer",
+   "gold": "limits/what-this-assistant-can-help-with",
+   "got": "makers/chatting-with-a-maker",
+   "rank": 6
+  },
+  {
+   "q": "the assistant could not help me, now what",
+   "gold": "limits/where-to-get-more-help",
+   "got": "limits/what-this-assistant-can-help-with",
+   "rank": 4
+  },
+  {
+   "q": "how do I give my finished design to a tailor",
+   "gold": "makers/sending-a-design-to-a-maker",
+   "got": "sheet/finished-measurement-equals-body-plus-ease",
+   "rank": 4
+  },
+  {
+   "q": "what do New and Being made stand for",
+   "gold": "makers/request-statuses",
+   "got": "makers/the-maker-inbox",
+   "rank": 2
+  },
+  {
+   "q": "the tailor asked me about my sleeve, where do I see it",
+   "gold": "makers/how-a-maker-flags-missing-details",
+   "got": "describing/what-bespoke-asks-you",
+   "rank": 4
+  },
+  {
+   "q": "can I talk to the tailor about my design",
+   "gold": "makers/chatting-with-a-maker",
+   "got": "makers/what-happens-after-you-send-your-design",
+   "rank": 8
+  },
+  {
+   "q": "the tailor refused my order",
+   "gold": "makers/if-a-request-is-declined",
+   "got": "sheet/what-the-sheet-does-not-contain",
+   "rank": 16
+  },
+  {
+   "q": "where does a tailor see incoming orders",
+   "gold": "makers/the-maker-inbox",
+   "got": "describing/details-bespoke-has-no-word-for",
+   "rank": 29
+  },
+  {
+   "q": "how does a tailor mark that stitching has begun",
+   "gold": "makers/moving-a-request-forward",
+   "got": "limits/where-to-get-more-help",
+   "rank": 7
+  },
+  {
+   "q": "I have a shirt that fits perfectly, can I copy it",
+   "gold": "measuring/measuring-a-garment-you-already-own",
+   "got": "moodboard/notes-with-arrows",
+   "rank": 20
+  },
+  {
+   "q": "any advice to get accurate numbers",
+   "gold": "measuring/measurement-tips",
+   "got": "describing/changing-your-mind",
+   "rank": 3
+  },
+  {
+   "q": "make the neck more plunging than the first photo",
+   "gold": "moodboard/comparing-pictures-deeper-than-1",
+   "got": "moodboard/circling-a-detail",
+   "rank": 6
+  },
+  {
+   "q": "what does bespoke take from a full photo versus a circled part",
+   "gold": "moodboard/what-a-whole-picture-gives-and-what-a-circle-gives",
+   "got": "moodboard/circling-a-detail",
+   "rank": 4
+  },
+  {
+   "q": "if I contradict a photo, who wins",
+   "gold": "moodboard/pictures-suggest-words-win",
+   "got": "moodboard/what-the-moodboard-is",
+   "rank": 2
+  },
+  {
+   "q": "is my text sent to some server",
+   "gold": "privacy/privacy-where-your-words-and-pictures-are-read",
+   "got": "privacy/the-optional-language-model",
+   "rank": 10
+  },
+  {
+   "q": "is my question to this chat stored",
+   "gold": "privacy/what-this-help-assistant-does-with-your-question",
+   "got": "moodboard/pictures-suggest-words-win",
+   "rank": 4
+  },
+  {
+   "q": "can a tailor see other people's requests",
+   "gold": "privacy/customer-and-maker-accounts",
+   "got": "makers/if-a-request-is-declined",
+   "rank": 4
+  },
+  {
+   "q": "what is printed on the page I hand to the tailor",
+   "gold": "sheet/the-tailor-sheet",
+   "got": "sheet/what-the-sheet-does-not-contain",
+   "rank": 2
+  },
+  {
+   "q": "what do snug and comfy map to",
+   "gold": "sheet/fit-words-and-what-they-mean",
+   "got": "measuring/how-to-measure-your-waist",
+   "rank": 4
+  }
+ ],
+ "false_answers": [
+  {
+   "q": "how do I fix my laptop wifi",
+   "kind": "off_topic",
+   "top": 3.4168,
+   "got": "makers/sending-a-design-to-a-maker"
+  },
+  {
+   "q": "which phone should I buy",
+   "kind": "off_topic",
+   "top": 3.9384,
+   "got": "makers/sending-a-design-to-a-maker"
+  },
+  {
+   "q": "translate good morning to French",
+   "kind": "off_topic",
+   "top": 2.8218,
+   "got": "moodboard/circling-a-detail"
+  },
+  {
+   "q": "how do I delete my account",
+   "kind": "near_topic",
+   "top": 5.1589,
+   "got": "makers/maker-accounts"
+  },
+  {
+   "q": "is there an android app",
+   "kind": "near_topic",
+   "top": 4.2935,
+   "got": "limits/what-bespoke-does-not-do"
+  },
+  {
+   "q": "how should I wash a silk kurti",
+   "kind": "near_topic",
+   "top": 6.8528,
+   "got": "glossary/glossary-silk-sheer-and-festive-fabrics"
+  },
+  {
+   "q": "how do I iron georgette",
+   "kind": "near_topic",
+   "top": 3.085,
+   "got": "describing/english-examples-that-work-well"
+  },
+  {
+   "q": "do you ship to the United States",
+   "kind": "near_topic",
+   "top": 4.0731,
+   "got": "describing/changing-your-mind"
+  },
+  {
+   "q": "does it work without internet",
+   "kind": "near_topic",
+   "top": 4.2781,
+   "got": "privacy/privacy-where-your-words-and-pictures-are-read"
+  },
+  {
+   "q": "can I pay the tailor through upi",
+   "kind": "near_topic",
+   "top": 4.6364,
+   "got": "makers/moving-a-request-forward"
+  },
+  {
+   "q": "do you have a size chart for plus sizes",
+   "kind": "near_topic",
+   "top": 11.2401,
+   "got": "sheet/finished-measurement-equals-body-plus-ease"
+  },
+  {
+   "q": "how do I get alterations done after delivery",
+   "kind": "near_topic",
+   "top": 6.5329,
+   "got": "makers/what-happens-after-you-send-your-design"
+  },
+  {
+   "q": "is there a discount code for first order",
+   "kind": "near_topic",
+   "top": 4.6026,
+   "got": "about/how-bespoke-works-in-short"
+  },
+  {
+   "q": "what is the best colour for my skin tone",
+   "kind": "near_topic",
+   "top": 3.4364,
+   "got": "moodboard/saying-not-this-colour"
+  },
+  {
+   "q": "which saree drape suits a short person",
+   "kind": "near_topic",
+   "top": 11.3667,
+   "got": "glossary/glossary-bottoms-and-drapes"
+  },
+  {
+   "q": "how do I tie a dupatta in a stylish way",
+   "kind": "near_topic",
+   "top": 2.9228,
+   "got": "glossary/glossary-prints-and-embellishments"
+  }
+ ]
+}

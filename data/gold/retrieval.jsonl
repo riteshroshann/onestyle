@@ -1,0 +1,100 @@
+{"id": "qa-001", "lang": "english", "q": "is this a shop where I can buy ready clothes", "chunk": "limits/what-bespoke-does-not-do", "kind": "answerable"}
+{"id": "qa-002", "lang": "english", "q": "who is this product made for", "chunk": "about/who-bespoke-is-for", "kind": "answerable"}
+{"id": "qa-003", "lang": "english", "q": "can I type in Hindi script instead of roman letters", "chunk": "about/languages-bespoke-understands", "kind": "answerable"}
+{"id": "qa-004", "lang": "hinglish", "q": "kya main Hindi mein likh sakta hoon", "chunk": "about/languages-bespoke-understands", "kind": "answerable"}
+{"id": "qa-005", "lang": "english", "q": "what is the very first thing I should write when I start", "chunk": "describing/describing-a-garment-start-with-the-garment", "kind": "answerable"}
+{"id": "qa-006", "lang": "hinglish", "q": "shuru mein kya likhna chahiye", "chunk": "describing/describing-a-garment-start-with-the-garment", "kind": "answerable"}
+{"id": "qa-007", "lang": "english", "q": "give me some sample sentences in Hinglish", "chunk": "describing/hinglish-examples-that-work-well", "kind": "answerable"}
+{"id": "qa-008", "lang": "english", "q": "show me sample requests in plain English", "chunk": "describing/english-examples-that-work-well", "kind": "answerable"}
+{"id": "qa-009", "lang": "english", "q": "how do I exclude something from my design", "chunk": "describing/saying-what-you-do-not-want", "kind": "answerable"}
+{"id": "qa-010", "lang": "hinglish", "q": "mujhe embroidery nahi chahiye, ye kaise likhu", "chunk": "describing/saying-what-you-do-not-want", "kind": "answerable"}
+{"id": "qa-011", "lang": "english", "q": "what does the word thoda do to a value", "chunk": "describing/softening-and-strengthening-words", "kind": "answerable"}
+{"id": "qa-012", "lang": "english", "q": "I want different fits at the waist and the hem", "chunk": "describing/describing-different-parts-of-one-garment", "kind": "answerable"}
+{"id": "qa-013", "lang": "english", "q": "I want pockets and a drawstring but there is no option", "chunk": "describing/details-bespoke-has-no-word-for", "kind": "answerable"}
+{"id": "qa-014", "lang": "english", "q": "I made a wrong choice, can I go back a step", "chunk": "describing/changing-your-mind", "kind": "answerable"}
+{"id": "qa-015", "lang": "hinglish", "q": "galti ho gayi, pichla step wapas kaise karu", "chunk": "describing/changing-your-mind", "kind": "answerable"}
+{"id": "qa-016", "lang": "english", "q": "why does it keep asking me questions with buttons", "chunk": "describing/what-bespoke-asks-you", "kind": "answerable"}
+{"id": "qa-017", "lang": "english", "q": "what is an anarkali and a lehenga", "chunk": "glossary/glossary-indian-garments-such-as-kurti-anarkali-lehenga-and-salwar-suit", "kind": "answerable"}
+{"id": "qa-018", "lang": "english", "q": "which trousers does bespoke know besides jeans, like sharara", "chunk": "glossary/glossary-bottoms-and-drapes", "kind": "answerable"}
+{"id": "qa-019", "lang": "english", "q": "does it know hoodies, blazers and jumpsuits", "chunk": "glossary/glossary-western-garments", "kind": "answerable"}
+{"id": "qa-020", "lang": "english", "q": "which cloth is breathable for hot days", "chunk": "glossary/glossary-cotton-and-everyday-fabrics", "kind": "answerable"}
+{"id": "qa-021", "lang": "english", "q": "tell me about banarasi and chanderi cloth for weddings", "chunk": "glossary/glossary-silk-sheer-and-festive-fabrics", "kind": "answerable"}
+{"id": "qa-022", "lang": "english", "q": "what should I wear in the cold, which material", "chunk": "glossary/glossary-winter-fabrics", "kind": "answerable"}
+{"id": "qa-023", "lang": "hinglish", "q": "sardi ke liye kaunsa kapda theek rahega", "chunk": "glossary/glossary-winter-fabrics", "kind": "answerable"}
+{"id": "qa-024", "lang": "english", "q": "what are bandhani and gota patti", "chunk": "glossary/glossary-prints-and-embellishments", "kind": "answerable"}
+{"id": "qa-025", "lang": "hinglish", "q": "kamar aur kulha ka matlab kya hai", "chunk": "glossary/glossary-body-and-part-words-in-hinglish", "kind": "answerable"}
+{"id": "qa-026", "lang": "english", "q": "can Bespoke tell me how much my kurti will cost", "chunk": "limits/prices-and-delivery", "kind": "answerable"}
+{"id": "qa-027", "lang": "hinglish", "q": "kitne ka padega aur kab tak milega", "chunk": "limits/prices-and-delivery", "kind": "answerable"}
+{"id": "qa-028", "lang": "english", "q": "does a picture I pin act as a strict instruction", "chunk": "limits/pictures-are-suggestions", "kind": "answerable"}
+{"id": "qa-029", "lang": "english", "q": "can the app misunderstand what I wrote", "chunk": "limits/where-bespoke-can-be-wrong", "kind": "answerable"}
+{"id": "qa-030", "lang": "english", "q": "what kind of questions will this chat answer", "chunk": "limits/what-this-assistant-can-help-with", "kind": "answerable"}
+{"id": "qa-031", "lang": "english", "q": "the assistant could not help me, now what", "chunk": "limits/where-to-get-more-help", "kind": "answerable"}
+{"id": "qa-032", "lang": "english", "q": "how do I give my finished design to a tailor", "chunk": "makers/sending-a-design-to-a-maker", "kind": "answerable"}
+{"id": "qa-033", "lang": "hinglish", "q": "design tailor ko kaise dikhau", "chunk": "makers/sending-a-design-to-a-maker", "kind": "answerable"}
+{"id": "qa-034", "lang": "english", "q": "what does the tailor do once they get my design", "chunk": "makers/what-happens-after-you-send-your-design", "kind": "answerable"}
+{"id": "qa-035", "lang": "english", "q": "what do New and Being made stand for", "chunk": "makers/request-statuses", "kind": "answerable"}
+{"id": "qa-036", "lang": "english", "q": "my request says waiting on details, what should I do", "chunk": "makers/what-waiting-on-details-means", "kind": "answerable"}
+{"id": "qa-037", "lang": "english", "q": "the tailor asked me about my sleeve, where do I see it", "chunk": "makers/how-a-maker-flags-missing-details", "kind": "answerable"}
+{"id": "qa-038", "lang": "english", "q": "can I talk to the tailor about my design", "chunk": "makers/chatting-with-a-maker", "kind": "answerable"}
+{"id": "qa-039", "lang": "english", "q": "the tailor refused my order", "chunk": "makers/if-a-request-is-declined", "kind": "answerable"}
+{"id": "qa-040", "lang": "english", "q": "I am a tailor, how do I sign up", "chunk": "makers/maker-accounts", "kind": "answerable"}
+{"id": "qa-041", "lang": "english", "q": "where does a tailor see incoming orders", "chunk": "makers/the-maker-inbox", "kind": "answerable"}
+{"id": "qa-042", "lang": "english", "q": "how does a tailor mark that stitching has begun", "chunk": "makers/moving-a-request-forward", "kind": "answerable"}
+{"id": "qa-043", "lang": "english", "q": "what should I wear and use before taking measurements", "chunk": "measuring/how-to-measure-before-you-start", "kind": "answerable"}
+{"id": "qa-044", "lang": "english", "q": "where do I put the tape for the chest", "chunk": "measuring/how-to-measure-your-bust", "kind": "answerable"}
+{"id": "qa-045", "lang": "hinglish", "q": "chaati ka naap kaise lete hain", "chunk": "measuring/how-to-measure-your-bust", "kind": "answerable"}
+{"id": "qa-046", "lang": "english", "q": "where is my natural waist", "chunk": "measuring/how-to-measure-your-waist", "kind": "answerable"}
+{"id": "qa-047", "lang": "english", "q": "how to take the measure round my seat", "chunk": "measuring/how-to-measure-your-hip", "kind": "answerable"}
+{"id": "qa-048", "lang": "hinglish", "q": "kandhe ka naap kaise lu", "chunk": "measuring/how-to-measure-your-shoulder", "kind": "answerable"}
+{"id": "qa-049", "lang": "english", "q": "how long should the arm piece be, how do I measure it", "chunk": "measuring/how-to-measure-sleeve-length", "kind": "answerable"}
+{"id": "qa-050", "lang": "english", "q": "from where to where do I measure a kurti's length", "chunk": "measuring/how-to-measure-garment-length", "kind": "answerable"}
+{"id": "qa-051", "lang": "english", "q": "I have a shirt that fits perfectly, can I copy it", "chunk": "measuring/measuring-a-garment-you-already-own", "kind": "answerable"}
+{"id": "qa-052", "lang": "english", "q": "any advice to get accurate numbers", "chunk": "measuring/measurement-tips", "kind": "answerable"}
+{"id": "qa-053", "lang": "english", "q": "what can I do with the canvas where I pin pictures", "chunk": "moodboard/what-the-moodboard-is", "kind": "answerable"}
+{"id": "qa-054", "lang": "english", "q": "how are my pictures numbered", "chunk": "moodboard/pinning-pictures", "kind": "answerable"}
+{"id": "qa-055", "lang": "english", "q": "I like only the sleeve of this photo, how do I show that", "chunk": "moodboard/circling-a-detail", "kind": "answerable"}
+{"id": "qa-056", "lang": "english", "q": "can I add a text note with an arrow", "chunk": "moodboard/notes-with-arrows", "kind": "answerable"}
+{"id": "qa-057", "lang": "english", "q": "I love the dress but hate its colour", "chunk": "moodboard/saying-not-this-colour", "kind": "answerable"}
+{"id": "qa-058", "lang": "english", "q": "make the neck more plunging than the first photo", "chunk": "moodboard/comparing-pictures-deeper-than-1", "kind": "answerable"}
+{"id": "qa-059", "lang": "english", "q": "what does bespoke take from a full photo versus a circled part", "chunk": "moodboard/what-a-whole-picture-gives-and-what-a-circle-gives", "kind": "answerable"}
+{"id": "qa-060", "lang": "english", "q": "if I contradict a photo, who wins", "chunk": "moodboard/pictures-suggest-words-win", "kind": "answerable"}
+{"id": "qa-061", "lang": "english", "q": "is my text sent to some server", "chunk": "privacy/privacy-where-your-words-and-pictures-are-read", "kind": "answerable"}
+{"id": "qa-062", "lang": "english", "q": "can an external AI be switched on to help with my request", "chunk": "privacy/the-optional-language-model", "kind": "answerable"}
+{"id": "qa-063", "lang": "english", "q": "is my question to this chat stored", "chunk": "privacy/what-this-help-assistant-does-with-your-question", "kind": "answerable"}
+{"id": "qa-064", "lang": "english", "q": "can a tailor see other people's requests", "chunk": "privacy/customer-and-maker-accounts", "kind": "answerable"}
+{"id": "qa-065", "lang": "english", "q": "what is printed on the page I hand to the tailor", "chunk": "sheet/the-tailor-sheet", "kind": "answerable"}
+{"id": "qa-066", "lang": "hinglish", "q": "sheet Hindi mein kaise milegi", "chunk": "sheet/english-and-hindi-sheets", "kind": "answerable"}
+{"id": "qa-067", "lang": "english", "q": "why is the garment bigger than my body numbers", "chunk": "sheet/finished-measurement-equals-body-plus-ease", "kind": "answerable"}
+{"id": "qa-068", "lang": "english", "q": "what is the extra room in a garment called", "chunk": "sheet/ease-what-it-means", "kind": "answerable"}
+{"id": "qa-069", "lang": "english", "q": "how many inches extra for loose and fitted", "chunk": "sheet/ease-numbers-bespoke-uses", "kind": "answerable"}
+{"id": "qa-070", "lang": "english", "q": "what do snug and comfy map to", "chunk": "sheet/fit-words-and-what-they-mean", "kind": "answerable"}
+{"id": "qa-071", "lang": "hinglish", "q": "gala kitna gehra hona chahiye, inches mein", "chunk": "sheet/neckline-depth-what-it-means", "kind": "answerable"}
+{"id": "qa-072", "lang": "english", "q": "which collar and neck shapes can I choose", "chunk": "sheet/neckline-shapes", "kind": "answerable"}
+{"id": "qa-073", "lang": "english", "q": "is cap or three quarter a sleeve style or a length", "chunk": "sheet/sleeve-length-and-style", "kind": "answerable"}
+{"id": "qa-074", "lang": "english", "q": "what steps are there between crop and floor", "chunk": "sheet/garment-length", "kind": "answerable"}
+{"id": "qa-075", "lang": "english", "q": "does the sheet act as an invoice", "chunk": "sheet/what-the-sheet-does-not-contain", "kind": "answerable"}
+{"id": "qa-076", "lang": "english", "q": "who won the cricket match yesterday", "chunk": null, "kind": "off_topic"}
+{"id": "qa-077", "lang": "english", "q": "write a poem about the sea", "chunk": null, "kind": "off_topic"}
+{"id": "qa-078", "lang": "english", "q": "what is the capital of Japan", "chunk": null, "kind": "off_topic"}
+{"id": "qa-079", "lang": "english", "q": "how do I fix my laptop wifi", "chunk": null, "kind": "off_topic"}
+{"id": "qa-080", "lang": "english", "q": "tell me the weather in Mumbai", "chunk": null, "kind": "off_topic"}
+{"id": "qa-081", "lang": "english", "q": "recipe for butter chicken", "chunk": null, "kind": "off_topic"}
+{"id": "qa-082", "lang": "english", "q": "explain quantum physics", "chunk": null, "kind": "off_topic"}
+{"id": "qa-083", "lang": "english", "q": "which phone should I buy", "chunk": null, "kind": "off_topic"}
+{"id": "qa-084", "lang": "english", "q": "translate good morning to French", "chunk": null, "kind": "off_topic"}
+{"id": "qa-085", "lang": "english", "q": "who is the prime minister of India", "chunk": null, "kind": "off_topic"}
+{"id": "qa-086", "lang": "english", "q": "how do I get a refund", "chunk": null, "kind": "near_topic"}
+{"id": "qa-087", "lang": "english", "q": "how do I delete my account", "chunk": null, "kind": "near_topic"}
+{"id": "qa-088", "lang": "english", "q": "is there an android app", "chunk": null, "kind": "near_topic"}
+{"id": "qa-089", "lang": "english", "q": "how should I wash a silk kurti", "chunk": null, "kind": "near_topic"}
+{"id": "qa-090", "lang": "english", "q": "how do I iron georgette", "chunk": null, "kind": "near_topic"}
+{"id": "qa-091", "lang": "english", "q": "do you ship to the United States", "chunk": null, "kind": "near_topic"}
+{"id": "qa-092", "lang": "english", "q": "does it work without internet", "chunk": null, "kind": "near_topic"}
+{"id": "qa-093", "lang": "english", "q": "is there a dark mode", "chunk": null, "kind": "near_topic"}
+{"id": "qa-094", "lang": "english", "q": "can I pay the tailor through upi", "chunk": null, "kind": "near_topic"}
+{"id": "qa-095", "lang": "english", "q": "do you have a size chart for plus sizes", "chunk": null, "kind": "near_topic"}
+{"id": "qa-096", "lang": "english", "q": "how do I get alterations done after delivery", "chunk": null, "kind": "near_topic"}
+{"id": "qa-097", "lang": "english", "q": "is there a discount code for first order", "chunk": null, "kind": "near_topic"}
+{"id": "qa-098", "lang": "english", "q": "what is the best colour for my skin tone", "chunk": null, "kind": "near_topic"}
+{"id": "qa-099", "lang": "english", "q": "which saree drape suits a short person", "chunk": null, "kind": "near_topic"}
+{"id": "qa-100", "lang": "english", "q": "how do I tie a dupatta in a stylish way", "chunk": null, "kind": "near_topic"}
