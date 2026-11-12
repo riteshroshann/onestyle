@@ -123,3 +123,24 @@
 
 /* a phrase the engine understood: underlined like a row of stitches */
 .stitched { text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .14em; }
+
+/* ---------------------------------------------------------------- home: cover, paper and tape */
+/* ink ground with a fine pebble, like the back of a leather tape case */
+.leather {
+  background-color: var(--brand-ink);
+  background-image: radial-gradient(rgba(255,255,255,.055) 1.1px, transparent 1.6px), radial-gradient(rgba(255,255,255,.035) 1.1px, transparent 1.6px);
+  background-size: 7px 7px, 7px 7px;
+  background-position: 0 0, 3.5px 3.5px;
+}
+/* pattern paper: warm, with grain */
+.paper {
+  background-color: #e8e2d8;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* a tailor's tape: cyan rule with inch ticks */
+.tape {
+  background:
+    linear-gradient(var(--brand), var(--brand)) bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, var(--brand) 0 1.5px, transparent 1.5px 12px) bottom / 100% 9px no-repeat,
+    repeating-linear-gradient(90deg, var(--brand) 0 1.5px, transparent 1.5px 6px) bottom / 100% 5px no-repeat;
+}
