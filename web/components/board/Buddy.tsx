@@ -10,7 +10,8 @@ import { Mark } from "../site/Mark";
 import { Arrow, Dots, Reveal, SOFT, SPRING } from "../site/Motion";
 import { ideaLine } from "./notes";
 
-export type Phase = "reading" | "done" | "refused" | "error";
+// brief: no reading yet; the buddy opens on the design and writes a creative direction for it
+export type Phase = "brief" | "reading" | "done" | "refused" | "error";
 export type Step = "wait" | "work" | "done" | "skip" | "fail";
 export interface Result { summary: string; ideas: Idea[]; pictureCount: number; leftOut: number[]; notice: string; usable: boolean }
 export interface ReadingState {
@@ -25,7 +26,8 @@ export interface ReadingState {
 }
 export interface Look { label: string; url: string }
 
-interface Turn { role: "user" | "assistant"; content: string; failed?: boolean }
+interface Turn { role: "user" | "assistant"; content: string; failed?: boolean; hidden?: boolean }
+const BRIEF = "Write a short creative direction for my design: the mood, a colour palette, the fabric, and two details that make it special.";
 
 const STEP_TEXT: Record<"notes" | "cloud" | "device", { title: string; sub: Partial<Record<Step, string>> }> = {
   notes: { title: "Your notes", sub: { wait: "Reading what you wrote", work: "Reading what you wrote", done: "Your words lead" } },
@@ -173,10 +175,10 @@ export function Buddy({ state, picked, applied, looks, context, onPick, onUse, o
     el.scrollTo({ top: fresh ? 0 : el.scrollHeight, behavior: still ? "auto" : "smooth" });
   }, [state.phase, turns.length, thinking, applied, still]);
 
-  const send = async (text: string) => {
+  const send = async (text: string, hidden = false) => {
     const q = text.trim();
     if (!q || thinking) return;
-    const history = [...turns, { role: "user" as const, content: q }];
+    const history = [...turns, { role: "user" as const, content: q, hidden }];
     setTurns(history);
     setDraft("");
     setThinking(true);
@@ -185,6 +187,14 @@ export function Buddy({ state, picked, applied, looks, context, onPick, onUse, o
     setThinking(false);
   };
   const ready = draft.trim().length > 0 && !thinking;
+  const talking = state.phase === "brief" || state.phase === "done";
+  // the brief writes its direction as soon as it opens
+  const briefed = useRef(false);
+  useEffect(() => {
+    if (state.phase !== "brief" || briefed.current) return;
+    briefed.current = true;
+    void send(BRIEF, true);
+  }, [state.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <motion.aside role="complementary" aria-label="Your board, read"
@@ -194,7 +204,7 @@ export function Buddy({ state, picked, applied, looks, context, onPick, onUse, o
       <header className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
         <span className="flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-full bg-brand-ink/[.05]"><Mark className="size-3.5" /></span>
-          <span className="text-[15px] font-medium">Your board, read</span>
+          <span className="text-[15px] font-medium">{state.phase === "brief" ? "Your creative direction" : "Your board, read"}</span>
         </span>
         <button type="button" onClick={onClose} aria-label="Close"
           className="press grid size-9 place-items-center rounded-full text-brand-ink/60 transition-colors hover:bg-black/[.05] hover:text-brand-ink">
@@ -204,6 +214,15 @@ export function Buddy({ state, picked, applied, looks, context, onPick, onUse, o
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
         <ol className="flex flex-col gap-3">
+          {state.phase === "brief" && (
+            <>
+              <Bubble>
+                <p className={label}>Your design</p>
+                <p className="mt-1.5 text-[17px] font-medium leading-[1.35] tracking-[-0.01em] [overflow-wrap:anywhere]">{context.replace(/^Design:\s*/, "").replace(/\.$/, "") || "A new design"}</p>
+              </Bubble>
+              <Bubble delay={0.1}><p className="text-[14px] text-brand-ink/65">This board is your studio. Drop or paste pictures of anything you love, then read the board and I will turn them into a direction.</p></Bubble>
+            </>
+          )}
           {state.phase === "reading" && <Progress state={state} />}
 
           {(state.phase === "error" || state.phase === "refused") && (
@@ -248,46 +267,48 @@ export function Buddy({ state, picked, applied, looks, context, onPick, onUse, o
                 <Bubble><p>Added to your design. Talk, the sheet and the shop links all follow it now, and you can keep working here.</p></Bubble>
               )}
 
-              {(looks.ideas.length > 0 || looks.shops.length > 0) && (
-                <motion.li initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-2">
-                  <p className={cn(label, "px-1")}>Look further</p>
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
-                    {[...looks.ideas, ...looks.shops].map((l, k) => (
-                      <motion.a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer"
-                        initial={{ opacity: 0, y: 6, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ ...SPRING, delay: still ? 0 : 0.35 + k * 0.04 }} whileTap={{ scale: 0.95 }}
-                        className="inline-flex h-9 max-w-full items-center truncate rounded-full px-4 text-[13px] font-medium text-brand-ink no-underline ring-1 ring-black/10 transition-colors hover:bg-black/[.04]">
-                        {l.label}
-                      </motion.a>
-                    ))}
-                  </div>
-                </motion.li>
-              )}
 
-              {turns.map((t, i) => (
-                <Bubble key={i} mine={t.role === "user"} tone={t.failed ? "error" : undefined}>
-                  {t.role === "user" || t.failed ? t.content : <Reveal text={t.content} still={still} />}
-                </Bubble>
-              ))}
-              <AnimatePresence>
-                {thinking && (
-                  <motion.li key="dots" initial={{ opacity: 0, y: 8, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={SPRING}
-                    style={{ transformOrigin: "bottom left" }} className="flex">
-                    <div className="rounded-[20px] rounded-bl-[6px] bg-[#f2f3f5] px-4 py-2.5"><Dots /></div>
-                  </motion.li>
-                )}
-              </AnimatePresence>
             </>
           )}
+
+          {(looks.ideas.length > 0 || looks.shops.length > 0) && talking && (
+            <motion.li initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-2">
+              <p className={cn(label, "px-1")}>Look further</p>
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {[...looks.ideas, ...looks.shops].map((l, k) => (
+                  <motion.a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: 6, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ ...SPRING, delay: still ? 0 : 0.35 + k * 0.04 }} whileTap={{ scale: 0.95 }}
+                    className="inline-flex h-9 max-w-full items-center truncate rounded-full px-4 text-[13px] font-medium text-brand-ink no-underline ring-1 ring-black/10 transition-colors hover:bg-black/[.04]">
+                    {l.label}
+                  </motion.a>
+                ))}
+              </div>
+            </motion.li>
+          )}
+
+          {talking && turns.filter((t) => !t.hidden).map((t, i) => (
+            <Bubble key={i} mine={t.role === "user"} tone={t.failed ? "error" : undefined}>
+              {t.role === "user" || t.failed ? t.content : <Reveal text={t.content} still={still} />}
+            </Bubble>
+          ))}
+          <AnimatePresence>
+            {talking && thinking && (
+              <motion.li key="dots" initial={{ opacity: 0, y: 8, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={SPRING}
+                style={{ transformOrigin: "bottom left" }} className="flex">
+                <div className="rounded-[20px] rounded-bl-[6px] bg-[#f2f3f5] px-4 py-2.5"><Dots /></div>
+              </motion.li>
+            )}
+          </AnimatePresence>
         </ol>
       </div>
 
       <footer className="px-3 pb-3">
-        {state.phase === "done" ? (
+        {talking ? (
           <form onSubmit={(e) => { e.preventDefault(); void send(draft); }}>
             <div className="flex items-end gap-2 rounded-[24px] bg-[#f2f3f5] p-1.5 pl-4 ring-1 ring-transparent transition-[box-shadow,background-color] duration-200 focus-within:bg-white focus-within:shadow-[0_6px_20px_-10px_rgba(13,17,23,.25)] focus-within:ring-black/15">
               <textarea rows={1} value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={600}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(draft); } }}
-                aria-label="Ask about this board" placeholder="Ask about colours, fabric, fit"
+                aria-label="Ask about this board" placeholder={state.phase === "brief" ? "Ask for a palette, a fabric, a detail" : "Ask about colours, fabric, fit"}
                 className="max-h-28 min-h-9 flex-1 resize-none bg-transparent py-2 text-[15px] leading-[1.35] outline-none placeholder:text-brand-ink/40" />
               <motion.button type="submit" disabled={!ready} aria-label="Send"
                 animate={{ scale: ready ? 1 : 0.88, opacity: ready ? 1 : 0.35 }} whileTap={{ scale: 0.9 }} transition={SPRING}

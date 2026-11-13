@@ -9,7 +9,7 @@ import { apply, emptySpec, Update } from "../lib/engine/spec";
 import { links } from "../lib/engine/describe";
 import { loadVision, tag, zeroShot } from "../lib/models";
 import { Buddy } from "./board/Buddy";
-import type { ReadingState, Step } from "./board/Buddy";
+import type { Look, ReadingState, Step } from "./board/Buddy";
 import { ideaLine, layoutNotes, skeletons } from "./board/notes";
 import type { Chart } from "./board/notes";
 import { paletteOf } from "./board/palette";
@@ -110,6 +110,7 @@ function deviceIdea(ups: Update[]): Idea | null {
   return idea;
 }
 
+const NO_LOOKS = { ideas: [] as Look[], shops: [] as Look[] };
 const CHART_TITLE: Record<string, string> = { garment: "Garment", colour: "Colour", pattern: "Print" };
 /** What the image model saw in each picture, as charts for the notes. */
 const chartsOf = (scores: Scores): Record<number, Chart[]> => Object.fromEntries(Object.entries(scores).map(([n, slots]) =>
@@ -128,12 +129,14 @@ function looksFor(idea: Idea | undefined) {
 const idle = (pictures: { n: number; dataURL: string }[], steps: ReadingState["steps"]): ReadingState =>
   ({ phase: "reading", pictures, active: pictures[0]?.n ?? null, steps, loaded: 0, status: "Reading your board", result: null, message: "" });
 
-export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons, design = "" }: {
+export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons, design = "", designLooks = NO_LOOKS }: {
   boardId: string; onOpen: (id: string) => void; onNew: () => void;
   onEvidence: (u: Update[], note: string) => void;
   comparisons: { slot: string; cmp: string; ref: string }[];
   /** The current design in a sentence, such as "a pink anarkali for a wedding", so ideas fit it. */
   design?: string;
+  /** Idea searches and shops for the current design, shown in the brief before any reading. */
+  designLooks?: { ideas: Look[]; shops: Look[] };
 }) {
   const api = useRef<any>(null);
   const [hint, setHint] = useState("");
@@ -424,6 +427,13 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
     if (pending.current) { clearTimeout(saveTimer.current); void save(); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { boardHome().then(setHome).catch(() => setHome("device")); }, []);
+  // a design arriving from Talk opens on its creative direction: the board is where it grows
+  const briefed = useRef(false);
+  useEffect(() => {
+    if (!loaded || briefed.current || !design || !empty) return;
+    briefed.current = true;
+    setReading((r) => r ?? { phase: "brief", pictures: [], active: null, steps: { notes: "skip", cloud: "skip", device: "skip" }, loaded: 0, status: "Your creative direction", result: null, message: "" });
+  }, [loaded, design, empty]);
 
   return (
     <div className="boardwrap">
@@ -446,7 +456,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
           <MainMenu.DefaultItems.ChangeCanvasBackground />
         </MainMenu>
       </Excalidraw>
-      <div className="absolute left-3 top-[76px] z-[4] flex items-center gap-3 md:left-[64px] md:top-4">
+      <div className="absolute left-3 top-[76px] z-[25] flex items-center gap-3 md:left-[64px] md:top-4">
         <BoardsMenu current={boardId} onOpen={onOpen} onNew={onNew} />
         <AnimatePresence mode="wait">
           {!empty && home && (
@@ -469,9 +479,9 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
         )}
       </AnimatePresence>
       <AnimatePresence>
-        {loaded && empty && !reading && (
+        {loaded && empty && (!reading || reading.phase === "brief") && (
           <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}
-            className="pointer-events-none absolute inset-0 z-[3] grid place-items-start justify-items-center overflow-y-auto px-5 pb-60 pt-[150px] md:place-items-center md:pb-28 md:pt-20">
+            className={`pointer-events-none absolute inset-0 z-[3] grid place-items-start justify-items-center overflow-y-auto px-5 pb-60 pt-[150px] md:place-items-center md:pb-28 md:pt-20 ${reading ? "md:pr-[456px] max-md:hidden" : ""}`}>
             <div className="pointer-events-auto w-full max-w-[640px]">
               <motion.h2 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.05 }}
                 className="display text-[clamp(44px,6vw,80px)]">Pin what you love.</motion.h2>
@@ -521,7 +531,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
         {reading && (() => {
           const idea = reading.result?.ideas[picked];
           const context = [design && `Design: ${design}.`, reading.result?.summary && `Board: ${reading.result.summary}`, idea && `Direction: ${idea.title} (${ideaLine(idea)}).`].filter(Boolean).join(" ");
-          return <Buddy key="buddy" state={reading} picked={picked} applied={applied} looks={looksFor(idea)} context={context}
+          return <Buddy key="buddy" state={reading} picked={picked} applied={applied} looks={reading.phase === "brief" ? designLooks : looksFor(idea)} context={context}
             onPick={setPicked} onUse={use} onCircle={circle} onRetry={analyse} onClose={close} />;
         })()}
       </AnimatePresence>

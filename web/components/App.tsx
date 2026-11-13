@@ -778,11 +778,18 @@ function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string
   );
 }
 
+/** Idea searches and shops for a design, for the board's brief. */
+function boardLooks(spec: Spec) {
+  if (!spec.slots.garment) return undefined;
+  const L = links(spec);
+  return { ideas: L.pinterest.slice(0, 2).map((p) => ({ label: `Pinterest: ${p.label}`, url: p.url })), shops: L.shops.slice(0, 3).map((x) => ({ label: x.label, url: x.url })) };
+}
+
 function Finale({ spec, onSheet, onShop, backBtn }: { spec: Spec; onSheet: () => void; onShop: () => void; backBtn: React.ReactNode }) {
   const L = links(spec);
   return (
     <div className="finale">
-      <div className="q">Your design is ready. Find something close, or take it to a tailor.</div>
+      <div className="q">Your design is ready. Opening your moodboard, where we build the direction together.</div>
       <div className="cards">
         {L.shops.slice(0, 4).map((p) => (
           <a className="card" key={p.label} href={p.url} target="_blank" rel="noreferrer">
@@ -869,6 +876,15 @@ export default function App() {
   const openBoard = () => { setBoardId(newBoardId()); go("board"); };
   const [m, setM] = useState<Measurements>(() => load("bespoke.meas", {}));
   const [thinking, setThinking] = useState(false);
+  // when the last question is answered, the design moves on to the board, its main space; once per design
+  const finished = view === "talk" && !thinking && msgs.length > 0 && !!spec.slots.garment && ask(spec).length === 0;
+  const handedOver = useRef<string | null>(null);
+  useEffect(() => {
+    if (!finished || handedOver.current === designId) return;
+    handedOver.current = designId;
+    const t = setTimeout(openBoard, 1800);
+    return () => clearTimeout(t);
+  }, [finished, designId]); // eslint-disable-line react-hooks/exhaustive-deps
   const [draft, setDraft] = useState("");
   const [heard, setHeard] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -1070,7 +1086,7 @@ export default function App() {
   if (resuming) return (
     <>{header}<main className="hero"><motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[17px] text-brand-ink/50">Opening your last design</motion.p></main></>
   );
-  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} design={spec.slots.garment ? phrase(spec) : ""} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
+  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} design={spec.slots.garment ? phrase(spec) : ""} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} designLooks={boardLooks(spec)} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => go("talk")} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => go("talk")} /></>);
 
@@ -1081,7 +1097,7 @@ export default function App() {
   if (!started) return (
     <>
       {header}
-      <main className="hero">
+      <main className="hero flex min-h-[calc(100svh-96px)] flex-col justify-center !pb-16">
         <div className="row">
           <h1 className="display">
             {["Describe it.", "Wear it."].map((line, i) => (
@@ -1098,24 +1114,28 @@ export default function App() {
         <motion.div className="brief" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.28 }}>
           <label htmlFor="brief" className="sr-only">Your brief</label>
           {composer(true)}
-          <ol className="mt-14 grid max-w-[1040px] gap-6 sm:grid-cols-3">
+        </motion.div>
+      </main>
+      {/* how it works, in a black band at the foot of the page */}
+      <section className="bg-brand-ink text-white" aria-labelledby="how">
+        <div className="mx-auto max-w-[1440px] px-5 py-[clamp(64px,9vw,128px)] md:px-10">
+          <h2 id="how" className="display max-w-[12ch] text-[clamp(36px,4.6vw,64px)] text-white">How it works.</h2>
+          <ol className="mt-12 grid gap-10 sm:grid-cols-3">
             {TALK_STEPS.map(([title, text], i) => (
-              <motion.li key={title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: 0.45 + i * 0.07 }}
-                className="border-t border-brand-ink/10 pt-4">
-                <span className="text-[13px] font-medium text-brand-ink/40">{i + 1}</span>
-                <p className="mt-1 text-[17px] font-medium tracking-[-0.01em]">{title}</p>
-                <p className="mt-1 max-w-[34ch] text-[14px] leading-[1.5] text-brand-ink/55">{text}</p>
+              <motion.li key={title} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ ...SOFT, delay: i * 0.08 }}
+                className="border-t border-white/15 pt-5">
+                <span className="text-[13px] font-medium text-white/40">{i + 1}</span>
+                <p className="mt-2 text-[20px] font-medium tracking-[-0.015em]">{title}</p>
+                <p className="mt-2 max-w-[34ch] text-[15px] leading-[1.55] text-white/60">{text}</p>
               </motion.li>
             ))}
           </ol>
-          <motion.div className="mt-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-            <button type="button" onClick={openBoard}
-              className="h-11 px-1 text-[15px] font-medium underline decoration-brand-ink/25 underline-offset-[6px] transition-[text-decoration-color] hover:decoration-brand-ink">
-              Have pictures instead? Start with a moodboard
-            </button>
-          </motion.div>
-        </motion.div>
-      </main>
+          <button type="button" onClick={openBoard}
+            className="press mt-14 inline-flex h-12 items-center rounded-full bg-white px-6 text-[15px] font-medium text-brand-ink transition-colors hover:bg-white/85">
+            Have pictures instead? Start with a moodboard
+          </button>
+        </div>
+      </section>
     </>
   );
 
@@ -1125,7 +1145,7 @@ export default function App() {
     <>
       {header}
       <div className="fitting">
-        <section className="flex flex-col gap-10 pb-[220px]" aria-live="polite">
+        <section className="flex min-h-[calc(100svh-140px)] flex-col justify-end gap-10 pb-[220px]" aria-live="polite">
           {msgs.map((x, i) => {
             if (x.role === "me") return <Said key={i} m={x} />;
             const last = i === msgs.length - 1;
