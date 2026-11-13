@@ -7,6 +7,13 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 | Syntax (attachment of values to garment parts) | `web/scripts/eval-binding.mjs`, gold `data/gold/binding.jsonl` | Scores `bind()` in `web/lib/engine/spec.ts`: which value attaches to which part ("sleeve par loose" is a sleeve fit) | `results/binding.json` | Used in the product (the binder is deployed); study of it |
 | Named entity recognition | `engine/bespoke/apps/ner.py` | Per-type report of the tagger that feeds the binder, for the gazetteer, the int8 ONNX model alone and the browser path | `results/ner.json` | Used in the product (the browser path is what ships) |
 | Semantics (grounding unseen phrases to ontology values) | `engine/bespoke/apps/grounding.py`, gold `data/gold/grounding.jsonl` | Measures `groundFuzzy` (spelling variants the tagger finds) against edit distance and an embedding, with an abstention threshold | `results/grounding.json` | Study of a deployed function; a better rule is proposed, not shipped |
+| Question answering (help-chatbot retrieval) | `web/scripts/eval-retrieval.mjs`, `engine/bespoke/apps/qa.py`, gold `data/gold/retrieval.jsonl` | Scores the deployed BM25 and its "answer or abstain" rule; compares dense and hybrid retrieval | `results/retrieval.json`, `results/retrieval_dense.json` | Study of the deployed retriever; the hybrid is not shipped |
+| Sentiment (stance of a preference line) | `engine/bespoke/apps/sentiment.py`, gold `data/gold/sentiment.jsonl` | Reads "love this neckline", "no embroidery" or "not too deep" as wanted or rejected, for chat lines and for the exclusion list | `results/sentiment.json` | Study only; the shipped binder handles negation by rule |
+| Text summarisation (thread to one line) | `engine/bespoke/apps/summarise.py`, gold `data/gold/summaries.jsonl` | Compares the engine's `phrase()` (the line on the order card) with lead and TextRank extraction | `results/summarisation.json` | `phrase()` is used in the product; TextRank is study only |
+| Machine translation (English tailor sheet to Hindi) | `engine/bespoke/apps/translate.py`, gold `data/gold/translation.jsonl` | Scores the Hindi tailor sheet the product prints against hand-written Hindi, next to a free local MT model | `results/translation.json` | The template system is used in the product; the neural model is study only |
+| BERT (inside the deployed MiniLM tagger) | `engine/bespoke/apps/bert_probe.py` | Shows what the shipped int8 model knows at each layer and which heads look at part words | `results/bert_probe.json` | Study of the deployed model (read-only) |
+| Part-of-speech tagging | `engine/bespoke/apps/pos.py`, gold `data/gold/pos.jsonl` and `pos-guidelines.md` | Universal POS for romanised Hinglish with silver training tags; HMM, CRF, fine-tuned MiniLM against spaCy | `results/pos.json` | Study only |
+| POS feature for the slot tagger | `engine/bespoke/apps/pos_ner.py` | Tests whether a POS feature helps the CRF slot tagger | `results/pos_ner.json` | Study only; no gain, so not added |
 
 ## Syntax: attachment of values to parts
 
@@ -47,7 +54,6 @@ Each system takes the best-scoring ontology form of the tag and answers only abo
 | Trigram Dice, tuned | 0.40 | 0.896 | 0.972 | 0.932 (0.882 to 0.973) | 10 |
 | Edit-distance similarity | 0.66 | 0.971 | 0.944 | 0.957 (0.917 to 0.986) | 3 |
 | Embedding cosine (bge-small-en-v1.5) | 0.72 | 0.828 | 0.747 | 0.785 (0.695 to 0.861) | 17 |
-| Question answering (help-chatbot retrieval) | `web/scripts/eval-retrieval.mjs`, `engine/bespoke/apps/qa.py`, gold `data/gold/retrieval.jsonl` | Scores the deployed BM25 and its "answer or abstain" rule; compares dense and hybrid retrieval | `results/retrieval.json`, `results/retrieval_dense.json` | Study of the deployed retriever; the hybrid is not shipped |
 
 Edit distance matches the shipped trigram rule on F1 (the intervals overlap widely at n = 99) and abstains on out-of-ontology words about three times as often (3 false grounds against 9). The embedding does worst: it is English-only and cannot see that "kurthi" is a spelling of "kurti". Proposal for the owner of `lexicon.ts`: keep trigram Dice, add an edit-similarity check of at least 0.66 before answering. The shipped errors (`deployed_errors` in the result) are mostly near words a tailor would also flag, such as "maximalist" read as minimal and "skintight" read as fitted. A few "false grounds" are arguable ("graduation ball" to farewell). The typos are synthetic, so real typing noise could behave differently.
 
@@ -60,7 +66,6 @@ Edit distance matches the shipped trigram rule on F1 (the intervals overlap wide
 | BM25, deployed (`retrieve.js`) | 0.547 (0.44 to 0.67) | 0.720 | 0.827 | 0.671 (0.59 to 0.76) |
 | Dense, bge-small-en-v1.5 | 0.533 (0.43 to 0.64) | 0.747 | 0.853 | 0.671 |
 | Hybrid, reciprocal rank fusion | 0.600 (0.48 to 0.71) | 0.827 | 0.907 | 0.728 (0.64 to 0.81) |
-| Sentiment (stance of a preference line) | `engine/bespoke/apps/sentiment.py`, gold `data/gold/sentiment.jsonl` | Reads "love this neckline", "no embroidery" or "not too deep" as wanted or rejected, for chat lines and for the exclusion list | `results/sentiment.json` | Study only; the shipped binder handles negation by rule |
 
 n = 75 answerable questions, intervals are bootstrap over questions; the arms are within each other's intervals on Recall@1, so the only supported claim is that fusing the two does not hurt and probably helps at Recall@3 and @5. Python's BM25 MRR differs from the Node one in the third decimal because it also ranks the passages scoring zero.
 
@@ -77,7 +82,6 @@ Answerability: the deployed rule answers when the top BM25 score is at least 2.5
 | TF-IDF logistic regression, hand-written lines only | 0.867 | 0.865 (0.805 to 0.918) | 0.72 |
 | TF-IDF logistic regression plus synthetic lines | 0.875 | 0.874 (0.809 to 0.926) | 0.84 |
 | MiniLM fine-tuned plus synthetic lines (seed 13) | 0.908 | 0.909 (0.852 to 0.951) | 0.96 |
-| Text summarisation (thread to one line) | `engine/bespoke/apps/summarise.py`, gold `data/gold/summaries.jsonl` | Compares the engine's `phrase()` (the line on the order card) with lead and TextRank extraction | `results/summarisation.json` | `phrase()` is used in the product; TextRank is study only |
 
 MiniLM macro F1 over three seeds is 0.909, 0.909 and 0.843, so the learned model is the least stable. The intervals overlap throughout: the data cannot rank the lexicon, the logistic regression and MiniLM. What it does show is where each fails. The lexicon is perfect on neutral lines. Its 10 errors (listed in the result) are two kinds: negation scope, where Hindi puts the negator after the word ("pasand nahi aaya", "accha nahi lag raha") and a left-only window misses it, and "not too deep" or "not too flashy", where the lexicon flips an excess word to approval although the customer is asking for less; and approvals with no lexicon word ("this fit is just right"). The learned models do better on negator lines (0.84 and 0.96 against 0.80), but on 25 lines that gap is not significant. Not used in the product: `bind()` already turns "no" and "nahi" into `exclude` updates, and a stance model would only add value on free chat lines, which the maker chat could use to flag an unhappy customer.
 
@@ -94,7 +98,6 @@ MiniLM macro F1 over three seeds is 0.909, 0.909 and 0.843, so the learned model
 | All customer turns joined | 14.0 | 0.750 | 0.368 | 0.519 (0.478 to 0.561) |
 | Engine `phrase()` | 14.3 | 0.694 | 0.342 | 0.525 (0.471 to 0.578) |
 | Oracle: best 2 turns | 9.2 | 0.651 | 0.371 | 0.591 (0.550 to 0.634) |
-| Machine translation (English tailor sheet to Hindi) | `engine/bespoke/apps/translate.py`, gold `data/gold/translation.jsonl` | Scores the Hindi tailor sheet the product prints against hand-written Hindi, next to a free local MT model | `results/translation.json` | The template system is used in the product; the neural model is study only |
 
 TextRank beats the lead baseline on ROUGE-1 and ROUGE-L only within noise, and every extractive method that picks two turns stays below the oracle, because a design is spread over several turns. `phrase()` reads the whole thread into a state and writes a line from it; it matches the join of all customer turns on ROUGE-L (the intervals overlap) while being a normalised sentence rather than a transcript, and it handles a change of mind (thread 13) where extraction cannot. The references were written after reading the same turns, so every system that copies words from the customer scores high; ROUGE rewards that, and a structure-aware check of the slots would be the fairer measure. Not tested: an abstractive neural summariser.
 
@@ -106,7 +109,6 @@ TextRank beats the lead baseline on ROUGE-1 and ROUGE-L only within noise, and e
 |---|---|---|---|---|
 | Template system (deployed) | 64.1 | 76.7 | 79.3 (74.1 to 84.4) | 0.42 |
 | opus-mt-en-hi (Helsinki-NLP, 75M parameters, beam 4) | 4.1 | 22.2 | 24.0 (20.0 to 28.6) | 0.00 |
-| BERT (inside the deployed MiniLM tagger) | `engine/bespoke/apps/bert_probe.py` | Shows what the shipped int8 model knows at each layer and which heads look at part words | `results/bert_probe.json` | Study of the deployed model (read-only) |
 
 A generic MT model has no tailoring vocabulary: it reads "Avoid" as "stay away", "Neckline" as a name, "sweetheart" as "जानेमन" and mangles the numbers. The template system's remaining misses are register choices (for example "ज़री" against "ज़री का काम") and one real defect: the Avoid row prints "नहीं चाहिए: कढ़ाई नहीं", saying "not wanted" twice, because `sheetLines` in `web/lib/engine/describe.ts` appends "नहीं" to each value under a label that already means "not wanted". The fix for the owner of that file is to drop the `${...} नहीं` suffix (or change the label to "बिना"). Exact match by part is in the result; Avoid and Back neck are 0 for that reason and for wording. Not tested: IndicTrans2 or a larger model, which do not fit this machine's budget of time; a human fluency judgement.
 
@@ -122,8 +124,6 @@ Layer-wise probing: a linear classifier on each layer's first-subword vector pre
 | Macro F1 over types | 0.791 | 0.829 | 0.857 | 0.869 | 0.801 | 0.828 |
 | Control accuracy | 0.803 | 0.773 | 0.704 | 0.682 | 0.579 | 0.557 |
 | Selectivity | 0.044 | 0.111 | 0.190 | 0.222 | 0.301 | 0.337 |
-| Part-of-speech tagging | `engine/bespoke/apps/pos.py`, gold `data/gold/pos.jsonl` and `pos-guidelines.md` | Universal POS for romanised Hinglish with silver training tags; HMM, CRF, fine-tuned MiniLM against spaCy | `results/pos.json` | Study only |
-| POS feature for the slot tagger | `engine/bespoke/apps/pos_ner.py` | Tests whether a POS feature helps the CRF slot tagger | `results/pos_ner.json` | Study only; no gain, so not added |
 
 Even the embedding layer gets 0.85 because the gold words are mostly ontology words the model saw in training, but the probe there is mostly memorising words: selectivity is 0.04. Accuracy peaks in the middle (layer 5, 0.904) and flattens; selectivity keeps rising to the last layer (0.34), so later layers organise words by entity type rather than by identity. With 406 test words, differences of two or three points between layers are within noise; the trend in selectivity is not.
 
