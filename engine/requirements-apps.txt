@@ -1,0 +1,8 @@
+# Extra libraries for engine/scripts/apps.py, on top of requirements.txt.
+# torch comes from the CUDA index: uv pip install torch --index-url https://download.pytorch.org/whl/cu126
+scikit-learn
+sacrebleu
+sentencepiece
+sacremoses
+spacy
+# spaCy English model (wheel from the spaCy releases): python -m spacy download en_core_web_sm

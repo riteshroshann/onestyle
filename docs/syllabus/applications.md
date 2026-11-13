@@ -1,6 +1,6 @@
 # Applications syllabus coverage
 
-Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2seq, BERT, GPT) and Unit 4 (POS, NER, parsing, sentiment, MT, QA, summarisation). Every number below was written by a script into the named `results/` file. Evaluation sets are small; the size is given next to each number.
+Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2seq, BERT, GPT) and Unit 4 (POS, NER, parsing, sentiment, MT, QA, summarisation). Every number below was written by a script into the named `results/` file. Evaluation sets are small; the size is given next to each number. Numbers from the Node scorers (binding, grounding parity, retrieval, summarisation, translation) were measured against `web/lib` at commit 8ffed89; main has since changed `spec.ts`, so re-run them after merging.
 
 | Topic | Code | What it does for the product | Result | Status |
 |---|---|---|---|---|
@@ -122,7 +122,28 @@ Layer-wise probing: a linear classifier on each layer's first-subword vector pre
 | Macro F1 over types | 0.791 | 0.829 | 0.857 | 0.869 | 0.801 | 0.828 |
 | Control accuracy | 0.803 | 0.773 | 0.704 | 0.682 | 0.579 | 0.557 |
 | Selectivity | 0.044 | 0.111 | 0.190 | 0.222 | 0.301 | 0.337 |
+| Part-of-speech tagging | `engine/bespoke/apps/pos.py`, gold `data/gold/pos.jsonl` and `pos-guidelines.md` | Universal POS for romanised Hinglish with silver training tags; HMM, CRF, fine-tuned MiniLM against spaCy | `results/pos.json` | Study only |
+| POS feature for the slot tagger | `engine/bespoke/apps/pos_ner.py` | Tests whether a POS feature helps the CRF slot tagger | `results/pos_ner.json` | Study only; no gain, so not added |
 
 Even the embedding layer gets 0.85 because the gold words are mostly ontology words the model saw in training, but the probe there is mostly memorising words: selectivity is 0.04. Accuracy peaks in the middle (layer 5, 0.904) and flattens; selectivity keeps rising to the last layer (0.34), so later layers organise words by entity type rather than by identity. With 406 test words, differences of two or three points between layers are within noise; the trend in selectivity is not.
 
 Attention: for the 58 value words (fit, length, dimension, sleeve style, silhouette, neckline) that share a request with a part or location cue word (82 gold dev and test requests), the share of attention that lands on the cue words, divided by the share uniform attention would give them. No head attaches values to parts: the layer averages are all below 1 (attention goes to neighbours and the special tokens), and the best heads (layer 7 head 5, layer 5 head 1) reach 1.5 times uniform, with 22% of their attention on cue words. Attachment is left to the rule-based binder, which is consistent with the syntax result above. Per-layer lifts and the top five heads are in the result.
+
+## Part-of-speech tagging
+
+`python scripts/apps.py pos`, about 2 min (CPU plus GPU). Gold: 60 requests (525 tokens, 45 of them without a Hindi function word, so "English only") hand-tagged by one annotator with Universal POS; guidelines in `data/gold/pos-guidelines.md`. Training tags are silver: ontology classes and Hindi function words by rule, spaCy en_core_web_sm for the remaining tokens, on 6000 synthetic requests. Tagging the gold with that same rule-plus-spaCy labeller scores 0.821.
+
+| System | Accuracy, all 525 tokens (95% interval) | Accuracy, English-only requests |
+|---|---|---|
+| Most frequent tag per word | 0.804 (0.764 to 0.838) | 0.830 |
+| HMM | 0.810 (0.768 to 0.848) | 0.830 |
+| CRF | 0.804 (0.764 to 0.839) | 0.810 |
+| CRF plus gazetteer feature | 0.811 (0.775 to 0.846) | 0.820 |
+| MiniLM fine-tuned | 0.806 (0.770 to 0.838) | 0.815 |
+| spaCy en_core_web_sm applied directly | 0.688 (0.627 to 0.744) | 0.778 |
+
+All learned taggers sit at the silver labeller's ceiling (about 0.81 to 0.82) and none is distinguishable from the word-frequency baseline: they learn the rules that made their labels. The main disagreement with the gold is NOUN versus ADJ (45 tokens for the CRF), because the silver rule calls fit, length and style words adjectives while the guidelines call "knee length" and "straight cut kurta" nouns. spaCy alone is worse, even on English-only requests, since it reads lowercase fashion words as proper nouns and verbs. A better result needs hand-tagged training data, not a better model.
+
+## POS as a feature for the slot tagger
+
+`python scripts/apps.py pos-ner`, about 5 min. The ladder's CRF is trained on 3000 synthetic requests with and without spaCy POS features (own and neighbouring tags), three seeds, scored on the 52 gold test requests. Slot F1: words only 0.768 against 0.757 with POS (difference -0.011, 95% interval -0.027 to 0.004); with the gazetteer feature 0.867 against 0.868 (+0.001, -0.010 to 0.011). POS does not help: the interval spans zero in both settings, and the gazetteer already carries what POS would add. Not added to the product.

@@ -36,3 +36,11 @@ def test_probe_helpers():
     assert entity_type("B-FIT") == "FIT" and entity_type("O") == "O"
     a = control_labels(["x", "y", "x"], ["A", "B"], random.Random(1))
     assert a == control_labels(["y", "x"], ["A", "B"], random.Random(1)) and set(a) == {"x", "y"}
+
+
+def test_pos_feature_builder_adds_neighbour_tags():
+    from bespoke.apps.pos_ner import features
+
+    f = features(["a", "kurti"], ["DET", "NOUN"], False, lambda ws, i: {"w": ws[i]})
+    assert f[0]["pos"] == "DET" and f[0]["pos-1"] == "<s>" and f[0]["pos+1"] == "NOUN" and f[1]["pos+1"] == "</s>"
+    assert "pos" not in features(["a"], None, False, lambda ws, i: {"w": ws[i]})[0]

@@ -1,0 +1,445 @@
+{
+ "task": "Universal POS tagging of romanised Hinglish requests",
+ "seed": 13,
+ "n_gold_requests": 60,
+ "n_gold_tokens": 525,
+ "n_english_only_requests": 45,
+ "n_silver_requests": 6000,
+ "interval": "bootstrap over requests, 1000 resamples",
+ "silver": "ontology classes and Hindi function words by rule, spaCy en_core_web_sm for the rest",
+ "systems": {
+  "most_frequent_tag_per_word": {
+   "all_requests": {
+    "accuracy": 0.8038,
+    "accuracy_ci95": [
+     0.764,
+     0.8377
+    ],
+    "n_tokens": 525,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      51
+     ],
+     [
+      "ADP",
+      "ADV",
+      9
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      9
+     ],
+     [
+      "NOUN",
+      "NUM",
+      6
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ]
+    ]
+   },
+   "english_only_requests": {
+    "accuracy": 0.83,
+    "accuracy_ci95": [
+     0.7933,
+     0.863
+    ],
+    "n_tokens": 400,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      41
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ],
+     [
+      "ADP",
+      "ADV",
+      4
+     ],
+     [
+      "NOUN",
+      "NUM",
+      4
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      3
+     ]
+    ]
+   }
+  },
+  "hmm": {
+   "all_requests": {
+    "accuracy": 0.8095,
+    "accuracy_ci95": [
+     0.7675,
+     0.8477
+    ],
+    "n_tokens": 525,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      42
+     ],
+     [
+      "ADP",
+      "ADV",
+      8
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      7
+     ],
+     [
+      "NOUN",
+      "NUM",
+      6
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ]
+    ]
+   },
+   "english_only_requests": {
+    "accuracy": 0.83,
+    "accuracy_ci95": [
+     0.7877,
+     0.8675
+    ],
+    "n_tokens": 400,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      34
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ],
+     [
+      "ADJ",
+      "ADV",
+      4
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      4
+     ],
+     [
+      "ADP",
+      "ADV",
+      4
+     ]
+    ]
+   }
+  },
+  "crf": {
+   "all_requests": {
+    "accuracy": 0.8038,
+    "accuracy_ci95": [
+     0.7644,
+     0.8394
+    ],
+    "n_tokens": 525,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      45
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      12
+     ],
+     [
+      "ADP",
+      "ADV",
+      8
+     ],
+     [
+      "NOUN",
+      "NUM",
+      6
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ]
+    ]
+   },
+   "english_only_requests": {
+    "accuracy": 0.81,
+    "accuracy_ci95": [
+     0.7702,
+     0.8487
+    ],
+    "n_tokens": 400,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      38
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      9
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ],
+     [
+      "ADP",
+      "ADV",
+      4
+     ],
+     [
+      "NOUN",
+      "NUM",
+      4
+     ]
+    ]
+   }
+  },
+  "crf_plus_gazetteer_feature": {
+   "all_requests": {
+    "accuracy": 0.8114,
+    "accuracy_ci95": [
+     0.7745,
+     0.846
+    ],
+    "n_tokens": 525,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      37
+     ],
+     [
+      "ADP",
+      "ADV",
+      11
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      9
+     ],
+     [
+      "NOUN",
+      "NUM",
+      6
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ]
+    ]
+   },
+   "english_only_requests": {
+    "accuracy": 0.82,
+    "accuracy_ci95": [
+     0.7783,
+     0.8608
+    ],
+    "n_tokens": 400,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      31
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      6
+     ],
+     [
+      "ADP",
+      "ADV",
+      6
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ],
+     [
+      "NOUN",
+      "NUM",
+      4
+     ]
+    ]
+   }
+  },
+  "minilm_finetuned": {
+   "all_requests": {
+    "accuracy": 0.8057,
+    "accuracy_ci95": [
+     0.7695,
+     0.8382
+    ],
+    "n_tokens": 525,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      46
+     ],
+     [
+      "ADP",
+      "ADV",
+      9
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      9
+     ],
+     [
+      "NOUN",
+      "NUM",
+      6
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ]
+    ]
+   },
+   "english_only_requests": {
+    "accuracy": 0.815,
+    "accuracy_ci95": [
+     0.774,
+     0.8532
+    ],
+    "n_tokens": 400,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "ADJ",
+      38
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      5
+     ],
+     [
+      "ADP",
+      "ADV",
+      5
+     ],
+     [
+      "DET",
+      "PRON",
+      4
+     ],
+     [
+      "NOUN",
+      "NUM",
+      4
+     ]
+    ]
+   }
+  },
+  "spacy_en_core_web_sm_directly": {
+   "all_requests": {
+    "accuracy": 0.6876,
+    "accuracy_ci95": [
+     0.6267,
+     0.744
+    ],
+    "n_tokens": 525,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "PROPN",
+      40
+     ],
+     [
+      "NOUN",
+      "VERB",
+      14
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      13
+     ],
+     [
+      "ADP",
+      "PROPN",
+      11
+     ],
+     [
+      "ADJ",
+      "PROPN",
+      9
+     ]
+    ]
+   },
+   "english_only_requests": {
+    "accuracy": 0.7775,
+    "accuracy_ci95": [
+     0.7318,
+     0.8256
+    ],
+    "n_tokens": 400,
+    "top_confusions_gold_predicted": [
+     [
+      "NOUN",
+      "PROPN",
+      27
+     ],
+     [
+      "NOUN",
+      "VERB",
+      12
+     ],
+     [
+      "ADJ",
+      "NOUN",
+      10
+     ],
+     [
+      "NOUN",
+      "ADJ",
+      7
+     ],
+     [
+      "ADJ",
+      "VERB",
+      6
+     ]
+    ]
+   }
+  }
+ },
+ "silver_vs_gold_accuracy": 0.821
+}

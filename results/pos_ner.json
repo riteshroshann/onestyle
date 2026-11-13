@@ -1,0 +1,63 @@
+{
+ "task": "slot (NER) F1 of a CRF with and without a POS feature",
+ "n_test_requests": 52,
+ "train_requests_per_seed": 3000,
+ "seeds": [
+  13,
+  14,
+  15
+ ],
+ "pos_source": "spaCy en_core_web_sm tags of the request tokens (own tag and both neighbours)",
+ "arms": {
+  "words": {
+   "f1_per_seed": [
+    0.7756,
+    0.7603,
+    0.7672
+   ],
+   "f1_mean": 0.7677,
+   "f1_std": 0.0063
+  },
+  "words_plus_pos": {
+   "f1_per_seed": [
+    0.7672,
+    0.7419,
+    0.7603
+   ],
+   "f1_mean": 0.7565,
+   "f1_std": 0.0107,
+   "f1_gain_over_words": {
+    "mean": -0.0112,
+    "ci95_bootstrap_over_requests": [
+     -0.0267,
+     0.0042
+    ]
+   }
+  },
+  "words_plus_gazetteer": {
+   "f1_per_seed": [
+    0.8655,
+    0.8697,
+    0.8661
+   ],
+   "f1_mean": 0.8671,
+   "f1_std": 0.0019
+  },
+  "words_plus_gazetteer_plus_pos": {
+   "f1_per_seed": [
+    0.8734,
+    0.8739,
+    0.8565
+   ],
+   "f1_mean": 0.8679,
+   "f1_std": 0.0081,
+   "f1_gain_over_words_plus_gazetteer": {
+    "mean": 0.0008,
+    "ci95_bootstrap_over_requests": [
+     -0.0096,
+     0.0107
+    ]
+   }
+  }
+ }
+}
