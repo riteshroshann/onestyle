@@ -20,28 +20,28 @@
    "exact_match_requests": 0.7105
   },
   "t5_small_greedy": {
-   "precision": 0.6376,
-   "recall": 0.4867,
-   "f1": 0.552,
+   "precision": 0.622,
+   "recall": 0.51,
+   "f1": 0.5604,
    "f1_ci95": [
-    0.4902,
-    0.6101
+    0.5009,
+    0.6132
    ],
-   "exact_match_requests": 0.0526
+   "exact_match_requests": 0.0263
   },
   "t5_small_constrained": {
-   "precision": 0.6463,
-   "recall": 0.4933,
-   "f1": 0.5595,
+   "precision": 0.6194,
+   "recall": 0.51,
+   "f1": 0.5594,
    "f1_ci95": [
-    0.4981,
-    0.6189
+    0.4991,
+    0.6146
    ],
-   "exact_match_requests": 0.0526
+   "exact_match_requests": 0.0263
   }
  },
  "outputs_with_a_triple_outside_the_training_vocabulary": {
-  "t5_small_greedy": 7
+  "t5_small_greedy": 5
  },
  "examples": [
   {
@@ -59,14 +59,18 @@
     "set garment=sharara"
    ],
    "t5_small_greedy": [
-    "add colour=mustard",
+    "add colour=black",
+    "add components=sharara",
     "add embellishment=gota patti",
-    "set garment=sharara"
+    "add occasion=winter",
+    "add shade=light"
    ],
    "t5_small_constrained": [
-    "add colour=mustard",
+    "add colour=black",
+    "add components=sharara",
     "add embellishment=gota patti",
-    "set garment=sharara"
+    "add occasion=winter",
+    "add shade=light"
    ]
   },
   {
@@ -80,12 +84,12 @@
     "set bodice.fit=relaxed"
    ],
    "t5_small_greedy": [
-    "exclude embellishment=thread work",
-    "set bodice.fit=fitted"
+    "exclude embellishment=mirror work",
+    "set bodice.fit=relaxed"
    ],
    "t5_small_constrained": [
-    "exclude embellishment=thread work",
-    "set bodice.fit=fitted"
+    "exclude embellishment=mirror work",
+    "set bodice.fit=relaxed"
    ]
   },
   {
@@ -105,13 +109,15 @@
     "set garment=kurta set"
    ],
    "t5_small_greedy": [
-    "add components=kurti",
+    "add colour=black",
+    "add components=dhoti pants",
     "add embellishment=mirror work",
     "set garment.length=hip",
     "set garment=kurti"
    ],
    "t5_small_constrained": [
-    "add components=kurti",
+    "add colour=black",
+    "add components=dhoti pants",
     "add embellishment=mirror work",
     "set garment.length=hip",
     "set garment=kurti"

@@ -9,65 +9,65 @@
  "interval": "bootstrap over questions, 1000 resamples",
  "arms": {
   "bm25_deployed": {
-   "recall_at_1": 0.5467,
+   "recall_at_1": 0.5333,
    "recall_at_3": 0.72,
    "recall_at_5": 0.8267,
-   "mrr": 0.6732,
+   "mrr": 0.6664,
    "recall_at_1_ci95": [
-    0.44,
-    0.6537
+    0.4267,
+    0.6533
    ],
    "mrr_ci95": [
-    0.5835,
-    0.7558
+    0.578,
+    0.7516
    ]
   },
   "dense_bge_small": {
    "recall_at_1": 0.5333,
    "recall_at_3": 0.7467,
    "recall_at_5": 0.8533,
-   "mrr": 0.6708,
+   "mrr": 0.6701,
    "recall_at_1_ci95": [
     0.4267,
     0.64
    ],
    "mrr_ci95": [
-    0.5872,
-    0.7541
+    0.5859,
+    0.7534
    ]
   },
   "hybrid_rrf": {
-   "recall_at_1": 0.6,
-   "recall_at_3": 0.8267,
+   "recall_at_1": 0.6133,
+   "recall_at_3": 0.8133,
    "recall_at_5": 0.9067,
-   "mrr": 0.7282,
+   "mrr": 0.7335,
    "recall_at_1_ci95": [
-    0.48,
-    0.707
+    0.4933,
+    0.72
    ],
    "mrr_ci95": [
-    0.6417,
-    0.8082
+    0.6461,
+    0.8154
    ]
   }
  },
  "answerability": {
   "bm25_top_score": {
-   "auroc": 0.8443,
+   "auroc": 0.848,
    "auroc_ci95": [
-    0.7197,
-    0.9376
+    0.727,
+    0.9402
    ],
-   "youden_threshold_on_all_questions": 4.673,
-   "answers_given_to_answerable": 0.8267,
-   "answers_given_to_unanswerable": 0.2,
+   "youden_threshold_on_all_questions": 4.819,
+   "answers_given_to_answerable": 0.8133,
+   "answers_given_to_unanswerable": 0.16,
    "note": "threshold picked on the same questions it is scored on, so optimistic"
   },
   "dense_top_cosine": {
-   "auroc": 0.8592,
+   "auroc": 0.8581,
    "auroc_ci95": [
-    0.7747,
-    0.9294
+    0.7742,
+    0.9283
    ],
    "youden_threshold_on_all_questions": 0.627,
    "answers_given_to_answerable": 0.7867,

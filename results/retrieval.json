@@ -8,25 +8,25 @@
  "seed": 13,
  "interval": "bootstrap over questions, 1000 resamples",
  "retrieval": {
-  "recall_at_1": 0.5467,
+  "recall_at_1": 0.5333,
   "recall_at_3": 0.72,
   "recall_at_5": 0.8267,
-  "mrr": 0.6707,
+  "mrr": 0.6639,
   "recall_at_1_ci95": [
-   0.44,
-   0.6667
+   0.4267,
+   0.6533
   ],
   "mrr_ci95": [
-   0.5932,
-   0.7586
+   0.5828,
+   0.7512
   ],
   "by_language": {
    "english": {
     "n": 63,
-    "recall_at_1": 0.5556,
+    "recall_at_1": 0.5397,
     "recall_at_3": 0.6984,
     "recall_at_5": 0.8095,
-    "mrr": 0.6683
+    "mrr": 0.6602
    },
    "hinglish": {
     "n": 12,
@@ -44,7 +44,7 @@
    "answered_answerable": 74,
    "answered_unanswerable": 16,
    "abstained_on_unanswerable": 0.36,
-   "correct_top1_answers": 40,
+   "correct_top1_answers": 39,
    "coverage": 0.9867
   },
   "sweep": [
@@ -53,7 +53,7 @@
     "answered_answerable": 75,
     "answered_unanswerable": 16,
     "abstained_on_unanswerable": 0.36,
-    "correct_top1_answers": 41,
+    "correct_top1_answers": 40,
     "coverage": 1
    },
    {
@@ -61,7 +61,7 @@
     "answered_answerable": 75,
     "answered_unanswerable": 16,
     "abstained_on_unanswerable": 0.36,
-    "correct_top1_answers": 41,
+    "correct_top1_answers": 40,
     "coverage": 1
    },
    {
@@ -69,7 +69,7 @@
     "answered_answerable": 75,
     "answered_unanswerable": 16,
     "abstained_on_unanswerable": 0.36,
-    "correct_top1_answers": 41,
+    "correct_top1_answers": 40,
     "coverage": 1
    },
    {
@@ -77,7 +77,7 @@
     "answered_answerable": 74,
     "answered_unanswerable": 16,
     "abstained_on_unanswerable": 0.36,
-    "correct_top1_answers": 40,
+    "correct_top1_answers": 39,
     "coverage": 0.9867
    },
    {
@@ -85,7 +85,7 @@
     "answered_answerable": 72,
     "answered_unanswerable": 14,
     "abstained_on_unanswerable": 0.44,
-    "correct_top1_answers": 39,
+    "correct_top1_answers": 38,
     "coverage": 0.96
    },
    {
@@ -93,7 +93,7 @@
     "answered_answerable": 72,
     "answered_unanswerable": 11,
     "abstained_on_unanswerable": 0.56,
-    "correct_top1_answers": 39,
+    "correct_top1_answers": 38,
     "coverage": 0.96
    },
    {
@@ -101,16 +101,16 @@
     "answered_answerable": 67,
     "answered_unanswerable": 10,
     "abstained_on_unanswerable": 0.6,
-    "correct_top1_answers": 38,
+    "correct_top1_answers": 37,
     "coverage": 0.8933
    },
    {
     "threshold": 5,
-    "answered_answerable": 59,
-    "answered_unanswerable": 5,
-    "abstained_on_unanswerable": 0.8,
+    "answered_answerable": 60,
+    "answered_unanswerable": 4,
+    "abstained_on_unanswerable": 0.84,
     "correct_top1_answers": 36,
-    "coverage": 0.7867
+    "coverage": 0.8
    },
    {
     "threshold": 6,
@@ -122,54 +122,54 @@
    },
    {
     "threshold": 8,
-    "answered_answerable": 27,
+    "answered_answerable": 28,
     "answered_unanswerable": 2,
     "abstained_on_unanswerable": 0.92,
-    "correct_top1_answers": 22,
-    "coverage": 0.36
+    "correct_top1_answers": 23,
+    "coverage": 0.3733
    }
   ],
-  "auroc_top_score": 0.8443,
+  "auroc_top_score": 0.848,
   "auroc_ci95": [
-   0.7307,
-   0.9341
+   0.7372,
+   0.94
   ],
   "off_topic_top_scores": [
    0,
    0,
    0,
-   3.4168,
+   3.4468,
    0,
    0,
    0,
-   3.9384,
-   2.8218,
+   3.9707,
+   2.8489,
    0
   ],
   "near_topic_top_scores": [
    0,
-   5.1589,
-   4.2935,
-   6.8528,
-   3.085,
-   4.0731,
-   4.2781,
+   4.8189,
+   4.3265,
+   6.8945,
+   3.1139,
+   4.1058,
+   4.3267,
    0,
-   4.6364,
-   11.2401,
-   6.5329,
-   4.6026,
-   3.4364,
-   11.3667,
-   2.9228
+   4.671,
+   11.3163,
+   6.0341,
+   4.6546,
+   3.4697,
+   11.4775,
+   2.9514
   ],
   "deployed_prf_of_answering_correctly": {
    "precision": 1,
-   "recall": 0.9756,
-   "f1": 0.9877,
-   "tp": 40,
-   "predicted": 40,
-   "gold": 41
+   "recall": 0.975,
+   "f1": 0.9873,
+   "tp": 39,
+   "predicted": 39,
+   "gold": 40
   }
  },
  "failures": [
@@ -183,6 +183,12 @@
    "q": "kya main Hindi mein likh sakta hoon",
    "gold": "about/languages-bespoke-understands",
    "got": "sheet/english-and-hindi-sheets",
+   "rank": 2
+  },
+  {
+   "q": "what is the very first thing I should write when I start",
+   "gold": "describing/describing-a-garment-start-with-the-garment",
+   "got": "sheet/neckline-shapes",
    "rank": 2
   },
   {
@@ -201,7 +207,7 @@
    "q": "how do I exclude something from my design",
    "gold": "describing/saying-what-you-do-not-want",
    "got": "about/who-bespoke-is-for",
-   "rank": 21
+   "rank": 22
   },
   {
    "q": "mujhe embroidery nahi chahiye, ye kaise likhu",
@@ -309,7 +315,7 @@
    "q": "where does a tailor see incoming orders",
    "gold": "makers/the-maker-inbox",
    "got": "describing/details-bespoke-has-no-word-for",
-   "rank": 29
+   "rank": 30
   },
   {
    "q": "how does a tailor mark that stitching has begun",
@@ -326,7 +332,7 @@
   {
    "q": "any advice to get accurate numbers",
    "gold": "measuring/measurement-tips",
-   "got": "describing/changing-your-mind",
+   "got": "limits/what-this-assistant-can-help-with",
    "rank": 3
   },
   {
@@ -351,7 +357,7 @@
    "q": "is my text sent to some server",
    "gold": "privacy/privacy-where-your-words-and-pictures-are-read",
    "got": "privacy/the-optional-language-model",
-   "rank": 10
+   "rank": 11
   },
   {
    "q": "is my question to this chat stored",
@@ -382,97 +388,97 @@
   {
    "q": "how do I fix my laptop wifi",
    "kind": "off_topic",
-   "top": 3.4168,
+   "top": 3.4468,
    "got": "makers/sending-a-design-to-a-maker"
   },
   {
    "q": "which phone should I buy",
    "kind": "off_topic",
-   "top": 3.9384,
+   "top": 3.9707,
    "got": "makers/sending-a-design-to-a-maker"
   },
   {
    "q": "translate good morning to French",
    "kind": "off_topic",
-   "top": 2.8218,
+   "top": 2.8489,
    "got": "moodboard/circling-a-detail"
   },
   {
    "q": "how do I delete my account",
    "kind": "near_topic",
-   "top": 5.1589,
+   "top": 4.8189,
    "got": "makers/maker-accounts"
   },
   {
    "q": "is there an android app",
    "kind": "near_topic",
-   "top": 4.2935,
+   "top": 4.3265,
    "got": "limits/what-bespoke-does-not-do"
   },
   {
    "q": "how should I wash a silk kurti",
    "kind": "near_topic",
-   "top": 6.8528,
+   "top": 6.8945,
    "got": "glossary/glossary-silk-sheer-and-festive-fabrics"
   },
   {
    "q": "how do I iron georgette",
    "kind": "near_topic",
-   "top": 3.085,
+   "top": 3.1139,
    "got": "describing/english-examples-that-work-well"
   },
   {
    "q": "do you ship to the United States",
    "kind": "near_topic",
-   "top": 4.0731,
+   "top": 4.1058,
    "got": "describing/changing-your-mind"
   },
   {
    "q": "does it work without internet",
    "kind": "near_topic",
-   "top": 4.2781,
+   "top": 4.3267,
    "got": "privacy/privacy-where-your-words-and-pictures-are-read"
   },
   {
    "q": "can I pay the tailor through upi",
    "kind": "near_topic",
-   "top": 4.6364,
+   "top": 4.671,
    "got": "makers/moving-a-request-forward"
   },
   {
    "q": "do you have a size chart for plus sizes",
    "kind": "near_topic",
-   "top": 11.2401,
+   "top": 11.3163,
    "got": "sheet/finished-measurement-equals-body-plus-ease"
   },
   {
    "q": "how do I get alterations done after delivery",
    "kind": "near_topic",
-   "top": 6.5329,
-   "got": "makers/what-happens-after-you-send-your-design"
+   "top": 6.0341,
+   "got": "limits/prices-and-delivery"
   },
   {
    "q": "is there a discount code for first order",
    "kind": "near_topic",
-   "top": 4.6026,
+   "top": 4.6546,
    "got": "about/how-bespoke-works-in-short"
   },
   {
    "q": "what is the best colour for my skin tone",
    "kind": "near_topic",
-   "top": 3.4364,
+   "top": 3.4697,
    "got": "moodboard/saying-not-this-colour"
   },
   {
    "q": "which saree drape suits a short person",
    "kind": "near_topic",
-   "top": 11.3667,
+   "top": 11.4775,
    "got": "glossary/glossary-bottoms-and-drapes"
   },
   {
    "q": "how do I tie a dupatta in a stylish way",
    "kind": "near_topic",
-   "top": 2.9228,
+   "top": 2.9514,
    "got": "glossary/glossary-prints-and-embellishments"
   }
  ]

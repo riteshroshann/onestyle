@@ -13,14 +13,13 @@ import { bootstrap, key, prf, readJsonl, triple, writeResult } from "./eval-comm
 const here = dirname(fileURLToPath(import.meta.url));
 const engineDir = join(here, "..", "lib", "engine");
 
-// "par" ends a clause only when it is a conjunction ("fitted chahiye par sleeves loose"); after a part word it is the
-// postposition "on" ("sleeve par loose"). This is the proposed fix, applied to a copy of spec.ts.
-async function patchedBind() {
+// Main now reads "par" after a part word as the postposition "on" (the fix this study proposed). To keep the before/after
+// measurement, a copy of spec.ts with the old rule ("par" always ends a clause) is built in a temp dir.
+async function oldParBind() {
   let src = readFileSync(join(engineDir, "spec.ts"), "utf8");
-  const before = "const breaks = tokens.map((t) => CLAUSE_BREAK.has(t));";
-  if (!src.includes(before)) throw new Error("spec.ts changed: update the patch");
-  src = src.replace(before, `const partEnd = new Set(spans.filter((s) => ["PART", "LOC", "NECKLINE", "SLEEVE"].includes(s.tag)).map((s) => s.end));
-  const breaks = tokens.map((t, i) => CLAUSE_BREAK.has(t) && !(t === "par" && partEnd.has(i)));`);
+  const live = /const breaks = tokens\.map\(\(t, i\) => CLAUSE_BREAK\.has\(t\) && !\(t === "par" && \w+\.has\(i\)\)\);/;
+  if (!live.test(src)) throw new Error("spec.ts changed: update the old-rule patch");
+  src = src.replace(live, "const breaks = tokens.map((t) => CLAUSE_BREAK.has(t));");
   src = src.replaceAll(/from "\.\/(\w+)\.ts"/g, (_, f) => `from "${pathToFileURL(join(engineDir, f + ".ts")).href}"`);
   const dir = mkdtempSync(join(tmpdir(), "bespoke-par-"));
   writeFileSync(join(dir, "spec.ts"), src);
@@ -43,7 +42,7 @@ function goldSpans(row, tokens) {
 }
 
 const rows = readJsonl("data/gold/binding.jsonl");
-const bindPar = await patchedBind();
+const bindOld = await oldParBind();
 if (process.argv.includes("--predictions")) {
   const out = {};
   for (const r of rows) { const tk = tokenize(r.text); out[r.id] = [...new Set(bind(tk, goldSpans(r, tk), "words").map((u) => key(triple(u))))]; }
@@ -67,8 +66,8 @@ for (const [name, split] of Object.entries(sets)) {
   report.sets[name] = {};
   for (const [mode, spans] of Object.entries(modes)) {
     report.sets[name][mode] = {
-      deployed: score(items, (r, tk) => bind(tk, spans(r, tk), "words")),
-      par_fixed: score(items, (r, tk) => bindPar(tk, spans(r, tk), "words")),
+      current: score(items, (r, tk) => bind(tk, spans(r, tk), "words")),
+      par_old_rule: score(items, (r, tk) => bindOld(tk, spans(r, tk), "words")),
     };
   }
 }
@@ -79,14 +78,15 @@ for (const r of rows) {
   const tk = tokenize(r.text), sp = goldSpans(r, tk);
   const gold = new Set(goldKeys(r));
   const a = new Set(bind(tk, sp.map((s) => ({ ...s })), "words").map((u) => key(triple(u))));
-  const b = new Set(bindPar(tk, sp.map((s) => ({ ...s })), "words").map((u) => key(triple(u))));
-  const gain = [...gold].filter((k) => b.has(k) && !a.has(k)), loss = [...gold].filter((k) => a.has(k) && !b.has(k));
+  const b = new Set(bindOld(tk, sp.map((s) => ({ ...s })), "words").map((u) => key(triple(u))));
+  // a = current rule, b = old rule: attachments the current rule gets right that the old one missed, and the reverse
+  const gain = [...gold].filter((k) => a.has(k) && !b.has(k)), loss = [...gold].filter((k) => b.has(k) && !a.has(k));
   recovered += gain.length; broken += loss.length;
-  if (gain.length || loss.length) report.par_fix[r.id] = { text: r.text, recovered: gain, broken: loss };
+  if (gain.length || loss.length) report.par_fix[r.id] = { text: r.text, fixed_by_current_rule: gain, broken_by_current_rule: loss };
   const missed = [...gold].filter((k) => !a.has(k)), extra = [...a].filter((k) => !gold.has(k));
   if (missed.length || extra.length) report.misses.push({ id: r.id, split: r.split, text: r.text, missed, spurious: extra });
 }
-report.par_fix_summary = { gold_attachments_recovered: recovered, gold_attachments_broken: broken, requests_changed: Object.keys(report.par_fix).length };
+report.par_fix_summary = { gold_attachments_fixed_by_current_rule: recovered, gold_attachments_broken_by_current_rule: broken, requests_changed: Object.keys(report.par_fix).length };
 writeResult("binding", report);
-for (const [n, s] of Object.entries(report.sets)) console.log(n.padEnd(13), "gold", s.gold_spans.deployed.f1, "->", s.gold_spans.par_fixed.f1, "| gazetteer", s.gazetteer_spans.deployed.f1, "->", s.gazetteer_spans.par_fixed.f1);
+for (const [n, s] of Object.entries(report.sets)) console.log(n.padEnd(13), "gold: old par rule", s.gold_spans.par_old_rule.f1, "-> current", s.gold_spans.current.f1, "| gazetteer: old", s.gazetteer_spans.par_old_rule.f1, "-> current", s.gazetteer_spans.current.f1);
 console.log(report.par_fix_summary, "misses", report.misses.length);

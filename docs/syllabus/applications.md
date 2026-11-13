@@ -1,6 +1,6 @@
 # Applications syllabus coverage
 
-Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2seq, BERT, GPT) and Unit 4 (POS, NER, parsing, sentiment, MT, QA, summarisation). Every number below was written by a script into the named `results/` file. Evaluation sets are small; the size is given next to each number. Numbers from the Node scorers (binding, grounding parity, retrieval, summarisation, translation) were measured against `web/lib` at commit 8ffed89; main has since changed `spec.ts`, so re-run them after merging.
+Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2seq, BERT, GPT) and Unit 4 (POS, NER, parsing, sentiment, MT, QA, summarisation). Every number below was written by a script into the named `results/` file. Evaluation sets are small; the size is given next to each number. Numbers from the Node scorers (binding, grounding parity, retrieval, summarisation, translation) were re-measured against `web/lib` at main commit ed44caa (after the studio rework of `spec.ts` and `describe.ts`). Only the binding, retrieval and seq2seq results changed; the grounding, summarisation, translation and dependency files regenerate identically.
 
 | Topic | Code | What it does for the product | Result | Status |
 |---|---|---|---|---|
@@ -20,24 +20,17 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 
 ## Syntax: attachment of values to parts
 
-Gold: `data/gold/binding.jsonl`, 152 requests (30 dev and 52 test from `requests.txt`, the 24 of `web/tests/requests.test.ts`, 26 short postposition probes written to stress "par", "pe", "se" and "mein", and 20 English two-part probes, `attach_en`, used by the parser comparison). Each request carries its gold spans and the updates a tailor would take from it (`op slot=value`, with `~slight` or `~strong` and `@ref` where present). Canonical values follow the ontology; what is judged is the attachment: slot, operation, negation scope and comparison reference. Written independently of the binder's output (29 requests disagree with it, which would not happen if the gold were copied from it). One annotator.
+Gold: `data/gold/binding.jsonl`, 152 requests (30 dev and 52 test from `requests.txt`, the 24 of `web/tests/requests.test.ts`, 26 short postposition probes written to stress "par", "pe", "se" and "mein", and 20 English two-part probes, `attach_en`, used by the parser comparison). Each request carries its gold spans and the updates a tailor would take from it (`op slot=value`, with `~slight` or `~strong` and `@ref` where present). Canonical values follow the ontology; what is judged is the attachment: slot, operation, negation scope and comparison reference. Written independently of the binder's output (24 requests disagree with it, which would not happen if the gold were copied from it). One annotator.
 
 Score is micro precision, recall and F1 of the set of triples per request, bootstrap interval over requests (1000 resamples, seed 13). "Gold spans" feeds the binder the annotated spans, so it isolates binding; "gazetteer spans" is the deployed no-model path.
 
 The postposition set was written to find faults, so its score is a stress test, not a typical rate.
 
-### Bug: "par" is a clause break and a postposition
+### "par": fixed on main
 
-`CLAUSE_BREAK` in `web/lib/engine/spec.ts` contains "par". After a part word it is the postposition "on": "sleeve par loose" binds loose to the bodice. Measured: the fix below recovers 6 gold attachments in 6 requests and breaks none (`results/binding.json`, key `par_fix`). It lifts the postposition set but leaves the other sets unchanged, because their requests rarely use "par".
+At 8ffed89 `CLAUSE_BREAK` in `web/lib/engine/spec.ts` contained "par" and treated it only as a clause break, although after a part word it is the postposition "on": "sleeve par loose" bound loose to the bodice. Main now has exactly the fix this study proposed (`cueEnds` in `bind()`). The scorer keeps the before and after: it re-creates the old rule in a temp copy of `spec.ts` and compares (`par_old_rule` against `current` in `results/binding.json`). The postposition set rises from F1 0.727 to 0.849 (0.736 to 0.943), the current rule fixes 6 gold attachments in 6 requests and breaks none, and the other sets are unchanged because their requests rarely use "par".
 
-Fix for the owner of `spec.ts`, replacing the `breaks` line in `bind()`:
-
-```ts
-const partEnd = new Set(spans.filter((s) => ["PART", "LOC", "NECKLINE", "SLEEVE"].includes(s.tag)).map((s) => s.end));
-const breaks = tokens.map((t, i) => CLAUSE_BREAK.has(t) && !(t === "par" && partEnd.has(i)));
-```
-
-Not fixed by it, and visible in the `misses` list of the result: a clause keeps the context of its first part cue ("kamar pe fitted hip pe loose" puts both fits on the bodice, with "pe" not a break), context does not carry across a break ("sleeves full par loose nahi"), and "gale par 7 inch gehra" binds the number to garment length.
+Still open on main, visible in the `misses` list of the result: a clause keeps the context of its first part cue ("kamar pe fitted hip pe loose" puts both fits on the bodice, with "pe" not a break), context does not carry across a break ("sleeves full par loose nahi"), and "gale par 7 inch gehra" now gets the 7 inches right but also emits a spurious depth "deep".
 
 ## Named entity recognition
 
@@ -58,7 +51,7 @@ Each system takes the best-scoring ontology form of the tag and answers only abo
 | Edit-distance similarity | 0.66 | 0.971 | 0.944 | 0.957 (0.917 to 0.986) | 3 |
 | Embedding cosine (bge-small-en-v1.5) | 0.72 | 0.828 | 0.747 | 0.785 (0.695 to 0.861) | 17 |
 
-Edit distance matches the shipped trigram rule on F1 (the intervals overlap widely at n = 99) and abstains on out-of-ontology words about three times as often (3 false grounds against 9). The embedding does worst: it is English-only and cannot see that "kurthi" is a spelling of "kurti". Proposal for the owner of `lexicon.ts`: keep trigram Dice, add an edit-similarity check of at least 0.66 before answering. The shipped errors (`deployed_errors` in the result) are mostly near words a tailor would also flag, such as "maximalist" read as minimal and "skintight" read as fitted. A few "false grounds" are arguable ("graduation ball" to farewell). The typos are synthetic, so real typing noise could behave differently.
+Edit distance matches the shipped trigram rule on F1 (the intervals overlap widely at n = 99) and abstains on out-of-ontology words about three times as often (3 false grounds against 9). The embedding does worst: it is English-only and cannot see that "kurthi" is a spelling of "kurti". Still open on main (`groundFuzzy` still answers at trigram Dice 0.5). Proposal for the owner of `lexicon.ts`: keep trigram Dice, add an edit-similarity check of at least 0.66 before answering. The shipped errors (`deployed_errors` in the result) are mostly near words a tailor would also flag, such as "maximalist" read as minimal and "skintight" read as fitted. A few "false grounds" are arguable ("graduation ball" to farewell). The typos are synthetic, so real typing noise could behave differently.
 
 ## Question answering: help-chatbot retrieval
 
@@ -66,13 +59,13 @@ Edit distance matches the shipped trigram rule on F1 (the intervals overlap wide
 
 | Arm | Recall@1 | Recall@3 | Recall@5 | MRR |
 |---|---|---|---|---|
-| BM25, deployed (`retrieve.js`) | 0.547 (0.44 to 0.67) | 0.720 | 0.827 | 0.671 (0.59 to 0.76) |
-| Dense, bge-small-en-v1.5 | 0.533 (0.43 to 0.64) | 0.747 | 0.853 | 0.671 |
-| Hybrid, reciprocal rank fusion | 0.600 (0.48 to 0.71) | 0.827 | 0.907 | 0.728 (0.64 to 0.81) |
+| BM25, deployed (`retrieve.js`) | 0.533 (0.43 to 0.65) | 0.720 | 0.827 | 0.664 (0.58 to 0.75) |
+| Dense, bge-small-en-v1.5 | 0.533 (0.43 to 0.64) | 0.747 | 0.853 | 0.670 |
+| Hybrid, reciprocal rank fusion | 0.613 (0.49 to 0.72) | 0.813 | 0.907 | 0.734 (0.65 to 0.82) |
 
-n = 75 answerable questions, intervals are bootstrap over questions; the arms are within each other's intervals on Recall@1, so the only supported claim is that fusing the two does not hurt and probably helps at Recall@3 and @5. Python's BM25 MRR differs from the Node one in the third decimal because it also ranks the passages scoring zero.
+n = 75 answerable questions, intervals are bootstrap over questions; the arms are within each other's intervals on Recall@1, so the only supported claim is that fusing the two does not hurt and probably helps at Recall@3 and @5. (Main added a passage to the privacy corpus since the first measurement; BM25 Recall@1 moved from 0.547 to 0.533.) Python's BM25 MRR (0.666) differs from the Node one in the third decimal because it also ranks the passages scoring zero.
 
-Answerability: the deployed rule answers when the top BM25 score is at least 2.5. On this set it answers 74 of 75 answerable questions (coverage 0.99) and also answers 16 of the 25 unanswerable ones (abstains on 36%): the false answers are three off-topic questions (laptop wifi, which phone, translate) and 13 near-topic ones whose top passage shares a word with the question, for example the silk-fabric passage for a question about washing a silk kurti (`false_answers` in the result). AUROC of the top score for answerable against unanswerable is 0.844 for BM25 and 0.859 for the dense cosine (25 negatives, so intervals are wide: 0.72 to 0.94 and 0.77 to 0.93). Raising the 2.5 threshold to about 4.7 would abstain on 80% of unanswerable questions but would also drop 17% of answerable ones (threshold chosen on the same questions, so optimistic). Whether to move it is a product choice.
+Answerability: the deployed rule answers when the top BM25 score is at least 2.5. On this set it answers 74 of 75 answerable questions (coverage 0.99) and also answers 16 of the 25 unanswerable ones (abstains on 36%): the false answers are three off-topic questions (laptop wifi, which phone, translate) and 13 near-topic ones whose top passage shares a word with the question, for example the silk-fabric passage for a question about washing a silk kurti (`false_answers` in the result). AUROC of the top score for answerable against unanswerable is 0.848 for BM25 and 0.858 for the dense cosine (25 negatives, so intervals are wide: 0.74 to 0.94 and 0.77 to 0.93). `GROUNDED_MIN` is still 2.5 on main, so this finding is open. Raising it to about 4.8 would abstain on 84% of unanswerable questions but would also drop 19% of answerable ones (threshold chosen on the same questions, so optimistic). Whether to move it is a product choice.
 
 ## Sentiment: stance towards the design
 
@@ -113,7 +106,7 @@ TextRank beats the lead baseline on ROUGE-1 and ROUGE-L only within noise, and e
 | Template system (deployed) | 64.1 | 76.7 | 79.3 (74.1 to 84.4) | 0.42 |
 | opus-mt-en-hi (Helsinki-NLP, 75M parameters, beam 4) | 4.1 | 22.2 | 24.0 (20.0 to 28.6) | 0.00 |
 
-A generic MT model has no tailoring vocabulary: it reads "Avoid" as "stay away", "Neckline" as a name, "sweetheart" as "जानेमन" and mangles the numbers. The template system's remaining misses are register choices (for example "ज़री" against "ज़री का काम") and one real defect: the Avoid row prints "नहीं चाहिए: कढ़ाई नहीं", saying "not wanted" twice, because `sheetLines` in `web/lib/engine/describe.ts` appends "नहीं" to each value under a label that already means "not wanted". The fix for the owner of that file is to drop the `${...} नहीं` suffix (or change the label to "बिना"). Exact match by part is in the result; Avoid and Back neck are 0 for that reason and for wording. Not tested: IndicTrans2 or a larger model, which do not fit this machine's budget of time; a human fluency judgement.
+A generic MT model has no tailoring vocabulary: it reads "Avoid" as "stay away", "Neckline" as a name, "sweetheart" as "जानेमन" and mangles the numbers. The template system's remaining misses are register choices (for example "ज़री" against "ज़री का काम") and one real defect: the Avoid row prints "नहीं चाहिए: कढ़ाई नहीं", saying "not wanted" twice, because `sheetLines` in `web/lib/engine/describe.ts` appends "नहीं" to each value under a label that already means "not wanted". Still open on main: `describe.ts` still appends the suffix. The fix for the owner of that file is to drop the `${...} नहीं` suffix (or change the label to "बिना"). Exact match by part is in the result; Avoid and Back neck are 0 for that reason and for wording. Not tested: IndicTrans2 or a larger model, which do not fit this machine's budget of time; a human fluency judgement.
 
 ## BERT: a look inside the deployed MiniLM
 
@@ -182,7 +175,7 @@ Off the shelf, the models find these lowercase, space-separated fashion requests
 | System | Precision | Recall | F1 (95% interval) | Requests exactly right |
 |---|---|---|---|---|
 | Gazetteer plus binder (deployed) | 0.951 | 0.910 | 0.930 (0.900 to 0.960) | 0.711 |
-| t5-small, greedy | 0.638 | 0.487 | 0.552 (0.490 to 0.610) | 0.053 |
-| t5-small, constrained | 0.646 | 0.493 | 0.560 (0.498 to 0.619) | 0.053 |
+| t5-small, greedy | 0.622 | 0.510 | 0.560 (0.501 to 0.613) | 0.026 |
+| t5-small, constrained | 0.619 | 0.510 | 0.559 (0.499 to 0.615) | 0.026 |
 
-The small seq2seq model is far behind the pipeline it was trained to imitate: it misses values and attachments on requests that differ from the templates (for example it reads "waist par tight nahi, thoda comfortable rakho" as "fitted" plus an embellishment exclusion). Constrained decoding removes malformed outputs (7 gold requests had an unknown triple under greedy decoding) and adds half a point of F1, within noise. Training was cut at 10 epochs for the time budget, so longer training, more data or a larger model might close some of the gap, but with a deterministic teacher the best case is matching it. The pipeline stays.
+The small seq2seq model is far behind the pipeline it was trained to imitate: it misses values and attachments on requests that differ from the templates (for example it reads "waist par tight nahi, thoda comfortable rakho" as "fitted" plus an embellishment exclusion). Constrained decoding removes malformed outputs (5 gold requests had an unknown triple under greedy decoding) without changing F1 (0.560 against 0.559). The model was retrained for the re-measurement and the numbers moved by up to a point from run to run, so differences of that size mean nothing. Training was cut at 10 epochs for the time budget, so longer training, more data or a larger model might close some of the gap, but with a deterministic teacher the best case is matching it. The pipeline stays.
