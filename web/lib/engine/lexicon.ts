@@ -88,17 +88,32 @@ export function groundFuzzy(text: string, tag: Tag): { value: string; score: num
   const values = ONTO.lexicon[tag];
   if (!values) return null;
   const a = trigrams(text);
-  let best: { value: string; score: number } | null = null;
+  let best: { value: string; score: number; form: string } | null = null;
   for (const [canonical, entry] of Object.entries<any>(values)) {
     for (const form of entry.forms as string[]) {
       const b = trigrams(form);
       let inter = 0;
       a.forEach((g) => { if (b.has(g)) inter++; });
       const score = (2 * inter) / (a.size + b.size);
-      if (!best || score > best.score) best = { value: canonical, score };
+      if (!best || score > best.score) best = { value: canonical, score, form };
     }
   }
-  return best && best.score >= 0.5 ? best : null;
+  // shared trigrams alone ground too many unrelated words; the spelling must also be close (docs/syllabus/applications.md)
+  if (!best || best.score < 0.5 || editSimilarity(text, best.form) < 0.66) return null;
+  return { value: best.value, score: best.score };
+}
+
+/** 1 minus the Levenshtein distance over the longer length: 1 for the same word, 0 for nothing in common. */
+export function editSimilarity(a: string, b: string): number {
+  a = a.toLowerCase(); b = b.toLowerCase();
+  if (!a.length || !b.length) return a === b ? 1 : 0;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return 1 - prev[b.length] / Math.max(a.length, b.length);
 }
 
 // ------------------------------------------------------------------ speech transcript correction

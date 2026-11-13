@@ -16,7 +16,9 @@ const K1 = 1.5;
 const B = 0.75;
 
 // Calibrated in tests/assistant.test.ts: every on-topic question scores above it, every off-topic one below.
-export const GROUNDED_MIN = 2.5;
+// Swept on 100 held-out questions (data/gold/retrieval.jsonl): 3.5 keeps 72 of 75 answerable ones and wrongly answers
+// 11 of 25 unanswerable ones, against 74 and 16 at 2.5. Higher cuts lose too many good answers (61 of 75 at 4.8).
+export const GROUNDED_MIN = 3.5;
 
 /** @type {{ tf: Map<string, number>, len: number }[]} */
 const DOCS = INDEX.chunks.map((c) => {

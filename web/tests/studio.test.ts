@@ -131,6 +131,13 @@ await t("'par' after a part is 'on', like 'pe'", () => {
   assert.equal(run("kurti, sleeve par loose").slots["sleeve.fit"]?.value, "loose");
   assert.equal(run("kurti, sleeve pe loose").slots["sleeve.fit"]?.value, "loose");
   assert.equal(run("kurti, sleeve par loose").slots["bodice.fit"], undefined);
+  // each value takes the nearest part cue before it, not the first cue in the clause
+  const waistHip = run("kurti chahiye, kamar pe fitted hip pe loose");
+  assert.equal(waistHip.slots["bodice.fit"]?.value, "fitted");
+  assert.equal(waistHip.slots["lower.fit"]?.value, "loose");
+  // an exact depth in inches is not overwritten by the vague word in the same clause
+  const neck = run("blouse, gale par 7 inch gehra");
+  assert.equal(neck.slots["neckline.depth"]?.inches, 7);
 });
 
 // ---------------------------------------------------------------- 4. shop links respect the wearer

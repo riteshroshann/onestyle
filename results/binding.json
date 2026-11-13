@@ -6,57 +6,57 @@
   "dev": {
    "gold_spans": {
     "current": {
-     "precision": 0.9804,
+     "precision": 0.9901,
      "recall": 0.9615,
-     "f1": 0.9709,
+     "f1": 0.9756,
      "tp": 100,
-     "predicted": 102,
+     "predicted": 101,
      "gold": 104,
      "n_requests": 30,
      "f1_ci95": [
-      0.9333,
-      0.9955
+      0.9412,
+      1
      ]
     },
     "par_old_rule": {
-     "precision": 0.9804,
+     "precision": 0.9901,
      "recall": 0.9615,
-     "f1": 0.9709,
+     "f1": 0.9756,
      "tp": 100,
-     "predicted": 102,
+     "predicted": 101,
      "gold": 104,
      "n_requests": 30,
      "f1_ci95": [
-      0.9333,
-      0.9955
+      0.9412,
+      1
      ]
     }
    },
    "gazetteer_spans": {
     "current": {
-     "precision": 0.9608,
+     "precision": 0.9703,
      "recall": 0.9423,
-     "f1": 0.9515,
+     "f1": 0.9561,
      "tp": 98,
-     "predicted": 102,
+     "predicted": 101,
      "gold": 104,
      "n_requests": 30,
      "f1_ci95": [
-      0.9053,
-      0.9882
+      0.9108,
+      0.9907
      ]
     },
     "par_old_rule": {
-     "precision": 0.9608,
+     "precision": 0.9703,
      "recall": 0.9423,
-     "f1": 0.9515,
+     "f1": 0.9561,
      "tp": 98,
-     "predicted": 102,
+     "predicted": 101,
      "gold": 104,
      "n_requests": 30,
      "f1_ci95": [
-      0.9053,
-      0.9882
+      0.9108,
+      0.9907
      ]
     }
    }
@@ -180,57 +180,57 @@
   "postposition": {
    "gold_spans": {
     "current": {
-     "precision": 0.84,
-     "recall": 0.8571,
-     "f1": 0.8485,
-     "tp": 42,
-     "predicted": 50,
+     "precision": 0.898,
+     "recall": 0.898,
+     "f1": 0.898,
+     "tp": 44,
+     "predicted": 49,
      "gold": 49,
      "n_requests": 26,
      "f1_ci95": [
-      0.7356,
-      0.9425
+      0.7778,
+      0.9808
      ]
     },
     "par_old_rule": {
-     "precision": 0.72,
-     "recall": 0.7347,
-     "f1": 0.7273,
-     "tp": 36,
+     "precision": 0.76,
+     "recall": 0.7755,
+     "f1": 0.7677,
+     "tp": 38,
      "predicted": 50,
      "gold": 49,
      "n_requests": 26,
      "f1_ci95": [
-      0.5926,
-      0.8491
+      0.617,
+      0.8868
      ]
     }
    },
    "gazetteer_spans": {
     "current": {
-     "precision": 0.84,
-     "recall": 0.8571,
-     "f1": 0.8485,
-     "tp": 42,
-     "predicted": 50,
+     "precision": 0.898,
+     "recall": 0.898,
+     "f1": 0.898,
+     "tp": 44,
+     "predicted": 49,
      "gold": 49,
      "n_requests": 26,
      "f1_ci95": [
-      0.7356,
-      0.9425
+      0.7778,
+      0.9808
      ]
     },
     "par_old_rule": {
-     "precision": 0.72,
-     "recall": 0.7347,
-     "f1": 0.7273,
-     "tp": 36,
+     "precision": 0.76,
+     "recall": 0.7755,
+     "f1": 0.7677,
+     "tp": 38,
      "predicted": 50,
      "gold": 49,
      "n_requests": 26,
      "f1_ci95": [
-      0.5926,
-      0.8491
+      0.617,
+      0.8868
      ]
     }
    }
@@ -238,56 +238,56 @@
   "attach_en": {
    "gold_spans": {
     "current": {
-     "precision": 0.9524,
-     "recall": 0.9524,
-     "f1": 0.9524,
-     "tp": 40,
-     "predicted": 42,
+     "precision": 1,
+     "recall": 0.9762,
+     "f1": 0.988,
+     "tp": 41,
+     "predicted": 41,
      "gold": 42,
      "n_requests": 20,
      "f1_ci95": [
-      0.8837,
+      0.9639,
       1
      ]
     },
     "par_old_rule": {
-     "precision": 0.9524,
-     "recall": 0.9524,
-     "f1": 0.9524,
-     "tp": 40,
-     "predicted": 42,
+     "precision": 1,
+     "recall": 0.9762,
+     "f1": 0.988,
+     "tp": 41,
+     "predicted": 41,
      "gold": 42,
      "n_requests": 20,
      "f1_ci95": [
-      0.8837,
+      0.9639,
       1
      ]
     }
    },
    "gazetteer_spans": {
     "current": {
-     "precision": 0.9756,
-     "recall": 0.9524,
-     "f1": 0.9639,
-     "tp": 40,
+     "precision": 1,
+     "recall": 0.9762,
+     "f1": 0.988,
+     "tp": 41,
      "predicted": 41,
      "gold": 42,
      "n_requests": 20,
      "f1_ci95": [
-      0.9024,
+      0.9639,
       1
      ]
     },
     "par_old_rule": {
-     "precision": 0.9756,
-     "recall": 0.9524,
-     "f1": 0.9639,
-     "tp": 40,
+     "precision": 1,
+     "recall": 0.9762,
+     "f1": 0.988,
+     "tp": 41,
      "predicted": 41,
      "gold": 42,
      "n_requests": 20,
      "f1_ci95": [
-      0.9024,
+      0.9639,
       1
      ]
     }
@@ -367,15 +367,6 @@
    ],
    "spurious": [
     "set|bodice.fit|loose|"
-   ]
-  },
-  {
-   "id": "gold-27",
-   "split": "dev",
-   "text": "neck 7 inch deep in front",
-   "missed": [],
-   "spurious": [
-    "set|neckline.depth|deep|"
    ]
   },
   {
@@ -501,48 +492,6 @@
    "spurious": []
   },
   {
-   "id": "post-04",
-   "split": "postposition",
-   "text": "kamar pe fitted hip pe loose",
-   "missed": [
-    "set|lower.fit|loose|"
-   ],
-   "spurious": [
-    "set|bodice.fit|loose|"
-   ]
-  },
-  {
-   "id": "post-05",
-   "split": "postposition",
-   "text": "neeche se loose upar se fitted",
-   "missed": [
-    "set|bodice.fit|fitted|"
-   ],
-   "spurious": [
-    "set|lower.fit|fitted|"
-   ]
-  },
-  {
-   "id": "post-06",
-   "split": "postposition",
-   "text": "gale par 7 inch gehra",
-   "missed": [],
-   "spurious": [
-    "set|neckline.depth|deep|"
-   ]
-  },
-  {
-   "id": "post-12",
-   "split": "postposition",
-   "text": "baazu se fitted kamar se loose",
-   "missed": [
-    "set|bodice.fit|loose|"
-   ],
-   "spurious": [
-    "set|sleeve.fit|loose|"
-   ]
-  },
-  {
    "id": "post-13",
    "split": "postposition",
    "text": "kamar par tight nahi hip par dheela",
@@ -552,18 +501,29 @@
    ],
    "spurious": [
     "set|bodice.fit|fitted|",
-    "exclude|bodice.fit|loose|"
+    "exclude|lower.fit|loose|"
    ]
   },
   {
-   "id": "post-24",
+   "id": "post-15",
    "split": "postposition",
-   "text": "gala aage se gol peeche se deep",
+   "text": "sleeve ki length 18 inch",
    "missed": [
-    "set|back.depth|deep|"
+    "set|sleeve.length|18 in|"
    ],
    "spurious": [
-    "set|neckline.depth|deep|"
+    "set|garment.length|18 in|"
+   ]
+  },
+  {
+   "id": "post-16",
+   "split": "postposition",
+   "text": "kurti ki lambai 40 inch aur baazu ki lambai 18 inch",
+   "missed": [
+    "set|sleeve.length|18 in|"
+   ],
+   "spurious": [
+    "set|garment.length|18 in|"
    ]
   },
   {
@@ -584,20 +544,7 @@
    "missed": [
     "set|neckline.depth|moderate|"
    ],
-   "spurious": [
-    "set|neckline.depth|shallow|"
-   ]
-  },
-  {
-   "id": "att-20",
-   "split": "attach_en",
-   "text": "hip loose while sleeves relaxed",
-   "missed": [
-    "set|sleeve.fit|relaxed|"
-   ],
-   "spurious": [
-    "set|lower.fit|relaxed|"
-   ]
+   "spurious": []
   }
  ],
  "par_fix_summary": {

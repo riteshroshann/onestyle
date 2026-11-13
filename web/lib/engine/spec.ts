@@ -114,7 +114,13 @@ export function bind(tokens: string[], spans: Span[], src: Source, p = 0.9): Upd
       op: negated.has(s) ? "exclude" : LIST_SLOTS.has(slot) ? "add" : "set",
       slot, value: { value: s.value, p, src, evidence: ev(s), intensity: intensity.get(s), ...extra },
     });
+    // each value takes the nearest part cue before it, so "kamar pe fitted hip pe loose" fits the waist and the hip separately
+    const cues = cl.filter((c) => (c.tag === "PART" || c.tag === "LOC") && partCtx(c) !== null);
+    let applied: Span | undefined;
+    const clauseStart = out.length;
     for (const s of values) {
+      const cue = [...cues].reverse().find((c) => c.end <= s.start);
+      if (cue && cue !== applied) { ctx = partCtx(cue); applied = cue; }
       switch (s.tag) {
         case "GARMENT": if (negated.has(s)) negatedGarments.add(s); break;
         case "NECKLINE":
@@ -156,6 +162,12 @@ export function bind(tokens: string[], spans: Span[], src: Source, p = 0.9): Upd
         case "OCCASION": out.push(mk("occasion", s)); break;
         case "STYLE": out.push(mk("style", s)); break;
       }
+    }
+    // "gale par 7 inch gehra": the inches already say how deep, so the word "deep" adds nothing and is dropped
+    const measured = new Set(out.slice(clauseStart).filter((u) => u.value?.inches !== undefined).map((u) => u.slot));
+    for (let i = out.length - 1; i >= clauseStart; i--) {
+      const u = out[i];
+      if (measured.has(u.slot) && u.value?.inches === undefined && u.op === "set" && /\.depth$/.test(u.slot)) out.splice(i, 1);
     }
     cl.forEach((s, k) => {
       if (s.tag !== "CMP") return;

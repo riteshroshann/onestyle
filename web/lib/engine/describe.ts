@@ -117,7 +117,7 @@ export function sheetLines(spec: Spec, m: Measurements = {}): SheetLine[] {
     out.push({ part: "Finish", en: [...(l.pattern ?? []), ...(l.embellishment ?? [])].map((v) => v.value).join(", "),
       hi: [...(l.pattern ?? []).map((v) => hindi("PATTERN", v.value)), ...(l.embellishment ?? []).map((v) => hindi("EMBELL", v.value))].join(", "), from: from(...(l.embellishment ?? [])) });
   if (spec.excluded.length)
-    out.push({ part: "Avoid", en: spec.excluded.map((e) => e.value).join(", "), hi: spec.excluded.map((e) => `${hindi(TAG_OF[e.slot] ?? "", e.value)} नहीं`).join(", "), from: spec.excluded.map((e) => `“${e.evidence}”`).join("; ") });
+    out.push({ part: "Avoid", en: spec.excluded.map((e) => e.value).join(", "), hi: spec.excluded.map((e) => hindi(TAG_OF[e.slot] ?? "", e.value)).join(", "), from: spec.excluded.map((e) => `“${e.evidence}”`).join("; ") });
   if (spec.notes?.length) out.push({ part: "Notes", en: spec.notes.join("; "), hi: spec.notes.join("; "), from: "details in the customer's words" });
   const who = wearerText(spec);
   if (who) out.unshift({ part: "Wearer", en: who.en, hi: who.hi, from: from(spec.slots.wearer, spec.slots.age) || "the garment" });
