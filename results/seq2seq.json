@@ -1,0 +1,144 @@
+{
+ "task": "request to linearised spec",
+ "model": "t5-small",
+ "train_requests": 4000,
+ "epochs": 10,
+ "seed": 13,
+ "teacher": "binder on exact spans of synthetic requests",
+ "n_gold_requests": 76,
+ "interval": "bootstrap over requests, 1000 resamples",
+ "valid_triples_in_trie": 618,
+ "systems": {
+  "deployed_gazetteer_plus_binder": {
+   "precision": 0.9512,
+   "recall": 0.91,
+   "f1": 0.9302,
+   "f1_ci95": [
+    0.8995,
+    0.9601
+   ],
+   "exact_match_requests": 0.7105
+  },
+  "t5_small_greedy": {
+   "precision": 0.6376,
+   "recall": 0.4867,
+   "f1": 0.552,
+   "f1_ci95": [
+    0.4902,
+    0.6101
+   ],
+   "exact_match_requests": 0.0526
+  },
+  "t5_small_constrained": {
+   "precision": 0.6463,
+   "recall": 0.4933,
+   "f1": 0.5595,
+   "f1_ci95": [
+    0.4981,
+    0.6189
+   ],
+   "exact_match_requests": 0.0526
+  }
+ },
+ "outputs_with_a_triple_outside_the_training_vocabulary": {
+  "t5_small_greedy": 7
+ },
+ "examples": [
+  {
+   "text": "mujhe haldi ke liye peela sharara chahiye with gota work",
+   "gold": [
+    "add colour=yellow",
+    "add embellishment=gota patti",
+    "add occasion=mehendi",
+    "set garment=sharara"
+   ],
+   "deployed_gazetteer_plus_binder": [
+    "add colour=yellow",
+    "add embellishment=gota patti",
+    "add occasion=mehendi",
+    "set garment=sharara"
+   ],
+   "t5_small_greedy": [
+    "add colour=mustard",
+    "add embellishment=gota patti",
+    "set garment=sharara"
+   ],
+   "t5_small_constrained": [
+    "add colour=mustard",
+    "add embellishment=gota patti",
+    "set garment=sharara"
+   ]
+  },
+  {
+   "text": "waist par tight nahi , thoda comfortable rakho",
+   "gold": [
+    "exclude bodice.fit=fitted",
+    "set bodice.fit=relaxed"
+   ],
+   "deployed_gazetteer_plus_binder": [
+    "exclude bodice.fit=fitted",
+    "set bodice.fit=relaxed"
+   ],
+   "t5_small_greedy": [
+    "exclude embellishment=thread work",
+    "set bodice.fit=fitted"
+   ],
+   "t5_small_constrained": [
+    "exclude embellishment=thread work",
+    "set bodice.fit=fitted"
+   ]
+  },
+  {
+   "text": "dhoti pants with a short kurta in khadi",
+   "gold": [
+    "add components=dhoti pants",
+    "add components=kurti",
+    "set fabric=khadi",
+    "set garment.length=short",
+    "set garment=kurta set"
+   ],
+   "deployed_gazetteer_plus_binder": [
+    "add components=dhoti pants",
+    "add components=kurti",
+    "set fabric=khadi",
+    "set garment.length=short",
+    "set garment=kurta set"
+   ],
+   "t5_small_greedy": [
+    "add components=kurti",
+    "add embellishment=mirror work",
+    "set garment.length=hip",
+    "set garment=kurti"
+   ],
+   "t5_small_constrained": [
+    "add components=kurti",
+    "add embellishment=mirror work",
+    "set garment.length=hip",
+    "set garment=kurti"
+   ]
+  },
+  {
+   "text": "peplum top pista colour for eid",
+   "gold": [
+    "add colour=mint",
+    "add occasion=festive",
+    "set garment=top",
+    "set lower.silhouette=peplum"
+   ],
+   "deployed_gazetteer_plus_binder": [
+    "add colour=mint",
+    "add occasion=festive",
+    "set garment=top",
+    "set lower.silhouette=peplum"
+   ],
+   "t5_small_greedy": [
+    "add colour=pink",
+    "set garment=top"
+   ],
+   "t5_small_constrained": [
+    "add colour=pink",
+    "set garment=top"
+   ]
+  }
+ ]
+}

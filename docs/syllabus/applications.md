@@ -16,6 +16,7 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 | POS feature for the slot tagger | `engine/bespoke/apps/pos_ner.py` | Tests whether a POS feature helps the CRF slot tagger | `results/pos_ner.json` | Study only; no gain, so not added |
 | Dependency parsing (attachment, off-the-shelf parser) | `engine/bespoke/apps/dependency.py`, gold `data/gold/binding.jsonl` | Compares the rule binder's value-to-part attachment with spaCy's parse and a nearest-cue rule on English requests | `results/dependency.json` | Study only; the rule binder stays |
 | GPT (decoder-only language models) | `engine/bespoke/apps/gpt.py` | Perplexity of GPT-2 and distilgpt2 on requests before and after fine-tuning on the synthetic generator; whether real word order beats shuffled | `results/gpt.json` | Study only; no generation feature uses it |
+| Sequence-to-sequence (request to linearised spec) | `engine/bespoke/apps/seq2seq.py` | t5-small fine-tuned to write the updates a request implies, with and without constrained decoding, against the gazetteer plus binder | `results/seq2seq.json` | Study only; negative result |
 
 ## Syntax: attachment of values to parts
 
@@ -173,3 +174,15 @@ The off-the-shelf parser does not beat the binder or even the one-line nearest-c
 | distilgpt2 fine-tuned on synthetic requests | 69 (54 to 88) | 80 | 43 | 0.890 (0.845 to 0.930) |
 
 Off the shelf, the models find these lowercase, space-separated fashion requests very surprising (perplexity near 1000) and Hinglish worse than English. Fine-tuning on the generator cuts perplexity about sixteen-fold, which says the gold requests resemble the generator's text; it is not a claim about free-form customer writing, and the Hinglish figure is lower only because those requests are short and formulaic. The real-over-shuffled preference rises from 0.76 to 0.89, so the tuned model has learnt request syntax, not just vocabulary. Possible product use, not built: ranking tagger or speech-recogniser hypotheses by perplexity, and drafting clarifying questions; neither was tested here.
+
+## Sequence-to-sequence: request to linearised spec
+
+`python scripts/apps.py seq2seq`, about 5 min on the laptop GPU (10 epochs, 4000 synthetic requests, bf16). t5-small writes the updates a request implies ("set bodice.fit=fitted ; exclude embellishment=thread work"). Training targets come from the shipped binder run on the exact spans of synthetic requests, so the model learns to imitate the binder, not the gold. Constrained decoding follows a trie of the 618 triples seen in training, so every output is a known, well-formed update. Scored on 76 gold requests (the 52 test lines and the 24 of `requests.test.ts`) against hand-annotated triples, intensity left out: micro F1 of the triple sets, bootstrap over requests.
+
+| System | Precision | Recall | F1 (95% interval) | Requests exactly right |
+|---|---|---|---|---|
+| Gazetteer plus binder (deployed) | 0.951 | 0.910 | 0.930 (0.900 to 0.960) | 0.711 |
+| t5-small, greedy | 0.638 | 0.487 | 0.552 (0.490 to 0.610) | 0.053 |
+| t5-small, constrained | 0.646 | 0.493 | 0.560 (0.498 to 0.619) | 0.053 |
+
+The small seq2seq model is far behind the pipeline it was trained to imitate: it misses values and attachments on requests that differ from the templates (for example it reads "waist par tight nahi, thoda comfortable rakho" as "fitted" plus an embellishment exclusion). Constrained decoding removes malformed outputs (7 gold requests had an unknown triple under greedy decoding) and adds half a point of F1, within noise. A first run of 3 epochs scored F1 0.32 and 0.34, so the model is still improving with training; longer training, more data or a larger model might close some of the gap, but with a deterministic teacher the best case is matching it. The pipeline stays.

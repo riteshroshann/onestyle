@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import random
 import subprocess
+import time
 from collections import Counter
 
 import numpy as np
@@ -21,8 +22,8 @@ from ..lexicon import bio_to_spans, tokenize
 from .common import GOLD, ROOT, SEED, bootstrap_ci, read_jsonl, write_result
 
 MODEL = "t5-small"
-N_TRAIN = 6000
-EPOCHS = 6
+N_TRAIN = 4000
+EPOCHS = 10
 SEP = ";"
 
 
@@ -107,11 +108,12 @@ def run() -> dict:
             y = [labels_of(ts) for _, ts in b]
             m = max(map(len, y))
             lab = torch.tensor([r + [-100] * (m - len(r)) for r in y], device=dev)
-            loss = model(**x, labels=lab).loss
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=dev == "cuda"):
+                loss = model(**x, labels=lab).loss
             loss.backward()
             opt.step(); sched.step(); opt.zero_grad()
             total += loss.item()
-        print("epoch", ep + 1, round(total, 2), flush=True)
+        print("epoch", ep + 1, round(total, 2), time.strftime("%X"), flush=True)
     model.eval()
 
     def constrained(batch_id: int, ids: torch.Tensor) -> list[int]:
