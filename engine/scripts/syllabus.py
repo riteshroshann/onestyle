@@ -23,6 +23,12 @@ TOPICS = {
     "ngram": ("ngram_eval", "run"),
     "embed": ("embed_eval", "run"),
     "classic": ("classic", "run"),
+    "hmm": ("seq_eval", "run_hmm"),
+    "crf": ("seq_eval", "run_crf"),
+    "topics": ("topics", "run"),
+    "graph": ("graph", "run"),
+    "analysis": ("analysis", "run"),
+    "figures": ("viz", "run"),
 }
 
 
