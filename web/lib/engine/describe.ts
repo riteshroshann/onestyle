@@ -169,11 +169,16 @@ export function query(spec: Spec, opts: { withParts?: boolean } = {}): string {
   return [...new Set(words.filter(Boolean).join(" ").replace(/\s+/g, " ").trim().split(" "))].join(" ");
 }
 
-/** What a shop's search box can actually match: who it is for, one colour and the garment. Shops return nothing for
- *  long phrases ("men blue silk wedding classic embroidery kurta"), so the detail stays on the sheet and in Pinterest. */
+// how shops name a pattern; plain and the bare word "printed" add nothing to a search
+const PATTERN_WORD: Record<string, string> = { solid: "", printed: "", polka: "polka dot" };
+
+/** What a shop's search box can actually match: who it is for, one colour, the print and the garment. Shops return
+ *  nothing for long phrases ("men blue silk wedding classic embroidery kurta"), so the rest stays on the sheet and in Pinterest. */
 export function shopQuery(spec: Spec): string {
   const s = spec.slots, l = spec.lists, a = audience(spec);
-  const words = [a.kid || impliedWearer(s.garment?.value) !== a.who ? a.word : "", l.colour?.[0]?.value ?? "", s.garment ? nice(garmentName(spec)) : "outfit"];
+  const pattern = l.pattern?.[0]?.value ?? "";
+  const words = [a.kid || impliedWearer(s.garment?.value) !== a.who ? a.word : "", l.colour?.[0]?.value ?? "",
+    PATTERN_WORD[pattern] ?? nice(pattern), s.garment ? nice(garmentName(spec)) : "outfit"];
   return words.filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
 }
 

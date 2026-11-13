@@ -211,6 +211,7 @@
       "solid": {"forms": ["solid", "plain", "sada", "simple colour", "no print", "no prints"], "hi": "सादा"},
       "floral": {"forms": ["floral", "flowers", "flower print", "phool", "phoolon wala"], "hi": "फूलदार"},
       "printed": {"forms": ["printed", "print", "prints", "graphic", "graphic print", "logo", "text print"], "hi": "प्रिंटेड"},
+      "animal print": {"forms": ["animal print", "cheetah", "cheetah print", "leopard", "leopard print", "zebra", "zebra print", "tiger print", "snake print", "snakeskin"], "hi": "एनिमल प्रिंट"},
       "striped": {"forms": ["striped", "stripes", "dhaari", "lines"], "hi": "धारीदार"},
       "checked": {"forms": ["checked", "checks", "checkered", "plaid"], "hi": "चेक"},
       "polka": {"forms": ["polka", "polka dots", "dots", "bindi print"], "hi": "पोल्का"},

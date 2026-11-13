@@ -395,9 +395,13 @@ function profileQuestion(slot: string, spec: Spec): Omit<Question, "cost"> | nul
   return null;
 }
 
+// people tire after a few questions; past this the design is complete enough and the sheet takes the rest
+export const QUESTION_CAP = 4;
+
 /** Every open question, garment and profile together, best first. The studio asks only the first. */
 export function ask(spec: Spec): Question[] {
   if (!spec.slots.garment) return (spec.asked ?? []).includes("garment") ? [] : questions(spec);
+  if ((spec.asked ?? []).filter((s) => s !== "garment").length >= QUESTION_CAP) return [];
   const out = questions(spec, 99);
   // a blouse is cut around the neck and back, so their depths rank just after the shape
   if (BLOUSES.has(spec.slots.garment.value)) {
@@ -408,7 +412,8 @@ export function ask(spec: Spec): Question[] {
     }
   }
   const occ = (spec.lists.occasion ?? []).map((o) => o.value);
-  const extra = ["wearer", "age", "occasion", "style", "budget"];
+  // age, style and budget are never asked; they change the cut when stated and stay editable on the sheet
+  const extra = ["wearer", "occasion"];
   if (occ.some((o) => DRESSY.has(o)) && family(spec) !== "knit_top") extra.push("embellishment");
   for (const slot of extra) {
     if (out.some((q) => q.slot === slot) || (spec.asked ?? []).includes(slot) || confidence(spec, slot) >= 0.7) continue;

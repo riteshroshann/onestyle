@@ -3,7 +3,7 @@
 // respect the wearer, and the understand / next / transcribe functions against a mocked provider.
 import assert from "node:assert/strict";
 import { tagRules, tokenize } from "../lib/engine/lexicon.ts";
-import { ageUpdates, answer, answerFromText, apply, ask, asked, bind, emptySpec, nextQuestion, profileUpdates, wearerOf, wearerUpdates } from "../lib/engine/spec.ts";
+import { ageUpdates, answer, answerFromText, apply, ask, asked, bind, emptySpec, nextQuestion, profileUpdates, QUESTION_CAP, wearerOf, wearerUpdates } from "../lib/engine/spec.ts";
 import type { Spec, Update } from "../lib/engine/spec.ts";
 import { links, query, sheetLines, shopQuery, wearerText } from "../lib/engine/describe.ts";
 import { meaning, verdict } from "../lib/engine/sense.ts";
@@ -85,12 +85,14 @@ await t("typed answers to profile questions", () => {
 // ---------------------------------------------------------------- 3. one question at a time
 await t("one question, profile first while unknown", () => {
   const hoodie = run("a grey hoodie");
-  assert.deepEqual(ask(hoodie).slice(0, 2).map((q) => q.slot), ["wearer", "age"]);
-  // a kurti already says who; its age is still unknown
-  assert.equal(nextQuestion(run("a red kurti"))?.slot, "age");
-  assert.equal(nextQuestion(run("a red kurti, I am 25"))?.slot, "neckline.shape");
+  assert.equal(ask(hoodie)[0]?.slot, "wearer");
+  // a kurti already says who; age, style and budget are never asked
+  const kurti = run("a red kurti");
+  assert.equal(nextQuestion(kurti)?.slot, "neckline.shape");
+  assert.ok(ask(kurti).some((q) => q.slot === "occasion"));
+  assert.ok(!ask(kurti).some((q) => ["age", "style", "budget"].includes(q.slot)), ask(kurti).map((q) => q.slot).join());
 });
-await t("never repeats an answered or skipped slot", () => {
+await t("never repeats an answered or skipped slot, and stops after a few", () => {
   let s = run("a red kurti for my sister, she is 24");
   const seen: string[] = [];
   for (let i = 0; i < 20; i++) {
@@ -101,7 +103,13 @@ await t("never repeats an answered or skipped slot", () => {
     s = apply(s, i % 2 ? [asked(q.slot)] : [...answer(q.slot, q.options[0]), asked(q.slot)]);
   }
   assert.equal(nextQuestion(s), null);
-  assert.ok(seen.length >= 6, seen.join());
+  assert.equal(seen.length, QUESTION_CAP, seen.join());
+});
+await t("a print shows up in the shop search", () => {
+  const s = apply(run("black sheer top with cheetah print skirt for winters"), wearerUpdates("women"));
+  assert.equal(s.lists.pattern?.[0]?.value, "animal print");
+  assert.equal(shopQuery(s), "black animal print co-ord set");
+  assert.equal(shopQuery(run("a plain blue kurti")), "blue kurti");
 });
 await t("neckline before its depth and before sleeves on a blouse", () => {
   const order = ask(run("a saree blouse for me, I am 30")).map((q) => q.slot);
