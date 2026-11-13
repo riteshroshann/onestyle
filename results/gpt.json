@@ -1,0 +1,60 @@
+{
+ "task": "decoder-only LMs on gold test requests",
+ "n_requests": 52,
+ "n_english_only": 41,
+ "n_hinglish": 11,
+ "train_requests": 6000,
+ "epochs": 2,
+ "seed": 13,
+ "interval": "bootstrap over requests, 1000 resamples",
+ "models": {
+  "gpt2": {
+   "perplexity": {
+    "all": 838.31,
+    "english_only": 735.42,
+    "hinglish": 1247.03
+   },
+   "perplexity_all_ci95": [
+    651.1851,
+    1070.4541
+   ],
+   "real_beats_shuffled_mean": 0.7931,
+   "real_beats_shuffled_ci95": [
+    0.7208,
+    0.8596
+   ]
+  },
+  "distilgpt2": {
+   "perplexity": {
+    "all": 1117.46,
+    "english_only": 1035.04,
+    "hinglish": 1409.76
+   },
+   "perplexity_all_ci95": [
+    871.4851,
+    1386.3414
+   ],
+   "real_beats_shuffled_mean": 0.7638,
+   "real_beats_shuffled_ci95": [
+    0.6927,
+    0.8358
+   ]
+  },
+  "distilgpt2_finetuned_on_synthetic": {
+   "perplexity": {
+    "all": 68.92,
+    "english_only": 80.4,
+    "hinglish": 43.21
+   },
+   "perplexity_all_ci95": [
+    53.8833,
+    87.6681
+   ],
+   "real_beats_shuffled_mean": 0.8904,
+   "real_beats_shuffled_ci95": [
+    0.8446,
+    0.9304
+   ]
+  }
+ }
+}

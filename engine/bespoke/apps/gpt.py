@@ -31,8 +31,7 @@ def nll(model, tok, text: str, dev: str) -> tuple[float, int]:
     return loss * (ids.shape[1] - 1), ids.shape[1] - 1
 
 
-def perplexity(model, tok, texts: list[str], dev: str) -> float:
-    parts = [nll(model, tok, t, dev) for t in texts]
+def pooled_perplexity(parts: list[tuple[float, int]]) -> float:
     return math.exp(sum(a for a, _ in parts) / sum(n for _, n in parts))
 
 
@@ -71,6 +70,7 @@ def finetune(name: str, texts: list[str], dev: str):
             labels = enc.input_ids.masked_fill(enc.attention_mask == 0, -100)
             model(**enc, labels=labels).loss.backward()
             opt.step(); sched.step(); opt.zero_grad()
+    print("finetuned", flush=True)
     return model.eval(), tok
 
 
@@ -93,9 +93,10 @@ def run() -> dict:
     out: dict = {"task": "decoder-only LMs on gold test requests", "n_requests": len(texts), "n_english_only": len(english), "n_hinglish": len(hinglish),
                  "train_requests": N_TRAIN, "epochs": EPOCHS, "seed": SEED, "interval": "bootstrap over requests, 1000 resamples", "models": {}}
     for name, (model, tok) in models.items():
-        per = {"all": texts, "english_only": [texts[i] for i in english], "hinglish": [texts[i] for i in hinglish]}
-        ppl = {k: round(perplexity(model, tok, v, dev), 2) for k, v in per.items()}
-        ppl_ci = bootstrap_ci(texts, lambda ts: perplexity(model, tok, list(ts), dev), n=200)
+        parts = [nll(model, tok, t, dev) for t in texts]  # scored once; resampling only re-pools
+        ppl = {"all": round(pooled_perplexity(parts), 2), "english_only": round(pooled_perplexity([parts[i] for i in english]), 2),
+               "hinglish": round(pooled_perplexity([parts[i] for i in hinglish]), 2)}
+        ppl_ci = bootstrap_ci(parts, pooled_perplexity)
         wins = plausibility(model, tok, texts, dev, random.Random(SEED))
         out["models"][name] = {"perplexity": ppl, "perplexity_all_ci95": ppl_ci, "real_beats_shuffled_mean": round(float(np.mean(wins)), 4),
                                "real_beats_shuffled_ci95": bootstrap_ci(wins, lambda v: float(np.mean(v)))}

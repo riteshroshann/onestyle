@@ -15,10 +15,11 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 | Part-of-speech tagging | `engine/bespoke/apps/pos.py`, gold `data/gold/pos.jsonl` and `pos-guidelines.md` | Universal POS for romanised Hinglish with silver training tags; HMM, CRF, fine-tuned MiniLM against spaCy | `results/pos.json` | Study only |
 | POS feature for the slot tagger | `engine/bespoke/apps/pos_ner.py` | Tests whether a POS feature helps the CRF slot tagger | `results/pos_ner.json` | Study only; no gain, so not added |
 | Dependency parsing (attachment, off-the-shelf parser) | `engine/bespoke/apps/dependency.py`, gold `data/gold/binding.jsonl` | Compares the rule binder's value-to-part attachment with spaCy's parse and a nearest-cue rule on English requests | `results/dependency.json` | Study only; the rule binder stays |
+| GPT (decoder-only language models) | `engine/bespoke/apps/gpt.py` | Perplexity of GPT-2 and distilgpt2 on requests before and after fine-tuning on the synthetic generator; whether real word order beats shuffled | `results/gpt.json` | Study only; no generation feature uses it |
 
 ## Syntax: attachment of values to parts
 
-Gold: `data/gold/binding.jsonl`, 132 requests (30 dev and 52 test from `requests.txt`, the 24 of `web/tests/requests.test.ts`, and 26 short postposition probes written to stress "par", "pe", "se" and "mein"). Each request carries its gold spans and the updates a tailor would take from it (`op slot=value`, with `~slight` or `~strong` and `@ref` where present). Canonical values follow the ontology; what is judged is the attachment: slot, operation, negation scope and comparison reference. Written independently of the binder's output (27 requests disagree with it, which would not happen if the gold were copied from it). One annotator.
+Gold: `data/gold/binding.jsonl`, 152 requests (30 dev and 52 test from `requests.txt`, the 24 of `web/tests/requests.test.ts`, 26 short postposition probes written to stress "par", "pe", "se" and "mein", and 20 English two-part probes, `attach_en`, used by the parser comparison). Each request carries its gold spans and the updates a tailor would take from it (`op slot=value`, with `~slight` or `~strong` and `@ref` where present). Canonical values follow the ontology; what is judged is the attachment: slot, operation, negation scope and comparison reference. Written independently of the binder's output (27 requests disagree with it, which would not happen if the gold were copied from it). One annotator.
 
 Score is micro precision, recall and F1 of the set of triples per request, bootstrap interval over requests (1000 resamples, seed 13). "Gold spans" feeds the binder the annotated spans, so it isolates binding; "gazetteer spans" is the deployed no-model path.
 
@@ -160,3 +161,15 @@ All learned taggers sit at the silver labeller's ceiling (about 0.81 to 0.82) an
 | Nearest cue in words | 57, 0.966 (0.915 to 1.0) |
 
 The off-the-shelf parser does not beat the binder or even the one-line nearest-cue rule on this set: lowercase fashion phrases ("sleeves loose and waist fitted") are not what it was trained on. The difference is within noise at n = 59, so the supported claim is only that a general English parser is not an upper bound here. Two caveats: the set is small and mostly adjacent value-cue pairs, which favours the nearest rule; and the binder is scored on gold spans, so the Hindi postposition faults of the syntax section do not appear (those need Hindi parsing, which does not exist here).
+
+## GPT: decoder-only models on requests
+
+`python scripts/apps.py gpt`, about 7.5 min on the laptop GPU (two epochs of fine-tuning on 6000 synthetic requests, then scoring and 50 shuffles per request per model). Test material: the 52 gold test requests, tokenised and space-joined, 41 English-only and 11 containing a Hindi function word. Perplexity is per GPT-2 subword token; intervals are bootstrap over requests. "Real beats shuffled" is the share of 50 word shuffles with higher perplexity than the real order, averaged over requests.
+
+| Model | Perplexity, all | English-only | Hinglish | Real beats shuffled (95% interval) |
+|---|---|---|---|---|
+| gpt2 (124M), as released | 838 (651 to 1070) | 735 | 1247 | 0.793 (0.721 to 0.860) |
+| distilgpt2 (82M), as released | 1117 (871 to 1386) | 1035 | 1410 | 0.764 (0.693 to 0.836) |
+| distilgpt2 fine-tuned on synthetic requests | 69 (54 to 88) | 80 | 43 | 0.890 (0.845 to 0.930) |
+
+Off the shelf, the models find these lowercase, space-separated fashion requests very surprising (perplexity near 1000) and Hinglish worse than English. Fine-tuning on the generator cuts perplexity about sixteen-fold, which says the gold requests resemble the generator's text; it is not a claim about free-form customer writing, and the Hinglish figure is lower only because those requests are short and formulaic. The real-over-shuffled preference rises from 0.76 to 0.89, so the tuned model has learnt request syntax, not just vocabulary. Possible product use, not built: ranking tagger or speech-recogniser hypotheses by perplexity, and drafting clarifying questions; neither was tested here.
