@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { sheetLines } from "@/lib/engine/describe";
+import { garmentName } from "@/lib/engine/spec";
 import type { Measurements } from "@/lib/engine/describe";
 import type { Spec } from "@/lib/engine/spec";
 import { getStore, MarketError } from "@/lib/market";
@@ -34,7 +35,8 @@ export function SendToMaker({ spec, m, onClose }: { spec: Spec; m: Measurements;
     setBusy(true);
     try {
       // a short name for lists: "navy kurti"
-      const title = [spec.lists.colour?.[0]?.value, spec.slots.garment?.value ?? "design"].filter(Boolean).join(" ");
+      // a kurti for a man is titled a kurta, as everywhere else
+      const title = [spec.lists.colour?.[0]?.value, spec.slots.garment ? garmentName(spec) : "design"].filter(Boolean).join(" ");
       const request = await getStore().createRequest(picked, { title, spec, lines: sheetLines(spec, m), measurements: m }, note);
       window.location.href = `/orders/?r=${request.id}`;
     } catch (err) {
