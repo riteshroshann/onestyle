@@ -132,6 +132,8 @@ export function createCloudStore(url: string, anonKey: string): Store {
       });
       if (error) throw authError(error);
       // With email confirmation switched on, Supabase creates the account but returns no session.
+      // an address that already has an account comes back with no identities and no email is sent
+      if (data.user && !data.session && (data.user.identities?.length ?? 1) === 0) throw new MarketError(EMAIL_TAKEN);
       if (!data.session || !data.user) throw new MarketError(CHECK_EMAIL);
       const profile = await profileOf(data.user.id);
       if (!profile) throw new MarketError(TRY_AGAIN);
