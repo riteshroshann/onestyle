@@ -103,7 +103,7 @@ export function Assistant() {
   if (HIDDEN.some((p) => path.startsWith(p))) return null;
   const ready = draft.trim().length > 0 && !thinking;
   return (
-    <div className={cn("fixed right-4 z-50 flex flex-col items-end gap-3 md:right-6", raised ? "bottom-24" : "bottom-4 md:bottom-6")}>
+    <div className={cn("fixed right-4 z-50 flex flex-col items-end gap-3 md:right-6", path.startsWith("/studio/board") ? "bottom-[190px] md:bottom-24" : raised ? "bottom-24" : "bottom-4 md:bottom-6")}>
       <AnimatePresence>
         {open && (
           <motion.div

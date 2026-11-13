@@ -404,7 +404,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
           <MainMenu.DefaultItems.ChangeCanvasBackground />
         </MainMenu>
       </Excalidraw>
-      <div className="absolute left-[64px] top-4 z-[4] flex items-center gap-3">
+      <div className="absolute left-3 top-[76px] z-[4] flex items-center gap-3 md:left-[64px] md:top-4">
         <BoardsMenu current={boardId} onOpen={onOpen} onNew={onNew} />
         <AnimatePresence mode="wait">
           {!empty && home && (
@@ -429,7 +429,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
       <AnimatePresence>
         {loaded && empty && !reading && (
           <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}
-            className="pointer-events-none absolute inset-0 z-[3] grid place-items-center overflow-y-auto px-5 pb-28 pt-20">
+            className="pointer-events-none absolute inset-0 z-[3] grid place-items-start justify-items-center overflow-y-auto px-5 pb-60 pt-[150px] md:place-items-center md:pb-28 md:pt-20">
             <div className="pointer-events-auto w-full max-w-[640px]">
               <motion.h2 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.05 }}
                 className="display text-[clamp(44px,6vw,80px)]">Pin what you love.</motion.h2>
