@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript, hindi, tagRules, tokenize } from "../lib/engine/lexicon";
-import { Measurements, PART_HI, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines, shopLinks, wearerText } from "../lib/engine/describe";
+import { Measurements, PART_HI, SWATCH, advice, finished, links, moreShops, nearestColour, phrase, sheetLines, shopLinks, wearerText } from "../lib/engine/describe";
+import { OutfitLook } from "./OutfitLook";
 import {
   AGES, BUDGETS, Question, Spec, Update, answer, answerFromText, apply, ask, asked, bind, contextOf, depthInches, emptySpec, garmentName,
   profileUpdates, wearerOf,
@@ -500,6 +501,7 @@ function Order({ spec, onEdit }: { spec: Spec; onEdit: (slot: string, value: str
     <aside className="order" aria-label="Your design">
       <AnimatePresence mode="wait" initial={false}><motion.h2 key={title} initial={{ opacity: 0, y: 10, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>{title}</motion.h2></AnimatePresence>
       <div className="meta">{rows.length ? `Draft ${spec.version}. Select any detail to change it.` : ""}</div>
+      {spec.slots.garment && <OutfitLook spec={spec} size="compact" className="mt-4 mb-2" />}
       {!rows.length && <div className="empty">Each detail you mention settles here, part by part, with where it came from.</div>}
       {rows.length > 0 && (
         <dl>
@@ -737,9 +739,13 @@ function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string
   const shops = shopLinks(spec, q.trim() || L.shopQuery);
   const section = who === "men" ? "men's" : "women's";
   const note = (filtered: boolean) => who === "anyone" ? "Opens a search on their site" : filtered ? `Opens the ${section} section` : `Searches ${section} styles`;
+  const more = moreShops(spec, q.trim() || L.shopQuery);
+  // the look comes first (beside these), then ideas, then everywhere to buy it
   const groups: { title: string; items: { href: string; domain: string; title: string; note: string }[] }[] = [
-    { title: "Buy something close, ready-made", items: shops.map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: note(p.filtered) })) },
     { title: "Ideas", items: L.pinterest.map((p) => ({ href: p.url, domain: "pinterest.com", title: p.label, note: "Pinterest" })) },
+    { title: "Compare prices everywhere", items: more.slice(0, 2).map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: p.note })) },
+    { title: "Buy something close, ready-made", items: [...shops.map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: note(p.filtered) })),
+      ...more.slice(2).map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: p.note }))] },
     { title: "The fabric", items: L.fabric.map((p) => ({ href: p.url, domain: "amazon.in", title: p.label, note: "By the metre" })) },
     { title: "Have it made", items: [{ href: L.tailors.url, domain: "maps.google.com", title: "Tailors near you", note: "Take your tailor sheet along" }] },
   ].filter((g) => g.items.length);
@@ -763,15 +769,22 @@ function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string
             </label>
             <Switch label="Shopping for" value={who} onChange={onWearer} options={[["women", "Women"], ["men", "Men"], ["anyone", "Anyone"]]} />
           </motion.div>
-          {groups.map((g, gi) => (
-            <section key={g.title} className="mt-14">
-              <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 + gi * 0.08 }}
-                className="text-[clamp(22px,2vw,28px)] font-medium tracking-[-0.02em]">{g.title}</motion.h2>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {g.items.map((it, i) => <Out key={it.href} {...it} delay={0.34 + gi * 0.08 + i * 0.04} />)}
-              </div>
-            </section>
-          ))}
+          <div className="mt-14 grid gap-x-14 gap-y-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.25 }} className="lg:sticky lg:top-28 lg:self-start">
+              <OutfitLook spec={spec} />
+            </motion.div>
+            <div>
+              {groups.map((g, gi) => (
+                <section key={g.title} className={gi ? "mt-14" : "mt-10 lg:mt-0"}>
+                  <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 + gi * 0.08 }}
+                    className="text-[clamp(22px,2vw,28px)] font-medium tracking-[-0.02em]">{g.title}</motion.h2>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {g.items.map((it, i) => <Out key={it.href} {...it} delay={0.34 + gi * 0.08 + i * 0.04} />)}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
         </>
       )}
     </main>

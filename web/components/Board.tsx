@@ -475,7 +475,8 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
   }, [loaded, design, empty, say]);
 
   return (
-    <div className="boardwrap">
+    // drawing tools wait for the first picture: before that, the board is only a place to drop one
+    <div className={empty ? "boardwrap is-empty" : "boardwrap"}>
       <Excalidraw
         excalidrawAPI={(a: any) => { api.current = a; }}
         initialData={initial}
@@ -545,9 +546,9 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="absolute inset-x-0 bottom-6 z-[5] flex justify-center px-4 max-md:bottom-[84px]">
+      <div className="pointer-events-none absolute inset-x-0 bottom-6 z-[5] flex justify-center px-4 max-md:bottom-[84px]">
         <motion.div layout transition={SPRING}
-          className="flex max-w-full items-center gap-2 rounded-full bg-white/85 py-2 pl-5 pr-2 shadow-[0_18px_50px_-20px_rgba(13,17,23,.35)] ring-1 ring-black/[.06] backdrop-blur-2xl">
+          className="pointer-events-auto flex max-w-full items-center gap-2 rounded-full bg-white/85 py-2 pl-5 pr-2 shadow-[0_18px_50px_-20px_rgba(13,17,23,.35)] ring-1 ring-black/[.06] backdrop-blur-2xl">
           <AnimatePresence mode="wait" initial={false}>
             <motion.span key={hint || (empty ? "empty" : "full")} role={hint ? "alert" : "status"} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2 }}
               className={`min-w-0 text-[14px] leading-[1.3] ${hint ? "text-[#b5121b]" : "text-brand-ink/60"} ${hasNotes && !hint ? "max-sm:hidden" : ""}`}>

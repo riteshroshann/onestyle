@@ -1,5 +1,5 @@
 // Binding (spans -> updates), state tracking (fold of updates) and the question policy.
-import { ONTO, groundFuzzy, tokenize } from "./lexicon.ts";
+import { ONTO, groundFuzzy, tagRules, tokenize } from "./lexicon.ts";
 import type { Span } from "./lexicon.ts";
 
 export type Source = "words" | "note" | "image" | "profile" | "answer" | "edit" | "model";
@@ -21,6 +21,7 @@ export const emptySpec = (): Spec => ({ version: 0, slots: {}, lists: {}, exclud
 
 export const LIST_SLOTS = new Set(["colour", "embellishment", "style", "pattern", "occasion", "shade", "components"]);
 const CLAUSE_BREAK = new Set([",", ".", ";", "!", "?", "and", "but", "aur", "par", "lekin", "with", "magar", "&", "|"]);
+const POSSESSIVE = new Set(["ki", "ka", "ke", "of", "the", "'s", "s"]);
 const SLEEVE_LENGTHS = new Set(ONTO.sleeve_length_order as string[]);
 const PRIORITY: Record<string, number> = { edit: 6, answer: 5, words: 4, model: 4, note: 3, image: 2, profile: 1 };
 const SET_GARMENTS = new Set(ONTO.garment_family.set as string[]);
@@ -115,7 +116,11 @@ export function bind(tokens: string[], spans: Span[], src: Source, p = 0.9): Upd
       slot, value: { value: s.value, p, src, evidence: ev(s), intensity: intensity.get(s), ...extra },
     });
     // each value takes the nearest part cue before it, so "kamar pe fitted hip pe loose" fits the waist and the hip separately
-    const cues = cl.filter((c) => (c.tag === "PART" || c.tag === "LOC") && partCtx(c) !== null);
+    // "sleeve ki length" / "length of the sleeve" is the sleeve's length: a length cue joined to a part by a possessive
+    // belongs to that part, not to the garment
+    const joined = (a: Span, b: Span) => b.start - a.end <= 2 && tokens.slice(a.end, b.start).every((t) => POSSESSIVE.has(t));
+    const cues = cl.filter((c) => (c.tag === "PART" || c.tag === "LOC") && partCtx(c) !== null)
+      .filter((c, i, all) => !(partCtx(c) === "length" && all.some((o) => o !== c && partCtx(o) !== "length" && (joined(o, c) || joined(c, o)))));
     let applied: Span | undefined;
     const clauseStart = out.length;
     for (const s of values) {
@@ -484,7 +489,29 @@ export function ageUpdates(text: string): Update[] {
 }
 
 /** Who wears it and how old they are, read from the words. */
-export const profileUpdates = (text: string): Update[] => [...wearerUpdates(text), ...ageUpdates(text)];
+// words that carry no theme of their own
+const FILLER = new Set("a an the with of on and or in for my me i want need some print prints printed graphic graphics theme themed logo design wala wali ka ki ke se aur chahiye please".split(" "));
+const PRINT_WORD = /\b(prints?|printed|graphics?|themed?|logo)\b/i;
+
+/** A print's theme in the customer's own words, such as "Harry Potter print", kept as a note for the tailor and the
+ *  shop search. It is the longest run of words the lexicon does not know, in a message that mentions a print. */
+export function themeUpdates(text: string): Update[] {
+  if (!PRINT_WORD.test(text)) return [];
+  const tk = tokenize(text);
+  const known = new Set<number>();
+  for (const sp of tagRules(tk)) for (let i = sp.start; i < sp.end; i++) known.add(i);
+  let best: string[] = [], cur: string[] = [];
+  tk.forEach((w, i) => {
+    if (!known.has(i) && /^[a-z][a-z'-]+$/i.test(w) && !FILLER.has(w.toLowerCase())) cur.push(w);
+    else { if (cur.length > best.length) best = cur; cur = []; }
+  });
+  if (cur.length > best.length) best = cur;
+  if (!best.length || best.length > 4) return [];
+  const theme = best.map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+  return [{ op: "note", slot: "notes", value: { value: `${theme} print`, p: 0.9, src: "words", evidence: best.join(" ") } }];
+}
+
+export const profileUpdates = (text: string): Update[] => [...wearerUpdates(text), ...ageUpdates(text), ...themeUpdates(text)];
 
 /** A typed reply to a profile question that the tagger cannot read: "20", "for my brother", "2000". */
 export function answerFromText(slot: string, text: string): Update[] {

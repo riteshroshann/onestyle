@@ -5,7 +5,8 @@ import assert from "node:assert/strict";
 import { tagRules, tokenize } from "../lib/engine/lexicon.ts";
 import { ageUpdates, answer, answerFromText, apply, ask, asked, bind, emptySpec, nextQuestion, profileUpdates, QUESTION_CAP, wearerOf, wearerUpdates } from "../lib/engine/spec.ts";
 import type { Spec, Update } from "../lib/engine/spec.ts";
-import { links, query, sheetLines, shopQuery, wearerText } from "../lib/engine/describe.ts";
+import { links, moreShops, query, sheetLines, shopQuery, wearerText } from "../lib/engine/describe.ts";
+import { avatarPrompt, outfitWords } from "../lib/avatar.ts";
 import { meaning, verdict } from "../lib/engine/sense.ts";
 import { screen } from "../lib/assistant/guard.js";
 import { chooseQuestion, resetAvailability, understand as understandClient } from "../lib/understand.ts";
@@ -104,6 +105,23 @@ await t("never repeats an answered or skipped slot, and stops after a few", () =
   }
   assert.equal(nextQuestion(s), null);
   assert.equal(seen.length, QUESTION_CAP, seen.join());
+});
+await t("a named print theme is kept for the tailor, the shops and the look", () => {
+  const s = run("maroon harry potter hoodie print");
+  assert.deepEqual(s.notes, ["Harry Potter print"]);
+  assert.equal(shopQuery(s), "maroon harry potter print hoodie");
+  assert.equal(run("a black hoodie with a naruto print").notes?.[0], "Naruto print");
+  assert.deepEqual(run("a red kurti for my sister").notes, []);
+  const more = moreShops(s);
+  assert.ok(more[0].url.includes("tbm=shop") && more.some((m) => m.label === "The Souled Store"), more.map((m) => m.label).join());
+  assert.ok(!moreShops(run("a plain blue kurti")).some((m) => m.label === "The Souled Store"));
+  assert.ok(moreShops(run("a maroon silk lehenga for my wedding")).some((m) => m.label === "Farfetch"));
+  // the look: the whole design, a generic model, and the change kept with the rest
+  const p = avatarPrompt(apply(s, [set("wearer", "men")]));
+  assert.match(p, /generic adult male fashion model/);
+  assert.match(p, /maroon harry potter print hoodie/);
+  const sleeves = apply(run("a pink anarkali in georgette with a v neck"), [set("sleeve.length", "full")]);
+  assert.match(outfitWords(sleeves), /pink georgette anarkali.*v neckline.*full sleeves/);
 });
 await t("a print shows up in the shop search", () => {
   const s = apply(run("black sheer top with cheetah print skirt for winters"), wearerUpdates("women"));

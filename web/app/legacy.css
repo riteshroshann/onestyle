@@ -159,6 +159,7 @@ body:has(.dock) button[aria-label="Back to top"] { display: none; }
 .boardwelcome p { font-size: calc(18px * var(--s)); margin: 0; max-width: 32em; color: var(--ink-2); }
 .boardwrap .excalidraw { --color-primary: #1d1d1f; --color-primary-darker: #000; --color-primary-darkest: #000; --color-primary-light: #e8e8ed; --color-surface-primary-container: #e8e8ed; --color-on-primary-container: #1d1d1f; }
 .boardwrap .help-icon, .boardwrap .default-sidebar-trigger, .boardwrap .sidebar-trigger { display: none !important; }
+.boardwrap.is-empty .App-toolbar-container, .boardwrap.is-empty .App-toolbar, .boardwrap.is-empty .HintViewer, .boardwrap.is-empty .App-bottom-bar, .boardwrap.is-empty .undo-redo-buttons { visibility: hidden; }
 
 /* tailor sheet */
 .sheet .hi { font-family: "Nirmala UI", "Noto Sans Devanagari", "Mangal", sans-serif; }

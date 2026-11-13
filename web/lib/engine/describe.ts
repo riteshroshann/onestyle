@@ -160,6 +160,7 @@ export function query(spec: Spec, opts: { withParts?: boolean } = {}): string {
     ...(l.shade ?? []).slice(0, 1).map((v) => v.value), ...(l.colour ?? []).slice(0, 1).map((v) => v.value),
     s["lower.silhouette"] && s["lower.silhouette"].value !== "anarkali" ? nice(s["lower.silhouette"].value) : "",
     s.fabric?.value, occ === "winter" ? "" : occ, mood, ...(l.embellishment ?? []).slice(0, 1).map((v) => v.value),
+    ...(spec.notes ?? []).filter((n) => / print$/i.test(n)).map((n) => n.toLowerCase()),
     ...(l.components ?? []).map((c) => nice(c.value)), s.garment ? nice(garmentName(spec)) : "outfit", occ === "winter" ? "winter" : "",
   ];
   if (opts.withParts) {
@@ -176,9 +177,11 @@ const PATTERN_WORD: Record<string, string> = { solid: "", printed: "", polka: "p
  *  nothing for long phrases ("men blue silk wedding classic embroidery kurta"), so the rest stays on the sheet and in Pinterest. */
 export function shopQuery(spec: Spec): string {
   const s = spec.slots, l = spec.lists, a = audience(spec);
-  const pattern = l.pattern?.[0]?.value ?? "";
+  // a named theme ("Harry Potter print") says more to a shop than the bare word "printed"
+  const theme = (spec.notes ?? []).find((n) => / print$/i.test(n));
+  const pattern = theme ?? l.pattern?.[0]?.value ?? "";
   const words = [a.kid || impliedWearer(s.garment?.value) !== a.who ? a.word : "", l.colour?.[0]?.value ?? "",
-    PATTERN_WORD[pattern] ?? nice(pattern), s.garment ? nice(garmentName(spec)) : "outfit"];
+    theme ? theme.toLowerCase() : PATTERN_WORD[pattern] ?? nice(pattern), s.garment ? nice(garmentName(spec)) : "outfit"];
   return words.filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
 }
 
@@ -202,6 +205,28 @@ export function shopLinks(spec: Spec, q = shopQuery(spec)) {
     { label: "Flipkart", domain: "flipkart.com", url: `https://www.flipkart.com/search?q=${e(q)}${flipkart}`, filtered: !!g },
     { label: "Nykaa Fashion", domain: "nykaafashion.com", url: `https://www.nykaafashion.com/catalogsearch/result/?q=${e(q)}`, filtered: false },
   ];
+}
+
+/** Beyond the big five: one search that compares prices across every store, and stores that suit this design
+ *  (fan and graphic prints, or occasion and luxury wear). Each opens on its own site with the same words. */
+export function moreShops(spec: Spec, q = shopQuery(spec)) {
+  const e = encodeURIComponent;
+  const printed = (spec.notes ?? []).some((n) => / print$/i.test(n)) || (spec.lists.pattern ?? []).some((p) => p.value === "printed" || p.value === "animal print");
+  const dressy = (spec.lists.occasion ?? []).some((o) => ["wedding", "sangeet", "reception", "festive", "party", "mehendi"].includes(o.value)) || ["silk", "velvet", "brocade"].includes(spec.slots.fabric?.value ?? "");
+  const out = [
+    { label: "Google Shopping", domain: "google.com", url: `https://www.google.com/search?tbm=shop&q=${e(q)}`, note: "Prices from every store, side by side" },
+    { label: "Google", domain: "google.com", url: `https://www.google.com/search?q=${e(`buy ${q} online`)}`, note: "Every store that sells it" },
+  ];
+  if (printed) out.push(
+    { label: "The Souled Store", domain: "thesouledstore.com", url: `https://www.thesouledstore.com/search?q=${e(q)}`, note: "Official fan and pop-culture prints" },
+    { label: "Redwolf", domain: "redwolf.in", url: `https://www.redwolf.in/search?q=${e(q)}`, note: "Licensed graphic merch" },
+    { label: "Bewakoof", domain: "bewakoof.com", url: `https://www.bewakoof.com/search/${e(q)}`, note: "Graphic prints and casual wear" },
+  );
+  if (dressy) out.push(
+    { label: "Tata CLiQ Luxury", domain: "luxury.tatacliq.com", url: `https://luxury.tatacliq.com/search/?searchCategory=all&text=${e(q)}`, note: "Designer and premium labels" },
+    { label: "Farfetch", domain: "farfetch.com", url: `https://www.farfetch.com/in/shopping/search/items.aspx?q=${e(q)}`, note: "Luxury boutiques worldwide" },
+  );
+  return out;
 }
 
 export function links(spec: Spec) {
