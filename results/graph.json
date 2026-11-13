@@ -1,0 +1,132 @@
+{
+ "topic": "graph NLP",
+ "seed": 13,
+ "items": 44417,
+ "split": "35533 items build the graph / 8884 held out",
+ "nodes": 241,
+ "completion": {
+  "co-occurrence edges only": {
+   "frequency prior": {
+    "hit@1": 0.3882,
+    "hit@3": 0.6575,
+    "mrr": 0.5544,
+    "mrr_ci95": [
+     0.544,
+     0.5649
+    ]
+   },
+   "conditional-probability vote": {
+    "hit@1": 0.4407,
+    "hit@3": 0.7258,
+    "mrr": 0.6097,
+    "mrr_ci95": [
+     0.5994,
+     0.6197
+    ]
+   },
+   "PPMI neighbour vote": {
+    "hit@1": 0.1624,
+    "hit@3": 0.4301,
+    "mrr": 0.3505,
+    "mrr_ci95": [
+     0.3415,
+     0.3593
+    ]
+   },
+   "personalised PageRank, PPMI edges": {
+    "hit@1": 0.2632,
+    "hit@3": 0.5476,
+    "mrr": 0.453,
+    "mrr_ci95": [
+     0.4429,
+     0.4628
+    ]
+   },
+   "personalised PageRank, count edges": {
+    "hit@1": 0.3703,
+    "hit@3": 0.669,
+    "mrr": 0.5492,
+    "mrr_ci95": [
+     0.5391,
+     0.5593
+    ]
+   },
+   "n_cases": 4931,
+   "graph_edges": 789
+  },
+  "co-occurrence + garment-family edges": {
+   "frequency prior": {
+    "hit@1": 0.3882,
+    "hit@3": 0.6575,
+    "mrr": 0.5544,
+    "mrr_ci95": [
+     0.544,
+     0.5649
+    ]
+   },
+   "conditional-probability vote": {
+    "hit@1": 0.4407,
+    "hit@3": 0.7258,
+    "mrr": 0.6097,
+    "mrr_ci95": [
+     0.5994,
+     0.6197
+    ]
+   },
+   "PPMI neighbour vote": {
+    "hit@1": 0.1606,
+    "hit@3": 0.4309,
+    "mrr": 0.3497,
+    "mrr_ci95": [
+     0.3407,
+     0.3585
+    ]
+   },
+   "personalised PageRank, PPMI edges": {
+    "hit@1": 0.2588,
+    "hit@3": 0.5439,
+    "mrr": 0.4475,
+    "mrr_ci95": [
+     0.4375,
+     0.4569
+    ]
+   },
+   "personalised PageRank, count edges": {
+    "hit@1": 0.3703,
+    "hit@3": 0.669,
+    "mrr": 0.5492,
+    "mrr_ci95": [
+     0.5391,
+     0.5593
+    ]
+   },
+   "n_cases": 4931,
+   "graph_edges": 945
+  }
+ },
+ "label_propagation": {
+  "labelled_values": 88,
+  "seeds_per_run": 17,
+  "runs": 50,
+  "accuracy_label_propagation": {
+   "mean": 0.8735,
+   "ci95": [
+    0.8687,
+    0.878
+   ]
+  },
+  "accuracy_majority_class": {
+   "mean": 0.8738,
+   "ci95": [
+    0.869,
+    0.8783
+   ]
+  },
+  "balanced_accuracy": {
+   "label_propagation": 0.2566,
+   "majority_class": 0.2567
+  },
+  "note": "values are labelled with the dominant usage of held-out items that contain them (at least 10 items); a few are seeds, the rest are scored"
+ },
+ "caveat": "Catalogue items are English product titles plus structured fields, mostly menswear, footwear and accessories; garment and colour co-occurrence there is not tailoring-request co-occurrence. Hidden values are drawn from values the gazetteer found, so the task is consistent with how the graph was built."
+}
