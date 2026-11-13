@@ -92,7 +92,9 @@ export type BoardEvent =
   | { type: "slot"; n: number; slot: string; value: string; p: number; circled: boolean }
   | { type: "depth"; n: number; inches: number };
 
-export interface BoardResult { updates: Update[]; perImage: Record<number, Record<string, [string, number]>>; depth: Record<number, number>; notes: { text: string; target: string }[] }
+/** The top readings for one slot of one picture, best first, as [value, probability]. */
+export type Scores = Record<number, Record<string, [string, number][]>>;
+export interface BoardResult { updates: Update[]; perImage: Record<number, Record<string, [string, number]>>; scores: Scores; depth: Record<number, number>; notes: { text: string; target: string }[] }
 
 type TagText = (t: string) => Promise<{ tokens: string[]; spans: any[] }>;
 
@@ -130,9 +132,11 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
 
   // every image: one distribution per slot
   const perImage: BoardResult["perImage"] = {};
+  const scores: Scores = {};
   const dists: Record<string, { n: number; d: number[] }[]> = {};
   for (const im of board.images) {
     perImage[im.n] = {};
+    scores[im.n] = {};
     emit({ type: "picture", n: im.n });
     for (const slot of WHOLE_SLOTS) {
       const prompts = IMAGE_SLOTS[slot];
@@ -141,6 +145,7 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
       (dists[slot] ??= []).push({ n: im.n, d });
       const j = d.indexOf(Math.max(...d));
       perImage[im.n][slot] = [Object.keys(prompts)[j], d[j]];
+      scores[im.n][slot] = Object.keys(prompts).map((k, i) => [k, d[i]] as [string, number]).sort((a, b) => b[1] - a[1]).slice(0, 3);
       emit({ type: "slot", n: im.n, slot, value: Object.keys(prompts)[j], p: d[j], circled: false });
     }
   }
@@ -193,7 +198,7 @@ export async function analyseBoard(board: Board, score: (img: string, prompts: s
     depth[im.n] = Math.round((DEPTH_PROMPTS.reduce((s, [, v], j) => s + v * d[j], 0) / z) * 4) / 4;
     emit({ type: "depth", n: im.n, inches: depth[im.n] });
   }
-  return { updates, perImage, depth, notes: board.notes.map((n) => ({ text: n.text, target: label(n.target) })) };
+  return { updates, perImage, scores, depth, notes: board.notes.map((n) => ({ text: n.text, target: label(n.target) })) };
 }
 
 /** "deeper than #1 but less than #2" -> interval in inches; propose toward the shallow end (a neckline can be deepened, not raised). */

@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Excalidraw, MainMenu, convertToExcalidrawElements } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { analyseBoard, checkInspiration, ideaUpdates, isOurs, mergeUpdates, readBoard, readNotes, resolveComparisons } from "../lib/engine/board";
-import type { Board as BoardGraph, BoardEvent, BoardResult, Idea, Inspiration, PictureIdeas } from "../lib/engine/board";
-import { Update } from "../lib/engine/spec";
+import type { Board as BoardGraph, BoardEvent, BoardResult, Idea, Inspiration, PictureIdeas, Scores } from "../lib/engine/board";
+import { apply, emptySpec, Update } from "../lib/engine/spec";
+import { links } from "../lib/engine/describe";
 import { loadVision, tag, zeroShot } from "../lib/models";
-import { Reading } from "./board/Reading";
-import type { PictureView, ReadingState, Step } from "./board/Reading";
-import { layoutNotes, skeletons } from "./board/notes";
+import { Buddy } from "./board/Buddy";
+import type { ReadingState, Step } from "./board/Buddy";
+import { ideaLine, layoutNotes, skeletons } from "./board/notes";
+import type { Chart } from "./board/notes";
 import { paletteOf } from "./board/palette";
 import { HaloDropzone } from "./ui/halo-dropzone";
 import { BoardsMenu } from "./board/BoardsMenu";
@@ -19,9 +21,9 @@ import { boardHome, loadScene, saveScene, thumbnail } from "../lib/boards";
 const SAVE_FAIL = "This board could not be saved. Check your connection; it saves again with your next change.";
 
 const STEPS: [string, string][] = [
-  ["Drop pictures", "Anything you love: clothes, art, anime, places, a colour."],
+  ["Drop or paste pictures", "Anything you love: clothes, art, anime, places, a colour."],
   ["Mark what matters", "Circle a detail, or add a note such as \"this neckline\" or \"not this colour\"."],
-  ["Read the board", "We find what to borrow, write it on the board and add it to your design."],
+  ["Read the board", "We chart what each picture shows and write the direction right on the board."],
 ];
 const isLabel = (e: any) => e.customData?.bespokeLabel || (e.type === "text" && /^#\d+$/.test((e.text ?? "").trim()));
 const isNote = (e: any) => !!e.customData?.bespokeNote;
@@ -108,15 +110,20 @@ function deviceIdea(ups: Update[]): Idea | null {
   return idea;
 }
 
-const borrowed = (p: PictureIdeas) => [...p.pattern, ...p["lower.silhouette"], ...p.fabric, ...p.embellishment];
-const pictureView = (p: PictureIdeas): PictureView => ({
-  n: p.n, shows: p.shows, borrow: p.borrow, palette: p.palette,
-  details: [
-    p.motifs.length ? `Motifs: ${p.motifs.join(", ")}` : "",
-    p.mood.length ? `Mood: ${p.mood.join(", ")}` : "",
-    borrowed(p).length ? `Try: ${borrowed(p).join(", ")}` : "",
-  ].filter(Boolean),
-});
+const CHART_TITLE: Record<string, string> = { garment: "Garment", colour: "Colour", pattern: "Print" };
+/** What the image model saw in each picture, as charts for the notes. */
+const chartsOf = (scores: Scores): Record<number, Chart[]> => Object.fromEntries(Object.entries(scores).map(([n, slots]) =>
+  [Number(n), Object.entries(slots).filter(([slot]) => CHART_TITLE[slot]).map(([slot, rows]) => ({ title: CHART_TITLE[slot], rows }))]));
+
+/** Where to look further for a direction: idea searches and shops, built from the direction as a design. */
+function looksFor(idea: Idea | undefined) {
+  if (!idea) return { ideas: [], shops: [] };
+  const L = links(apply(emptySpec(), ideaUpdates(idea)));
+  return {
+    ideas: L.pinterest.slice(0, 2).map((p) => ({ label: `Pinterest: ${p.label}`, url: p.url })),
+    shops: L.shops.slice(0, 3).map((x) => ({ label: x.label, url: x.url })),
+  };
+}
 
 const idle = (pictures: { n: number; dataURL: string }[], steps: ReadingState["steps"]): ReadingState =>
   ({ phase: "reading", pictures, active: pictures[0]?.n ?? null, steps, loaded: 0, status: "Reading your board", result: null, message: "" });
@@ -133,7 +140,11 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
   const [coach, setCoach] = useState(false);
   const [reading, setReading] = useState<ReadingState | null>(null);
   const [picked, setPicked] = useState(0);
+  const [applied, setApplied] = useState<number | null>(null);
   const outcome = useRef<{ plans: Plan[]; written: Written } | null>(null);
+  const charts = useRef<Record<number, Chart[]>>({});
+  const panelOpen = useRef(false);
+  const generation = useRef(0); // late charts belong to the latest reading, even after the panel closes
   const run = useRef(0);
   const [loaded, setLoaded] = useState(false);
   const [empty, setEmpty] = useState(true);
@@ -216,18 +227,23 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
   };
 
   /** Write the reading onto the board as notes, replacing earlier ones, and fade them in card by card. */
-  const writeNotes = (w: Written, animate: boolean) => {
+  const writeNotes = (w: Written, animate: boolean, seen: Record<number, Chart[]> = charts.current) => {
     const a = api.current;
     if (!a || (!w.pictures.length && !w.summary && !w.ideas.length)) return;
     const keep = a.getSceneElements().filter((e: any) => !isNote(e));
     const board = readBoard(keep, a.getFiles());
     const taken = keep.filter((e: any) => !e.isDeleted).map((e: any) => ({ x: e.x, y: e.y, w: e.width, h: e.height }));
-    const cards = layoutNotes(board.images.map((im) => ({ n: im.n, x: im.x, y: im.y, w: im.w, h: im.h })), taken, w.pictures, w.summary, w.ideas);
+    const cards = layoutNotes(board.images.map((im) => ({ n: im.n, x: im.x, y: im.y, w: im.w, h: im.h })), taken, w.pictures, w.summary, w.ideas, seen);
     const seed = Date.now().toString(36);
     const still = !animate || matchMedia("(prefers-reduced-motion: reduce)").matches;
     const els = convertToExcalidrawElements(skeletons(cards, seed) as any, { regenerateIds: false }).map((e: any) => (still ? e : { ...e, opacity: 0 }));
     a.updateScene({ elements: [...keep, ...els] });
-    const fit = () => a.scrollToContent(undefined, { fitToViewport: true, viewportZoomFactor: 0.85, animate: !still });
+    // with the buddy open beside it on a wide screen, the board fits into the space left of the panel
+    const beside = panelOpen.current && innerWidth >= 768;
+    const fit = () => {
+      a.scrollToContent(undefined, { fitToViewport: true, viewportZoomFactor: beside ? 0.62 : 0.85, animate: !still && !beside });
+      if (beside) { const st = a.getAppState(); a.updateScene({ appState: { scrollX: st.scrollX - 150 / st.zoom.value } }); }
+    };
     requestAnimationFrame(fit);
     if (still) return;
     const order = new Map(cards.map((c, i) => [`bespoke-${seed}-${c.key}`, i]));
@@ -265,6 +281,9 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
     relabel();
     setCoach(false);
     const id = ++run.current;
+    const gen = ++generation.current;
+    charts.current = {};
+    setApplied(null);
     const live = () => run.current === id;
     const set = (f: (r: ReadingState) => ReadingState) => { if (live()) setReading((r) => (r ? f(r) : r)); };
     const step = (k: keyof ReadingState["steps"], s: Step) => set((r) => ({ ...r, steps: { ...r.steps, [k]: s } }));
@@ -284,17 +303,26 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
       set((r) => ({ ...r, loaded: 1 }));
       return analyseBoard(board, zeroShot, tag, (status) => set((r) => ({ ...r, status })), onEvent);
     };
-    let device: Promise<BoardResult> | null = fine && board.images.length ? readOnDevice() : null;
+    // the image model always reads the pictures: its scores are charted under each one
+    const device: Promise<BoardResult> | null = board.images.length ? readOnDevice() : null;
     device?.catch(() => null); // handled where it is awaited
 
     const c = await cloud;
     if (!live()) return;
     if (c.kind === "refused") { run.current++; setReading((r) => r && { ...r, phase: "refused", message: c.message }); return; }
     step("cloud", c.kind === "ok" ? "done" : board.images.length && online ? "fail" : "skip");
-    if (!device && c.kind !== "ok" && board.images.length) device = readOnDevice();
     let dev: BoardResult | null = null;
-    if (device) {
-      try { dev = await device; step("device", "done"); } catch { step("device", "fail"); }
+    // with a good cloud reading and nothing fine to look at, the charts can arrive after the direction
+    if (device && (fine || c.kind !== "ok")) {
+      try { dev = await device; charts.current = chartsOf(dev.scores); step("device", "done"); } catch { step("device", "fail"); }
+    } else if (device) {
+      device.then((d) => {
+        if (generation.current !== gen) return;
+        charts.current = chartsOf(d.scores);
+        step("device", "done");
+        const o = outcome.current;
+        if (o) writeNotes(o.written, false);
+      }).catch(() => { if (generation.current === gen) step("device", "fail"); });
     } else step("device", "skip");
     const notes = await noteRead;
     if (!live()) return;
@@ -347,35 +375,49 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
       return { ups: withNote, note: said };
     });
     outcome.current = { plans, written };
+    writeNotes(written, true);
     setReading((r) => r && {
       ...r, phase: "done", active: null, status: "Finished reading your board",
       result: {
-        summary: written.summary, ideas, pictures: written.pictures.map(pictureView),
+        summary: written.summary, ideas, pictureCount: written.pictures.length,
         usable: plans.some((p) => p.ups.some((u) => u.op !== "note")),
         leftOut: c.kind === "ok" ? c.ins.leftOut : [], notice: c.kind === "ok" ? "" : NOTICE[c.kind] ?? "",
       },
     });
   };
 
-  const close = useCallback(() => { run.current++; outcome.current = null; setReading(null); }, []);
-  const finish = (animate: boolean) => {
-    const o = outcome.current;
-    close();
-    if (o) writeNotes(o.written, animate);
-    return o;
-  };
-  const keep = () => { finish(true); };
+  // closing stops a reading in progress; a finished one is already written on the board
+  const close = useCallback(() => { run.current++; setReading(null); }, []);
+  useEffect(() => { panelOpen.current = !!reading; }, [reading]);
   const circle = () => {
-    finish(true);
+    close();
     api.current?.setActiveTool({ type: "ellipse" });
     setCoach(true);
   };
+  // the direction goes into the design right here; the board never sends you elsewhere
   const use = () => {
-    const pick = picked;
-    const o = finish(false);
+    const o = outcome.current;
+    if (!o) return;
+    const plan = o.plans[picked] ?? o.plans[0];
     flush();
-    if (o) { const plan = o.plans[pick] ?? o.plans[0]; onEvidence(plan.ups, plan.note); }
+    onEvidence(plan.ups, plan.note);
+    setApplied(picked);
   };
+
+  // pasted pictures land on the board the same way as dropped ones
+  useEffect(() => {
+    const paste = (e: ClipboardEvent) => {
+      const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith("image/"));
+      // typing into a field pastes there; anywhere else on the board, pictures land on the canvas
+      const t = e.target;
+      if (!files.length || (t instanceof Element && t.closest("textarea, input, [contenteditable=true]"))) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      void addPictures(files);
+    };
+    window.addEventListener("paste", paste, true);
+    return () => window.removeEventListener("paste", paste, true);
+  });
 
   useEffect(() => () => {
     // leaving the board: keep whatever was waiting to be saved
@@ -439,7 +481,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
               </motion.p>
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.2 }} className="mt-8">
                 <HaloDropzone accept="image/*" multiple onFiles={addPictures} successResetMs={1200} showSuccessThumbnails={false}
-                  emptyLabel="Drop pictures here, or click to choose" successLabel="Added" formatHint="JPG, PNG or WebP" />
+                  emptyLabel="Drop or paste pictures, or click to choose" successLabel="Added" formatHint="JPG, PNG or WebP" />
               </motion.div>
               <ol className="mt-8 grid gap-5 sm:grid-cols-3">
                 {STEPS.map(([title, text], i) => (
@@ -476,7 +518,12 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
         </motion.div>
       </div>
       <AnimatePresence>
-        {reading && <Reading state={reading} picked={picked} onPick={setPicked} onUse={use} onCircle={circle} onKeep={keep} onRetry={analyse} onClose={close} />}
+        {reading && (() => {
+          const idea = reading.result?.ideas[picked];
+          const context = [design && `Design: ${design}.`, reading.result?.summary && `Board: ${reading.result.summary}`, idea && `Direction: ${idea.title} (${ideaLine(idea)}).`].filter(Boolean).join(" ");
+          return <Buddy key="buddy" state={reading} picked={picked} applied={applied} looks={looksFor(idea)} context={context}
+            onPick={setPicked} onUse={use} onCircle={circle} onRetry={analyse} onClose={close} />;
+        })()}
       </AnimatePresence>
     </div>
   );

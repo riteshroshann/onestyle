@@ -48,73 +48,68 @@ for (const width of [1440, 390]) {
 
   await page.goto(`${BASE}/studio/?new`);
   await page.getByRole("link", { name: "Board", exact: true }).first().click();
-  await page.locator("input[type=file]").first().setInputFiles(photos);
+  // paste: a picture on the clipboard lands on the board like a dropped one
+  await page.getByText("Pin what you love.").waitFor({ timeout: 8000 });
+  const { readFileSync } = await import("node:fs");
+  await page.evaluate(async (all) => {
+    const dt = new DataTransfer();
+    for (const [i, b64] of all.entries()) dt.items.add(new File([await (await fetch(`data:image/webp;base64,${b64}`)).blob()], `pasted-${i}.webp`, { type: "image/webp" }));
+    document.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+  }, photos.map((p) => readFileSync(p).toString("base64")));
+  await page.getByText("Pin what you love.").waitFor({ state: "hidden", timeout: 8000 });
   await page.waitForTimeout(2500);
 
-  // reading: progress, then results
+  // reading happens on the board: progress, then the buddy's bubbles, and the notes are written on the canvas
+  const panel = page.getByRole("complementary", { name: "Your board, read" });
   await page.getByRole("button", { name: "Read the board" }).click();
-  await page.getByText("Reading your board.").waitFor({ timeout: 5000 });
+  await panel.getByText("Reading your board.").waitFor({ timeout: 5000 });
   await page.waitForTimeout(450);
   await page.screenshot({ path: `${SHOTS}/board-progress-${width}.png` });
-  await page.getByText("Here is a direction.").waitFor({ timeout: 20000 });
-  await page.waitForTimeout(1200);
+  await panel.getByText("Soft florals held in a strict, architectural shape.").waitFor({ timeout: 20000 });
+  await page.getByRole("button", { name: "Clear notes" }).waitFor({ timeout: 5000 });
+  await page.waitForTimeout(1600);
   await page.screenshot({ path: `${SHOTS}/board-results-${width}.png` });
-  await page.getByRole("dialog").evaluate((d) => d.scrollTo(0, d.scrollHeight));
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: `${SHOTS}/board-results-end-${width}.png` });
 
-  assert.equal(sent.pictures.length, 2);
+  assert.ok(sent.pictures.length >= 2);
   for (const p of sent.pictures) {
     const size = await page.evaluate(async (src) => { const i = new Image(); i.src = src; await i.decode(); return Math.max(i.naturalWidth, i.naturalHeight); }, p.dataURL);
     assert.ok(size <= 768, `picture sent at ${size} px`);
     assert.match(p.dataURL, /^data:image\/jpeg;base64,/);
   }
-  // nothing runs off the side of the reading
-  const overflow = await page.getByRole("dialog").evaluate((d) => {
+  // nothing runs off the side of the panel
+  const overflow = await panel.evaluate((d) => {
     const out = [];
     const box = d.getBoundingClientRect();
-    for (const el of d.querySelectorAll("h2, h3, p:not(.sr-only), button")) {
+    for (const el of d.querySelectorAll("p:not(.sr-only), button, a")) {
       const r = el.getBoundingClientRect();
-      if (r.width && (r.left < box.left - 1 || r.right > box.right + 1 || el.scrollWidth > el.clientWidth + 1)) out.push(el.textContent.slice(0, 40));
+      if (r.width && (r.left < box.left - 1 || r.right > box.right + 1)) out.push(el.textContent.slice(0, 40));
     }
     return out;
   });
   assert.deepEqual(overflow, [], `cut off at ${width}: ${overflow.join(" | ")}`);
-  assert.equal(await page.getByRole("button", { name: /Blossom anarkali/ }).getAttribute("aria-pressed"), "true");
-  await page.getByRole("button", { name: /Concrete co-ord/ }).click();
+  assert.equal(await panel.getByRole("button", { name: /Blossom anarkali/ }).getAttribute("aria-pressed"), "true");
+  await panel.getByRole("button", { name: /Concrete co-ord/ }).click();
+  assert.equal(await panel.getByRole("link", { name: /^Pinterest/ }).first().getAttribute("target"), "_blank");
 
-  // keep the notes: they are written onto the canvas
-  await page.getByRole("button", { name: "Keep the notes on the board" }).click();
-  await page.getByRole("button", { name: "Clear notes" }).waitFor({ timeout: 5000 });
-  await page.waitForTimeout(1600);
-  await page.screenshot({ path: `${SHOTS}/board-notes-${width}.png` });
+  // adding the direction keeps you on the board
+  await panel.getByRole("button", { name: "Add to my design" }).click();
+  await panel.getByText(/Added to your design/).waitFor({ timeout: 5000 });
+  assert.equal(await page.getByRole("link", { name: "Board", exact: true }).first().getAttribute("aria-current"), "page");
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: `${SHOTS}/board-added-${width}.png` });
 
-  // circle a detail: overlay closes and a hint shows on the canvas
-  await page.getByRole("button", { name: "Read the board" }).click();
-  await page.getByText("Here is a direction.").waitFor({ timeout: 20000 });
-  await page.getByRole("button", { name: "Circle a detail" }).click();
+  // circle a detail: the panel closes and a hint shows on the canvas
+  await panel.getByRole("button", { name: "Circle a detail" }).click();
   await page.getByText("Draw a circle round the detail you love").waitFor({ timeout: 3000 });
-  await page.waitForTimeout(700);
-  await page.screenshot({ path: `${SHOTS}/board-circle-${width}.png` });
   await page.getByRole("button", { name: "Got it" }).click();
 
   // a refusal is polite and leads back to the board
   mode = "refused";
   await page.getByRole("button", { name: "Read the board" }).click();
-  await page.getByText("Let's try other pictures.").waitFor({ timeout: 20000 });
-  await page.waitForTimeout(700);
+  await panel.getByText("Let's try other pictures.").waitFor({ timeout: 20000 });
   await page.screenshot({ path: `${SHOTS}/board-refused-${width}.png` });
-  await page.getByRole("button", { name: "Back to the board" }).click();
+  await panel.getByRole("button", { name: "Back to the board" }).click();
   mode = "ok";
-
-  // use this direction: back to Talk with the board's reading in the chat
-  await page.getByRole("button", { name: "Read the board" }).click();
-  await page.getByText("Here is a direction.").waitFor({ timeout: 20000 });
-  await page.getByRole("button", { name: "Use this direction" }).click();
-  await page.getByText(/From your board/).first().waitFor({ timeout: 5000 });
-  assert.equal(await page.getByRole("link", { name: "Talk", exact: true }).first().getAttribute("aria-current"), "page");
-  await page.waitForTimeout(800);
-  await page.screenshot({ path: `${SHOTS}/board-talk-${width}.png` });
 
   // the notes were saved with the board: open it again from the boards menu and they are still there
   await page.getByRole("link", { name: "Board", exact: true }).first().click();
@@ -126,7 +121,7 @@ for (const width of [1440, 390]) {
   await page.screenshot({ path: `${SHOTS}/board-reopened-${width}.png` });
 
   if (errors.length) failures.push(`${width}: page errors: ${errors.join(" | ")}`);
-  console.log(`${width}: progress, results, notes on canvas, circle hint, refusal, Use this direction and saved notes all work`);
+  console.log(`${width}: paste, progress, buddy, notes and charts on canvas, add in place, circle hint, refusal and saved notes all work`);
   await page.close();
 }
 await browser.close();

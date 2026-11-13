@@ -1013,7 +1013,8 @@ export default function App() {
   };
   const setWearer = (w: string) => setSpec(apply(spec, [{ op: "set", slot: "wearer", value: { value: w, p: 1, src: "edit", evidence: "edited" } }]));
   const fromBoard = (ups: Update[], note: string) => {
-    remember(); const next = apply(spec, ups); setSpec(next); go("talk");
+    // the board adds to the design in place; Talk shows the reading whenever it is opened next
+    remember(); const next = apply(spec, ups); setSpec(next);
     void reply(next, ups, turnsOf(msgs), note);
   };
   const reset = () => {

@@ -115,6 +115,20 @@ const said = (value: string, slot: string, op: Update["op"] = "set"): Update => 
   assert.equal(els.filter((e) => e.type === "ellipse").length, 9, "three swatches per picture");
 }
 
+// 5b. what the image model saw is charted inside its card: one bar per reading, as long as its confidence
+{
+  const p: PictureIdeas = { n: 1, shows: "A red dress", borrow: "", palette: [], mood: [], motifs: [], pattern: [], "lower.silhouette": [], fabric: [], embellishment: [], style: [] };
+  const charts = { 1: [{ title: "Garment", rows: [["dress", 0.8], ["gown", 0.15], ["top", 0.05]] as [string, number][] }, { title: "Print", rows: [["solid", 0.9]] as [string, number][] }] };
+  const [card] = layoutNotes([{ n: 1, x: 0, y: 0, w: 300, h: 400 }], [], [p], "", [], charts);
+  const els = skeletons([card], "c");
+  const bars = els.filter((e) => /-c[0-9]+b[0-9]+$/.test(e.id));
+  assert.equal(bars.length, 4);
+  const [best, second] = bars;
+  assert.ok(best.width > second.width * 4, "bar length follows confidence");
+  for (const e of els) assert.ok(e.y + (e.height ?? e.fontSize * 1.25) <= card.y + card.h + 0.5 && e.x + (e.width ?? 0) <= card.x + card.w, `${e.id} runs past its card`);
+  assert.deepEqual(els.filter((e) => e.type === "text" && /-c[0-9]+$/.test(e.id)).map((e) => e.text), ["GARMENT", "PRINT"]);
+}
+
 // 6. small pieces
 assert.deepEqual(wrap("one two three four five", 60, 10), ["one two", "three four", "five"]);
 assert.ok(wrap("a ".repeat(200), 200, 16).every((l) => l.length <= Math.floor(200 / (16 * 0.5))));

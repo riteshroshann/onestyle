@@ -33,8 +33,8 @@ const UNAVAILABLE = "I could not reach the assistant. Check your connection and 
 const OFF = "I am not switched on yet.";
 // pages with their own bar along the bottom edge: the launcher sits above it
 const DOCKED = ["/studio"];
-// the inbox has its own composer in that corner, and Ask is for help with designing
-const HIDDEN = ["/orders", "/makers"];
+// the inbox has its own composer in that corner, Ask is for help with designing, and the board has its own buddy
+const HIDDEN = ["/orders", "/makers", "/studio/board"];
 
 async function ask(message: string, history: Turn[]): Promise<Turn> {
   try {
