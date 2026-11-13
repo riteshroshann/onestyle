@@ -60,6 +60,28 @@ python scripts/check_onnx.py         # ONNX must match PyTorch
 
 Results land in `results/tagging.json`. For the weak-label catalogue source, put Kaggle's Fashion Product Images `styles.csv` at `data/raw/styles.csv` (or point `BESPOKE_MYNTRA_CSV` at it); without it the data step uses synthetic requests only.
 
+## The course syllabus, topic by topic
+
+Every topic of the NLP course is implemented on Bespoke's own text, each with a result file in `results/` and a test. The full tables, with the size of every evaluation set next to its number, are in [docs/syllabus/classic.md](docs/syllabus/classic.md) and [docs/syllabus/applications.md](docs/syllabus/applications.md).
+
+| unit | topics | where |
+|---|---|---|
+| 1. Computational linguistics | syntax (which value attaches to which garment part), semantics (grounding unseen phrases), morphology, collocation, robustness to typos and romanisation | `web/lib/engine`, `web/scripts/eval-binding.mjs`, `engine/bespoke/apps/grounding.py`, `engine/bespoke/nlp/{morph,colloc,robust}.py` |
+| 2. Word representation | one-hot, bag-of-words, TF-IDF, n-gram language models (add-k, Witten-Bell, Kneser-Ney), word2vec and fastText against MiniLM | `engine/bespoke/nlp/{vectors,ngram,embed}.py` |
+| 3. Sequences | HMM, CRF and the fine-tuned MiniLM (the ladder above), a probe inside the deployed BERT, t5-small as sequence-to-sequence, GPT-2 perplexity, topic models, a value graph with PageRank | `engine/scripts/ladder.py`, `engine/bespoke/nlp/{hmm,seq_eval,topics,graph}.py`, `engine/bespoke/apps/{bert_probe,seq2seq,gpt}.py` |
+| 4. Applications | POS tagging, NER per entity type (browser path F1 0.951 on 52 requests), dependency attachment, sentiment, the English-to-Hindi sheet (chrF++ 76.7 on 69 rows), help-chatbot retrieval (Recall@3 0.720 on 75 questions), summarisation, significance tests and figures | `engine/bespoke/apps/`, `web/scripts/eval-retrieval.mjs`, `engine/bespoke/nlp/{analysis,viz}.py`, `results/figures/` |
+
+What runs in the product is the tokenizer, the gazetteer, the MiniLM tagger, the binder, the Hindi sheet templates, the one-line `phrase()` and BM25 retrieval. The rest are studies of those parts, and several are negative results the tables state plainly: t5-small does not match the pipeline, a learned guard loses to the regexes, a POS feature does not help the tagger, and an off-the-shelf parser attaches no better than the binder.
+
+Reproduce from `engine/` (extra libraries in `requirements-apps.txt`), and the two scorers from `web/`:
+
+```bash
+python scripts/syllabus.py all
+python scripts/apps.py ner            # one topic at a time; --help lists them
+node --experimental-strip-types scripts/eval-binding.mjs
+node --experimental-strip-types scripts/eval-retrieval.mjs
+```
+
 ## How a request becomes a specification
 
 1. **Tokenize and tag.** One regex tokenizer and one ontology-driven gazetteer, identical in Python and TypeScript (352 parity fixtures). The transformer tags words the gazetteer misses; decoding is Viterbi with BIO constraints, so `I-FIT` can never follow `O`.
