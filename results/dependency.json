@@ -1,0 +1,33 @@
+{
+ "task": "value-to-part attachment on English-only gold requests",
+ "n_requests": 34,
+ "n_attachments": 59,
+ "note": "binder scored on gold spans; spaCy and linear choose among the cue spans of the request, so they are not penalised for missing cues",
+ "interval": "bootstrap over attachments, 1000 resamples",
+ "systems": {
+  "binder": {
+   "attachment_accuracy": 0.9661,
+   "ci95": [
+    0.9153,
+    1.0
+   ],
+   "correct": 57
+  },
+  "spacy_tree_nearest": {
+   "attachment_accuracy": 0.9153,
+   "ci95": [
+    0.8305,
+    0.9831
+   ],
+   "correct": 54
+  },
+  "linear_nearest": {
+   "attachment_accuracy": 0.9661,
+   "ci95": [
+    0.9153,
+    1.0
+   ],
+   "correct": 57
+  }
+ }
+}

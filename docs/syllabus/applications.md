@@ -14,6 +14,7 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 | BERT (inside the deployed MiniLM tagger) | `engine/bespoke/apps/bert_probe.py` | Shows what the shipped int8 model knows at each layer and which heads look at part words | `results/bert_probe.json` | Study of the deployed model (read-only) |
 | Part-of-speech tagging | `engine/bespoke/apps/pos.py`, gold `data/gold/pos.jsonl` and `pos-guidelines.md` | Universal POS for romanised Hinglish with silver training tags; HMM, CRF, fine-tuned MiniLM against spaCy | `results/pos.json` | Study only |
 | POS feature for the slot tagger | `engine/bespoke/apps/pos_ner.py` | Tests whether a POS feature helps the CRF slot tagger | `results/pos_ner.json` | Study only; no gain, so not added |
+| Dependency parsing (attachment, off-the-shelf parser) | `engine/bespoke/apps/dependency.py`, gold `data/gold/binding.jsonl` | Compares the rule binder's value-to-part attachment with spaCy's parse and a nearest-cue rule on English requests | `results/dependency.json` | Study only; the rule binder stays |
 
 ## Syntax: attachment of values to parts
 
@@ -147,3 +148,15 @@ All learned taggers sit at the silver labeller's ceiling (about 0.81 to 0.82) an
 ## POS as a feature for the slot tagger
 
 `python scripts/apps.py pos-ner`, about 5 min. The ladder's CRF is trained on 3000 synthetic requests with and without spaCy POS features (own and neighbouring tags), three seeds, scored on the 52 gold test requests. Slot F1: words only 0.768 against 0.757 with POS (difference -0.011, 95% interval -0.027 to 0.004); with the gazetteer feature 0.867 against 0.868 (+0.001, -0.010 to 0.011). POS does not help: the interval spans zero in both settings, and the gazetteer already carries what POS would add. Not added to the product.
+
+## Dependency parsing: value-to-part attachment
+
+`python scripts/apps.py dependency`, about 15 s. Romanised Hinglish has no dependency treebank, so the comparison uses the English-only requests (34 of the binding gold, 14 from the first gold and 20 two-part probes I added with the `attach_en` split, written to make the nearest cue ambiguous). 59 attachments: a fit, length, depth or silhouette word and the part it belongs to. The deployed binder (on gold spans) is correct when it emits the gold update. spaCy en_core_web_sm and a nearest-in-words rule each pick, among the request's cue words, the one closest in the parse tree or in the sentence.
+
+| Attacher | Correct of 59 (95% interval) |
+|---|---|
+| Deployed binder | 57, 0.966 (0.915 to 1.0) |
+| spaCy parse, nearest cue in the tree | 54, 0.915 (0.831 to 0.983) |
+| Nearest cue in words | 57, 0.966 (0.915 to 1.0) |
+
+The off-the-shelf parser does not beat the binder or even the one-line nearest-cue rule on this set: lowercase fashion phrases ("sleeves loose and waist fitted") are not what it was trained on. The difference is within noise at n = 59, so the supported claim is only that a general English parser is not an upper bound here. Two caveats: the set is small and mostly adjacent value-cue pairs, which favours the nearest rule; and the binder is scored on gold spans, so the Hindi postposition faults of the syntax section do not appear (those need Hindi parsing, which does not exist here).

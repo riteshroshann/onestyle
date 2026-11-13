@@ -234,6 +234,64 @@
      ]
     }
    }
+  },
+  "attach_en": {
+   "gold_spans": {
+    "deployed": {
+     "precision": 0.9524,
+     "recall": 0.9524,
+     "f1": 0.9524,
+     "tp": 40,
+     "predicted": 42,
+     "gold": 42,
+     "n_requests": 20,
+     "f1_ci95": [
+      0.8837,
+      1
+     ]
+    },
+    "par_fixed": {
+     "precision": 0.9524,
+     "recall": 0.9524,
+     "f1": 0.9524,
+     "tp": 40,
+     "predicted": 42,
+     "gold": 42,
+     "n_requests": 20,
+     "f1_ci95": [
+      0.8837,
+      1
+     ]
+    }
+   },
+   "gazetteer_spans": {
+    "deployed": {
+     "precision": 0.9756,
+     "recall": 0.9524,
+     "f1": 0.9639,
+     "tp": 40,
+     "predicted": 41,
+     "gold": 42,
+     "n_requests": 20,
+     "f1_ci95": [
+      0.9024,
+      1
+     ]
+    },
+    "par_fixed": {
+     "precision": 0.9756,
+     "recall": 0.9524,
+     "f1": 0.9639,
+     "tp": 40,
+     "predicted": 41,
+     "gold": 42,
+     "n_requests": 20,
+     "f1_ci95": [
+      0.9024,
+      1
+     ]
+    }
+   }
   }
  },
  "par_fix": {
@@ -575,6 +633,28 @@
    ],
    "spurious": [
     "exclude|bodice.fit|loose|"
+   ]
+  },
+  {
+   "id": "att-14",
+   "split": "attach_en",
+   "text": "sleeves semi fitted , hip loose , neckline moderate",
+   "missed": [
+    "set|neckline.depth|moderate|"
+   ],
+   "spurious": [
+    "set|neckline.depth|shallow|"
+   ]
+  },
+  {
+   "id": "att-20",
+   "split": "attach_en",
+   "text": "hip loose while sleeves relaxed",
+   "missed": [
+    "set|sleeve.fit|relaxed|"
+   ],
+   "spurious": [
+    "set|lower.fit|relaxed|"
    ]
   }
  ],

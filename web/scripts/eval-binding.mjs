@@ -1,6 +1,6 @@
 // Scores the deployed binder (spans -> slot updates) against hand-annotated attachments, from gold spans and from
 // the gazetteer's spans, and measures what the "par" clause break costs. Read-only: the patched binder lives in a temp dir.
-// usage: node --experimental-strip-types scripts/eval-binding.mjs
+// usage: node --experimental-strip-types scripts/eval-binding.mjs [--predictions]   (the flag prints the deployed binder's triples per request, for the parser comparison)
 // Author: Ritesh Roshan
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -44,7 +44,13 @@ function goldSpans(row, tokens) {
 
 const rows = readJsonl("data/gold/binding.jsonl");
 const bindPar = await patchedBind();
-const sets = { dev: "dev", test: "test", requests: "requests", postposition: "postposition" };
+if (process.argv.includes("--predictions")) {
+  const out = {};
+  for (const r of rows) { const tk = tokenize(r.text); out[r.id] = [...new Set(bind(tk, goldSpans(r, tk), "words").map((u) => key(triple(u))))]; }
+  process.stdout.write(JSON.stringify(out));
+  process.exit(0);
+}
+const sets = { dev: "dev", test: "test", requests: "requests", postposition: "postposition", attach_en: "attach_en" };
 const modes = {
   gold_spans: (row, tokens) => goldSpans(row, tokens),
   gazetteer_spans: (_row, tokens) => tagRules(tokens),
