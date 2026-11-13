@@ -778,13 +778,6 @@ function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string
   );
 }
 
-/** Idea searches and shops for a design, for the board's brief. */
-function boardLooks(spec: Spec) {
-  if (!spec.slots.garment) return undefined;
-  const L = links(spec);
-  return { ideas: L.pinterest.slice(0, 2).map((p) => ({ label: `Pinterest: ${p.label}`, url: p.url })), shops: L.shops.slice(0, 3).map((x) => ({ label: x.label, url: x.url })) };
-}
-
 function Finale({ spec, onSheet, onShop, backBtn }: { spec: Spec; onSheet: () => void; onShop: () => void; backBtn: React.ReactNode }) {
   const L = links(spec);
   return (
@@ -1086,7 +1079,7 @@ export default function App() {
   if (resuming) return (
     <>{header}<main className="hero"><motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[17px] text-brand-ink/50">Opening your last design</motion.p></main></>
   );
-  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} design={spec.slots.garment ? phrase(spec) : ""} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} designLooks={boardLooks(spec)} /></>);
+  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} design={spec.slots.garment ? phrase(spec) : ""} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
   if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => go("talk")} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => go("talk")} /></>);
 

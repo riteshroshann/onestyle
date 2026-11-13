@@ -5,13 +5,16 @@ import { Excalidraw, MainMenu, convertToExcalidrawElements } from "@excalidraw/e
 import "@excalidraw/excalidraw/index.css";
 import { analyseBoard, checkInspiration, ideaUpdates, isOurs, mergeUpdates, readBoard, readNotes, resolveComparisons } from "../lib/engine/board";
 import type { Board as BoardGraph, BoardEvent, BoardResult, Idea, Inspiration, PictureIdeas, Scores } from "../lib/engine/board";
-import { apply, emptySpec, Update } from "../lib/engine/spec";
-import { links } from "../lib/engine/describe";
+import { Update } from "../lib/engine/spec";
 import { loadVision, tag, zeroShot } from "../lib/models";
-import { Buddy } from "./board/Buddy";
-import type { Look, ReadingState, Step } from "./board/Buddy";
-import { ideaLine, layoutNotes, skeletons } from "./board/notes";
-import type { Chart } from "./board/notes";
+import { Reading } from "./board/Reading";
+import type { PictureView, ReadingState, Step } from "./board/Reading";
+import { cardWidth, elements, place } from "./board/notes";
+import type { Chart, Sized } from "./board/notes";
+import { directionCard, pictureCard, SHADOW } from "./board/cards";
+import type { Drawn } from "./board/cards";
+import { Pet } from "./board/Pet";
+import type { Mood, Said } from "./board/Pet";
 import { paletteOf } from "./board/palette";
 import { HaloDropzone } from "./ui/halo-dropzone";
 import { BoardsMenu } from "./board/BoardsMenu";
@@ -110,43 +113,50 @@ function deviceIdea(ups: Update[]): Idea | null {
   return idea;
 }
 
-const NO_LOOKS = { ideas: [] as Look[], shops: [] as Look[] };
 const CHART_TITLE: Record<string, string> = { garment: "Garment", colour: "Colour", pattern: "Print" };
 /** What the image model saw in each picture, as charts for the notes. */
 const chartsOf = (scores: Scores): Record<number, Chart[]> => Object.fromEntries(Object.entries(scores).map(([n, slots]) =>
   [Number(n), Object.entries(slots).filter(([slot]) => CHART_TITLE[slot]).map(([slot, rows]) => ({ title: CHART_TITLE[slot], rows }))]));
 
-/** Where to look further for a direction: idea searches and shops, built from the direction as a design. */
-function looksFor(idea: Idea | undefined) {
-  if (!idea) return { ideas: [], shops: [] };
-  const L = links(apply(emptySpec(), ideaUpdates(idea)));
-  return {
-    ideas: L.pinterest.slice(0, 2).map((p) => ({ label: `Pinterest: ${p.label}`, url: p.url })),
-    shops: L.shops.slice(0, 3).map((x) => ({ label: x.label, url: x.url })),
-  };
-}
+const borrowed = (p: PictureIdeas) => [...p.pattern, ...p["lower.silhouette"], ...p.fabric, ...p.embellishment];
+const pictureView = (p: PictureIdeas): PictureView => ({
+  n: p.n, shows: p.shows, borrow: p.borrow, palette: p.palette,
+  details: [
+    p.motifs.length ? `Motifs: ${p.motifs.join(", ")}` : "",
+    p.mood.length ? `Mood: ${p.mood.join(", ")}` : "",
+    borrowed(p).length ? `Try: ${borrowed(p).join(", ")}` : "",
+  ].filter(Boolean),
+});
+
+// what the pet asks the stylist for when a design arrives on an empty board
+const BRIEF = "Write a short creative direction for my design: the mood, a colour palette, the fabric, and two details that make it special.";
+/** Splits an answer into the short sentences the pet says one at a time. */
+const sentences = (t: string) => (t.match(/[^.!?]+[.!?]+/g) ?? [t]).map((x) => x.trim()).filter(Boolean).slice(0, 5);
 
 const idle = (pictures: { n: number; dataURL: string }[], steps: ReadingState["steps"]): ReadingState =>
   ({ phase: "reading", pictures, active: pictures[0]?.n ?? null, steps, loaded: 0, status: "Reading your board", result: null, message: "" });
 
-export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons, design = "", designLooks = NO_LOOKS }: {
+export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons, design = "" }: {
   boardId: string; onOpen: (id: string) => void; onNew: () => void;
   onEvidence: (u: Update[], note: string) => void;
   comparisons: { slot: string; cmp: string; ref: string }[];
   /** The current design in a sentence, such as "a pink anarkali for a wedding", so ideas fit it. */
   design?: string;
-  /** Idea searches and shops for the current design, shown in the brief before any reading. */
-  designLooks?: { ideas: Look[]; shops: Look[] };
 }) {
   const api = useRef<any>(null);
   const [hint, setHint] = useState("");
   const [coach, setCoach] = useState(false);
   const [reading, setReading] = useState<ReadingState | null>(null);
   const [picked, setPicked] = useState(0);
-  const [applied, setApplied] = useState<number | null>(null);
+  const [said, setSaid] = useState<Said[]>([]);
+  const [mood, setMood] = useState<Mood>("idle");
+  const say = useCallback((...texts: string[]) => {
+    texts.forEach((text, i) => setTimeout(() => setSaid((xs) => [...xs, { id: `${Date.now()}-${i}-${Math.random()}`, text }]), i * 1100));
+  }, []);
+  const cheer = useCallback(() => { setMood("happy"); setTimeout(() => setMood("idle"), 1400); }, []);
+  const greeted = useRef(false);
   const outcome = useRef<{ plans: Plan[]; written: Written } | null>(null);
   const charts = useRef<Record<number, Chart[]>>({});
-  const panelOpen = useRef(false);
   const generation = useRef(0); // late charts belong to the latest reading, even after the panel closes
   const run = useRef(0);
   const [loaded, setLoaded] = useState(false);
@@ -224,32 +234,42 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
       // after the scene has taken the new pictures, bring the whole board into view below the toolbar
       requestAnimationFrame(() => a.scrollToContent(undefined, { fitToViewport: true, viewportZoomFactor: 0.6, animate: true }));
       setHint("");
+      if (!greeted.current || said.length < 2) say(shrunk.length > 1 ? `${shrunk.length} lovely pictures. Circle a detail or add a note, then read the board.` : "Lovely. Add a few more, or circle what you love, then read the board.");
+      greeted.current = true;
     } catch {
       setHint("That picture would not open. Try another.");
     }
   };
 
   /** Write the reading onto the board as notes, replacing earlier ones, and fade them in card by card. */
-  const writeNotes = (w: Written, animate: boolean, seen: Record<number, Chart[]> = charts.current) => {
+  const writeNotes = async (w: Written, animate: boolean, seen: Record<number, Chart[]> = charts.current) => {
     const a = api.current;
     if (!a || (!w.pictures.length && !w.summary && !w.ideas.length)) return;
+    const before = readBoard(a.getSceneElements(), a.getFiles());
+    // each card is typeset and drawn first, so its real height is known before it is placed
+    const drawn: (Sized & { img: Drawn })[] = [];
+    for (const p of w.pictures) {
+      const im = before.images.find((i) => i.n === p.n);
+      if (!im) continue;
+      const img = await pictureCard(p, seen[p.n] ?? [], cardWidth(im.w));
+      drawn.push({ key: `p${p.n}`, n: p.n, w: img.w, h: img.h, img });
+    }
+    if (w.summary || w.ideas.length) { const img = await directionCard(w.summary, w.ideas, 460); drawn.push({ key: "direction", w: img.w, h: img.h, img }); }
     const keep = a.getSceneElements().filter((e: any) => !isNote(e));
     const board = readBoard(keep, a.getFiles());
     const taken = keep.filter((e: any) => !e.isDeleted).map((e: any) => ({ x: e.x, y: e.y, w: e.width, h: e.height }));
-    const cards = layoutNotes(board.images.map((im) => ({ n: im.n, x: im.x, y: im.y, w: im.w, h: im.h })), taken, w.pictures, w.summary, w.ideas, seen);
+    const spots = place(board.images.map((im) => ({ n: im.n, x: im.x, y: im.y, w: im.w, h: im.h })), taken, drawn, SHADOW);
     const seed = Date.now().toString(36);
+    const ids: Record<string, string> = {};
+    const now = Date.now();
+    a.addFiles(drawn.map((d) => { ids[d.key] = `note-${seed}-${d.key}`; return { id: ids[d.key], dataURL: d.img.dataURL, mimeType: d.img.dataURL.startsWith("data:image/webp") ? "image/webp" : "image/png", created: now }; }));
     const still = !animate || matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const els = convertToExcalidrawElements(skeletons(cards, seed) as any, { regenerateIds: false }).map((e: any) => (still ? e : { ...e, opacity: 0 }));
+    const els = convertToExcalidrawElements(elements(spots, ids, seed) as any, { regenerateIds: false })
+      .map((e: any) => ({ ...e, groupIds: [`bespoke-${seed}-${spots.find((sp) => `bespoke-${seed}-${sp.key}` === e.id)?.key}`], ...(still ? {} : { opacity: 0 }) }));
     a.updateScene({ elements: [...keep, ...els] });
-    // with the buddy open beside it on a wide screen, the board fits into the space left of the panel
-    const beside = panelOpen.current && innerWidth >= 768;
-    const fit = () => {
-      a.scrollToContent(undefined, { fitToViewport: true, viewportZoomFactor: beside ? 0.62 : 0.85, animate: !still && !beside });
-      if (beside) { const st = a.getAppState(); a.updateScene({ appState: { scrollX: st.scrollX - 150 / st.zoom.value } }); }
-    };
-    requestAnimationFrame(fit);
+    requestAnimationFrame(() => a.scrollToContent(undefined, { fitToViewport: true, viewportZoomFactor: 0.85, animate: !still }));
     if (still) return;
-    const order = new Map(cards.map((c, i) => [`bespoke-${seed}-${c.key}`, i]));
+    const order = new Map(spots.map((c, i) => [`bespoke-${seed}-${c.key}`, i]));
     const start = performance.now();
     const tick = (now: number) => {
       const t = now - start;
@@ -286,7 +306,8 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
     const id = ++run.current;
     const gen = ++generation.current;
     charts.current = {};
-    setApplied(null);
+    setMood("thinking");
+    say(board.images.length > 1 ? `Reading ${board.images.length} pictures.` : "Reading your board.");
     const live = () => run.current === id;
     const set = (f: (r: ReadingState) => ReadingState) => { if (live()) setReading((r) => (r ? f(r) : r)); };
     const step = (k: keyof ReadingState["steps"], s: Step) => set((r) => ({ ...r, steps: { ...r.steps, [k]: s } }));
@@ -312,7 +333,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
 
     const c = await cloud;
     if (!live()) return;
-    if (c.kind === "refused") { run.current++; setReading((r) => r && { ...r, phase: "refused", message: c.message }); return; }
+    if (c.kind === "refused") { run.current++; setMood("idle"); say("Those pictures are not ones I can read. Try clothes, colours, places or art you love."); setReading((r) => r && { ...r, phase: "refused", message: c.message }); return; }
     step("cloud", c.kind === "ok" ? "done" : board.images.length && online ? "fail" : "skip");
     let dev: BoardResult | null = null;
     // with a good cloud reading and nothing fine to look at, the charts can arrive after the direction
@@ -324,12 +345,15 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
         charts.current = chartsOf(d.scores);
         step("device", "done");
         const o = outcome.current;
-        if (o) writeNotes(o.written, false);
+        // notes already on the board are redrawn with the charts
+        if (o && api.current?.getSceneElements().some((e: any) => !e.isDeleted && isNote(e))) void writeNotes(o.written, false);
+        if (o) say("I charted what the image model sees under each picture.");
       }).catch(() => { if (generation.current === gen) step("device", "fail"); });
     } else step("device", "skip");
     const notes = await noteRead;
     if (!live()) return;
     if (c.kind !== "ok" && !dev && board.images.length) {
+      setMood("idle");
       setReading((r) => r && { ...r, phase: "error", message: navigator.onLine
         ? "The pictures could not be read just now. Check your connection, then try again."
         : "You are offline, and this device has not read pictures before. Connect once and try again; after that it reads offline too." });
@@ -378,33 +402,41 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
       return { ups: withNote, note: said };
     });
     outcome.current = { plans, written };
-    writeNotes(written, true);
+    setMood("idle");
     setReading((r) => r && {
       ...r, phase: "done", active: null, status: "Finished reading your board",
       result: {
-        summary: written.summary, ideas, pictureCount: written.pictures.length,
+        summary: written.summary, ideas, pictures: written.pictures.map(pictureView),
         usable: plans.some((p) => p.ups.some((u) => u.op !== "note")),
         leftOut: c.kind === "ok" ? c.ins.leftOut : [], notice: c.kind === "ok" ? "" : NOTICE[c.kind] ?? "",
       },
     });
   };
 
-  // closing stops a reading in progress; a finished one is already written on the board
-  const close = useCallback(() => { run.current++; setReading(null); }, []);
-  useEffect(() => { panelOpen.current = !!reading; }, [reading]);
-  const circle = () => {
+  const close = useCallback(() => { run.current++; setMood("idle"); setReading(null); }, []);
+  /** Leaves the reading for the board, with the notes written onto it. */
+  const finish = (animate: boolean) => {
+    const o = outcome.current;
     close();
+    if (o) {
+      void writeNotes(o.written, animate);
+      cheer();
+      say(...[o.written.summary, "I wrote it all on your board."].filter(Boolean));
+    }
+    return o;
+  };
+  const keep = () => { finish(true); };
+  const circle = () => {
+    finish(true);
     api.current?.setActiveTool({ type: "ellipse" });
     setCoach(true);
   };
   // the direction goes into the design right here; the board never sends you elsewhere
   const use = () => {
-    const o = outcome.current;
-    if (!o) return;
-    const plan = o.plans[picked] ?? o.plans[0];
+    const pick = picked;
+    const o = finish(true);
     flush();
-    onEvidence(plan.ups, plan.note);
-    setApplied(picked);
+    if (o) { const plan = o.plans[pick] ?? o.plans[0]; onEvidence(plan.ups, plan.note); say(`"${o.written.ideas[pick]?.title ?? "This direction"}" is in your design now. Keep pinning.`); }
   };
 
   // pasted pictures land on the board the same way as dropped ones
@@ -427,13 +459,20 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
     if (pending.current) { clearTimeout(saveTimer.current); void save(); }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { boardHome().then(setHome).catch(() => setHome("device")); }, []);
-  // a design arriving from Talk opens on its creative direction: the board is where it grows
-  const briefed = useRef(false);
+  // the pet says hello; a design arriving from Talk gets a creative direction, sentence by sentence
+  const hello = useRef(false);
   useEffect(() => {
-    if (!loaded || briefed.current || !design || !empty) return;
-    briefed.current = true;
-    setReading((r) => r ?? { phase: "brief", pictures: [], active: null, steps: { notes: "skip", cloud: "skip", device: "skip" }, loaded: 0, status: "Your creative direction", result: null, message: "" });
-  }, [loaded, design, empty]);
+    if (!loaded || hello.current) return;
+    hello.current = true;
+    if (!empty) { say("Welcome back. Read the board whenever you are ready."); return; }
+    if (!design) { say("Hi. Drop or paste anything you love: clothes, art, places, a colour."); return; }
+    say(`Here is your board for ${design}.`);
+    setMood("thinking");
+    fetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: BRIEF, design, history: [] }) })
+      .then((r) => r.json()).then((b) => { if (b?.answer && !b.refused) say(...sentences(b.answer)); })
+      .catch(() => {})
+      .finally(() => { setMood("idle"); setTimeout(() => say("Now pin pictures that feel like it."), 400); });
+  }, [loaded, design, empty, say]);
 
   return (
     <div className="boardwrap">
@@ -479,9 +518,9 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
         )}
       </AnimatePresence>
       <AnimatePresence>
-        {loaded && empty && (!reading || reading.phase === "brief") && (
+        {loaded && empty && !reading && (
           <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }}
-            className={`pointer-events-none absolute inset-0 z-[3] grid place-items-start justify-items-center overflow-y-auto px-5 pb-60 pt-[150px] md:place-items-center md:pb-28 md:pt-20 ${reading ? "md:pr-[456px] max-md:hidden" : ""}`}>
+            className="pointer-events-none absolute inset-0 z-[3] grid place-items-start justify-items-center overflow-y-auto px-5 pb-60 pt-[150px] md:place-items-center md:pb-28 md:pt-20">
             <div className="pointer-events-auto w-full max-w-[640px]">
               <motion.h2 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.05 }}
                 className="display text-[clamp(44px,6vw,80px)]">Pin what you love.</motion.h2>
@@ -527,13 +566,9 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
           </motion.button>
         </motion.div>
       </div>
+      {!reading && <Pet said={said} mood={mood} />}
       <AnimatePresence>
-        {reading && (() => {
-          const idea = reading.result?.ideas[picked];
-          const context = [design && `Design: ${design}.`, reading.result?.summary && `Board: ${reading.result.summary}`, idea && `Direction: ${idea.title} (${ideaLine(idea)}).`].filter(Boolean).join(" ");
-          return <Buddy key="buddy" state={reading} picked={picked} applied={applied} looks={reading.phase === "brief" ? designLooks : looksFor(idea)} context={context}
-            onPick={setPicked} onUse={use} onCircle={circle} onRetry={analyse} onClose={close} />;
-        })()}
+        {reading && <Reading state={reading} picked={picked} onPick={setPicked} onUse={use} onCircle={circle} onKeep={keep} onRetry={analyse} onClose={close} />}
       </AnimatePresence>
     </div>
   );
