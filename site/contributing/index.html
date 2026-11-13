@@ -24,11 +24,16 @@
 <li><b>Verified.</b> Run it, test it, look at it. Screenshots at 390 and 1440 pixels for anything visual, in both the light pages and the dark Talk page.</li>
 <li><b>Small.</b> One change per pull request, matching the code around it. Comments say why, not what.</li>
 <li><b>Honest.</b> Fix the cause of a failure; never weaken a test to make it pass. Every number you add must be reproducible.</li></ol></div></div></section>
-  <section id="checks"><div class="wrap cols"><h2 class="reveal">Before you open a pull request</h2><div class="reveal"><pre><code>cd web
-bun x tsc --noEmit -p .           # types
-bun run build                     # the static export must build
-bun tests/assistant.test.ts       # Ask, retrieval and guardrails
-cd ../engine && pytest            # the engine, if you touched it</code></pre></div></div></section>
+  <section id="checks"><div class="wrap cols"><h2 class="reveal">Before you open a pull request</h2><div class="reveal"><p>One command runs everything: types, the build, every unit suite, the three browser walks against the fresh build, and the security checks.</p>
+<pre><code>cd web
+PLAYWRIGHT_CORE=/path/to/node_modules/playwright-core/index.mjs bun run test:all
+bun run test:all -- --live          # also probe the live site
+bun run test:security               # security checks alone, against the live site</code></pre>
+<div class="table"><table><thead><tr><th>Layer</th><th>What it proves</th></tr></thead><tbody>
+<tr><td>Unit</td><td>The engine (352 parity fixtures with the Python engine, binding, questions, comparisons), 21 realistic requests, the studio flow, the inbox and its permission rules, the board reader, the help chatbot, designs and the APIs, each against a mocked model.</td></tr>
+<tr><td>Browser walks</td><td>Studio: rubbish refused, one question at a time with no repeats, the sheet, men-only shop links, voice into the composer. Board: reading, notes on the canvas, every choice. Inbox: a customer and a maker in two tabs, badges, toasts, typing, status, the phone layout.</td></tr>
+<tr><td>Security</td><td>Headers, every function refusing bad and oversized input, prompt injection (also hidden in history), no invented links, no secrets in the shipped scripts, nothing in the database readable or writable without an account, and markup in messages shown as text.</td></tr></tbody></table></div>
+<p class="muted">The browser walks need playwright-core and Microsoft Edge. Screenshots go to a temp folder, never into the repo.</p></div></div></section>
   <section id="design"><div class="wrap cols"><h2 class="reveal">Design rules</h2><div class="reveal"><p>White, Google Sans at weight 500 for display type, one accent (<code>#38bdf8</code>), glass only on what floats, generous space. No badges, check-mark lists, emoji icons, nested cards or decorative gradients. Every state is designed: hover, focus, pressed, disabled, loading, empty and error. Motion answers a person's action, and reduced-motion turns it off.</p></div></div></section>
   <section id="writing"><div class="wrap cols"><h2 class="reveal">Writing</h2><div class="reveal"><p>Copy in plain, active, sentence-case words. Buttons say what happens: <code>Send to a maker</code>, not <code>Submit</code>. Commit messages are short and plain, describing what changed in one line.</p></div></div></section>
   <section id="safety"><div class="wrap cols"><h2 class="reveal">Data and safety</h2><div class="reveal"><p>Never log what people type. Keep secrets out of code; they live in the deployment's environment. New tables get row-level security before they get data. The Ask guardrails, retrieval threshold and output checks are tested; keep them that way.</p></div></div></section>
