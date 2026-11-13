@@ -1,0 +1,196 @@
+{
+ "topic": "conditional random field",
+ "seed": 13,
+ "protocol": "ablation and grid on a 4000-sentence subsample with 60 L-BFGS iterations (about a minute each); the chosen setting is refit on all 12,000",
+ "feature_group_ablation": {
+  "all groups + gazetteer": {
+   "dev_f1": 0.8963,
+   "test_f1": 0.9148
+  },
+  "minus word identity": {
+   "dev_f1": 0.9037,
+   "test_f1": 0.9121
+  },
+  "minus affixes": {
+   "dev_f1": 0.893,
+   "test_f1": 0.8716
+  },
+  "minus shape": {
+   "dev_f1": 0.9037,
+   "test_f1": 0.9125
+  },
+  "minus window (neighbour words)": {
+   "dev_f1": 0.9288,
+   "test_f1": 0.9259
+  },
+  "minus gazetteer": {
+   "dev_f1": 0.8409,
+   "test_f1": 0.756
+  },
+  "gazetteer only": {
+   "dev_f1": 0.9283,
+   "test_f1": 0.8639
+  }
+ },
+ "regularisation_grid_dev_chosen": {
+  "grid": {
+   "c1=0.01, c2=0.01": {
+    "dev_f1": 0.9111,
+    "test_f1": 0.9083
+   },
+   "c1=0.01, c2=0.05": {
+    "dev_f1": 0.9071,
+    "test_f1": 0.9102
+   },
+   "c1=0.01, c2=0.2": {
+    "dev_f1": 0.9037,
+    "test_f1": 0.9189
+   },
+   "c1=0.05, c2=0.01": {
+    "dev_f1": 0.9037,
+    "test_f1": 0.8935
+   },
+   "c1=0.05, c2=0.05": {
+    "dev_f1": 0.8963,
+    "test_f1": 0.9148
+   },
+   "c1=0.05, c2=0.2": {
+    "dev_f1": 0.8963,
+    "test_f1": 0.9189
+   },
+   "c1=0.2, c2=0.01": {
+    "dev_f1": 0.9071,
+    "test_f1": 0.8894
+   },
+   "c1=0.2, c2=0.05": {
+    "dev_f1": 0.8963,
+    "test_f1": 0.8973
+   },
+   "c1=0.2, c2=0.2": {
+    "dev_f1": 0.9071,
+    "test_f1": 0.9125
+   }
+  },
+  "chosen": "c1=0.01, c2=0.01"
+ },
+ "full_training": {
+  "default c1=c2=0.05": {
+   "f1": 0.9,
+   "ci95": [
+    0.8532,
+    0.9444
+   ]
+  },
+  "tuned c1=0.01, c2=0.01": {
+   "f1": 0.9042,
+   "ci95": [
+    0.8583,
+    0.9451
+   ],
+   "train_seconds": 92.5
+  },
+  "paired_bootstrap_tuned_vs_default": {
+   "delta": 0.0042,
+   "ci95": [
+    0.0,
+    0.0131
+   ],
+   "p": 0.727,
+   "resamples": 2000
+  }
+ },
+ "transitions": {
+  "n_transitions": 622,
+  "invalid_bio": {
+   "n": 98,
+   "mean_weight": -0.654,
+   "share_positive": 0.0
+  },
+  "valid_mean_weight": 0.434,
+  "strongest_positive": [
+   [
+    "B-CMP",
+    "I-CMP",
+    9.04
+   ],
+   [
+    "B-GARMENT",
+    "I-GARMENT",
+    9.0
+   ],
+   [
+    "B-SILHOUETTE",
+    "I-SILHOUETTE",
+    8.77
+   ],
+   [
+    "B-NECKLINE",
+    "I-NECKLINE",
+    8.55
+   ],
+   [
+    "B-LENGTH",
+    "I-LENGTH",
+    7.91
+   ],
+   [
+    "B-PATTERN",
+    "I-PATTERN",
+    7.72
+   ],
+   [
+    "B-INT",
+    "I-INT",
+    7.66
+   ],
+   [
+    "B-STYLE",
+    "I-STYLE",
+    7.55
+   ]
+  ],
+  "strongest_negative": [
+   [
+    "O",
+    "I-SILHOUETTE",
+    -2.69
+   ],
+   [
+    "B-FIT",
+    "B-FIT",
+    -2.8
+   ],
+   [
+    "B-GARMENT",
+    "B-GARMENT",
+    -2.88
+   ],
+   [
+    "B-EMBELL",
+    "I-FABRIC",
+    -2.91
+   ],
+   [
+    "B-PART",
+    "B-PART",
+    -3.23
+   ],
+   [
+    "O",
+    "I-LOC",
+    -3.37
+   ],
+   [
+    "O",
+    "I-GARMENT",
+    -3.52
+   ],
+   [
+    "I-LOC",
+    "B-DIM",
+    -5.5
+   ]
+  ]
+ },
+ "caveat": "Dev has 30 requests; many settings tie on dev and differences on test are within bootstrap noise. Ablation is on a subsample, so absolute F1 is below the full model's."
+}
