@@ -1,6 +1,6 @@
 # Applications syllabus coverage
 
-Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2seq, BERT, GPT) and Unit 4 (POS, NER, parsing, sentiment, MT, QA, summarisation). Every number below was written by a script into the named `results/` file. Evaluation sets are small; the size is given next to each number. Numbers from the Node scorers (binding, grounding parity, retrieval, summarisation, translation) were re-measured against `web/lib` at main commit ed44caa (after the studio rework of `spec.ts` and `describe.ts`). Only the binding, retrieval and seq2seq results changed; the grounding, summarisation, translation and dependency files regenerate identically.
+Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2seq, BERT, GPT) and Unit 4 (POS, NER, parsing, sentiment, MT, QA, summarisation). Every number below was written by a script into the named `results/` file. Evaluation sets are small; the size is given next to each number. Numbers from the Node scorers (binding, grounding parity, retrieval, summarisation, translation) were re-measured against `web/lib` at main commit 0ec0b5d (after the engine fixes for the findings below). Re-measured and changed: binding, grounding (the shipped rule), retrieval (the shipped threshold), translation and dependency. Summarisation is unchanged. For seq2seq the deployed row was re-scored at 0ec0b5d (unchanged); the two t5-small rows come from the model trained earlier, at main ed44caa, whose training targets came from the binder of that commit, and were not retrained.
 
 | Topic | Code | What it does for the product | Result | Status |
 |---|---|---|---|---|
@@ -20,17 +20,21 @@ Author: Ritesh Roshan. Rows for Unit 1 (syntax, semantics), Unit 3 (neural: seq2
 
 ## Syntax: attachment of values to parts
 
-Gold: `data/gold/binding.jsonl`, 152 requests (30 dev and 52 test from `requests.txt`, the 24 of `web/tests/requests.test.ts`, 26 short postposition probes written to stress "par", "pe", "se" and "mein", and 20 English two-part probes, `attach_en`, used by the parser comparison). Each request carries its gold spans and the updates a tailor would take from it (`op slot=value`, with `~slight` or `~strong` and `@ref` where present). Canonical values follow the ontology; what is judged is the attachment: slot, operation, negation scope and comparison reference. Written independently of the binder's output (24 requests disagree with it, which would not happen if the gold were copied from it). One annotator.
+Gold: `data/gold/binding.jsonl`, 152 requests (30 dev and 52 test from `requests.txt`, the 24 of `web/tests/requests.test.ts`, 26 short postposition probes written to stress "par", "pe", "se" and "mein", and 20 English two-part probes, `attach_en`, used by the parser comparison). Each request carries its gold spans and the updates a tailor would take from it (`op slot=value`, with `~slight` or `~strong` and `@ref` where present). Canonical values follow the ontology; what is judged is the attachment: slot, operation, negation scope and comparison reference. Written independently of the binder's output (19 requests disagree with it, which would not happen if the gold were copied from it). One annotator.
 
 Score is micro precision, recall and F1 of the set of triples per request, bootstrap interval over requests (1000 resamples, seed 13). "Gold spans" feeds the binder the annotated spans, so it isolates binding; "gazetteer spans" is the deployed no-model path.
 
 The postposition set was written to find faults, so its score is a stress test, not a typical rate.
 
-### "par": fixed on main
+### Findings on the binder: fixed on main, one regression, some still open
 
-At 8ffed89 `CLAUSE_BREAK` in `web/lib/engine/spec.ts` contained "par" and treated it only as a clause break, although after a part word it is the postposition "on": "sleeve par loose" bound loose to the bodice. Main now has exactly the fix this study proposed (`cueEnds` in `bind()`). The scorer keeps the before and after: it re-creates the old rule in a temp copy of `spec.ts` and compares (`par_old_rule` against `current` in `results/binding.json`). The postposition set rises from F1 0.727 to 0.849 (0.736 to 0.943), the current rule fixes 6 gold attachments in 6 requests and breaks none, and the other sets are unchanged because their requests rarely use "par".
+**"par" as a clause break: fixed.** At 8ffed89 `CLAUSE_BREAK` contained "par" and treated it only as a clause break, although after a part word it is the postposition "on": "sleeve par loose" bound loose to the bodice. Main has the fix this study proposed (`cueEnds` in `bind()`). The scorer re-creates the old rule in a temp copy of the current `spec.ts` (`par_old_rule` against `current` in `results/binding.json`). On the postposition set F1 is 0.768 with the old rule and 0.898 now (0.778 to 0.981); the current rule fixes 6 gold attachments in 6 requests and breaks none; the other sets do not change on this comparison because they rarely use "par".
 
-Still open on main, visible in the `misses` list of the result: a clause keeps the context of its first part cue ("kamar pe fitted hip pe loose" puts both fits on the bodice, with "pe" not a break), context does not carry across a break ("sleeves full par loose nahi"), and "gale par 7 inch gehra" now gets the 7 inches right but also emits a spurious depth "deep".
+**Nearest part cue, and inches beat "deep": fixed in the cases measured.** Main 0ec0b5d gives each value the nearest part or location cue before it and drops a depth word when the same clause gives inches. Misses fell from 29 at 8ffed89 to 24 at ed44caa to 19 now. These gold requests went from wrong to right: "neck 7 inch deep in front", "kamar pe fitted hip pe loose", "neeche se loose upar se fitted", "gale par 7 inch gehra", "baazu se fitted kamar se loose", "gala aage se gol peeche se deep" and "hip loose while sleeves relaxed". Gold-span F1 against the 8ffed89 values: dev 0.971 to 0.976, postposition 0.727 to 0.898, `attach_en` 0.952 to 0.988; test (0.941) and requests (0.995) are unchanged.
+
+**Regression:** "sleeve ki length 18 inch" and "kurti ki lambai 40 inch aur baazu ki lambai 18 inch" were right at ed44caa and now bind the 18 inches to garment length instead of sleeve length (`post-15` and `post-16` in the `misses` list). The nearest cue before the number is "ki length" or "lambai", which is not read as a sleeve cue.
+
+**Still open**, in the `misses` list: context does not carry across a break ("sleeves full par loose nahi" puts the fit on the bodice), "kamar par tight nahi hip par dheela" swaps the two parts' fits, and faults that are not about attachment (compound garments such as "kaftan style kurti", comparisons with "like pic 2" and "kurti like #2").
 
 ## Named entity recognition
 
@@ -46,12 +50,13 @@ Each system takes the best-scoring ontology form of the tag and answers only abo
 
 | System | Threshold | Precision | Recall | F1 on held-out half | False grounds on out-of-ontology words (all 56) |
 |---|---|---|---|---|---|
-| Trigram Dice (shipped, at 0.5, all 199) | 0.50 | 0.932 | 0.965 | 0.949 | 9 |
+| Shipped rule now: trigram Dice at 0.5 plus edit similarity at least 0.66 (all 199) | 0.50 | 0.985 | 0.923 | 0.953 | 2 |
+| Trigram Dice at 0.5 alone, the rule before 0ec0b5d (all 199) | 0.50 | 0.932 | 0.965 | 0.949 | 9 |
 | Trigram Dice, tuned | 0.40 | 0.896 | 0.972 | 0.932 (0.882 to 0.973) | 10 |
 | Edit-distance similarity | 0.66 | 0.971 | 0.944 | 0.957 (0.917 to 0.986) | 3 |
 | Embedding cosine (bge-small-en-v1.5) | 0.72 | 0.828 | 0.747 | 0.785 (0.695 to 0.861) | 17 |
 
-Edit distance matches the shipped trigram rule on F1 (the intervals overlap widely at n = 99) and abstains on out-of-ontology words about three times as often (3 false grounds against 9). The embedding does worst: it is English-only and cannot see that "kurthi" is a spelling of "kurti". Still open on main (`groundFuzzy` still answers at trigram Dice 0.5). Proposal for the owner of `lexicon.ts`: keep trigram Dice, add an edit-similarity check of at least 0.66 before answering. The shipped errors (`deployed_errors` in the result) are mostly near words a tailor would also flag, such as "maximalist" read as minimal and "skintight" read as fitted. A few "false grounds" are arguable ("graduation ball" to farewell). The typos are synthetic, so real typing noise could behave differently.
+**Fixed on main.** The study found that edit distance matched the old trigram rule on F1 and abstained on out-of-ontology words about three times as often, and proposed an edit-similarity check of at least 0.66 before answering. `groundFuzzy` now has that check; the Python reproduction mirrors it and agrees with the TypeScript on all 199 phrases. Before and after on all 199 phrases: false grounds on the 56 out-of-ontology words 9 to 2, precision 0.932 to 0.985, recall 0.965 to 0.923, F1 0.949 to 0.953. It trades recall for precision: 6 more of the 143 groundable typos are now left to the tagger or to a question. The two remaining false grounds (`deployed_errors` in the result) are "maximalist" read as minimal and "graduation ball" read as farewell, the second arguably acceptable. The embedding does worst: it is English-only and cannot see that "kurthi" is a spelling of "kurti". The typos are synthetic, so real typing noise could behave differently.
 
 ## Question answering: help-chatbot retrieval
 
@@ -65,7 +70,7 @@ Edit distance matches the shipped trigram rule on F1 (the intervals overlap wide
 
 n = 75 answerable questions, intervals are bootstrap over questions; the arms are within each other's intervals on Recall@1, so the only supported claim is that fusing the two does not hurt and probably helps at Recall@3 and @5. (Main added a passage to the privacy corpus since the first measurement; BM25 Recall@1 moved from 0.547 to 0.533.) Python's BM25 MRR (0.666) differs from the Node one in the third decimal because it also ranks the passages scoring zero.
 
-Answerability: the deployed rule answers when the top BM25 score is at least 2.5. On this set it answers 74 of 75 answerable questions (coverage 0.99) and also answers 16 of the 25 unanswerable ones (abstains on 36%): the false answers are three off-topic questions (laptop wifi, which phone, translate) and 13 near-topic ones whose top passage shares a word with the question, for example the silk-fabric passage for a question about washing a silk kurti (`false_answers` in the result). AUROC of the top score for answerable against unanswerable is 0.848 for BM25 and 0.858 for the dense cosine (25 negatives, so intervals are wide: 0.74 to 0.94 and 0.77 to 0.93). `GROUNDED_MIN` is still 2.5 on main, so this finding is open. Raising it to about 4.8 would abstain on 84% of unanswerable questions but would also drop 19% of answerable ones (threshold chosen on the same questions, so optimistic). Whether to move it is a product choice.
+Answerability: the deployed rule answers when the top BM25 score reaches `GROUNDED_MIN`, which the scorer reads from the code. **Fixed on main:** the threshold was 2.5 and is now 3.5. At 2.5 the rule answered 74 of 75 answerable questions and 16 of the 25 unanswerable ones (abstained on 36%). At 3.5 it answers 72 of 75 (coverage 0.96) and 11 of 25 (abstains on 56%); the false answers are one off-topic question and ten near-topic ones whose top passage shares a word with the question, for example the silk-fabric passage for a question about washing a silk kurti (`false_answers` in the result). The sweep in the result shows the trade: 4.0 answers 67 and 10, 5.0 answers 60 and 4. AUROC of the top score for answerable against unanswerable is 0.848 for BM25 and 0.858 for the dense cosine (25 negatives, so intervals are wide: 0.73 to 0.94 and 0.77 to 0.93); no threshold separates the near-topic questions, which is why abstention stays well short of complete.
 
 ## Sentiment: stance towards the design
 
@@ -99,14 +104,14 @@ TextRank beats the lead baseline on ROUGE-1 and ROUGE-L only within noise, and e
 
 ## Machine translation: English tailor sheet to Hindi
 
-`python scripts/apps.py translate`, about 25 s. Gold: 69 sheet rows as printed ("Neckline: V, front depth 6.75 in from the high shoulder point"), selected to cover every part of the sheet, each with a Hindi reference written by one annotator from the English alone. This is a small set of short rows, not a corpus: BLEU is corpus-level with effective order and is harsh on rows of two to ten words, so chrF++ is the better guide. The reference is one person's Hindi, not a panel's; "फिटेड" against the template's "फिट" counts as an error although both are in use.
+`python scripts/apps.py translate`, about 25 s. Gold: 69 sheet rows as printed (66 scored: after the engine changes three rows, `Lower body: fitted, 1.5 in ease at hip`, `Neckline: round, front depth 7.5 in from the high shoulder point` and `Sleeve: 18 in`, are no longer produced by the engine, so all systems are scored on the other 66; see `rows_no_longer_produced_by_the_engine` in the result) ("Neckline: V, front depth 6.75 in from the high shoulder point"), selected to cover every part of the sheet, each with a Hindi reference written by one annotator from the English alone. This is a small set of short rows, not a corpus: BLEU is corpus-level with effective order and is harsh on rows of two to ten words, so chrF++ is the better guide. The reference is one person's Hindi, not a panel's; "फिटेड" against the template's "फिट" counts as an error although both are in use.
 
 | System | BLEU | chrF++ (corpus) | chrF++ per row (95% interval) | Exact match |
 |---|---|---|---|---|
-| Template system (deployed) | 64.1 | 76.7 | 79.3 (74.1 to 84.4) | 0.42 |
-| opus-mt-en-hi (Helsinki-NLP, 75M parameters, beam 4) | 4.1 | 22.2 | 24.0 (20.0 to 28.6) | 0.00 |
+| Template system (deployed) | 66.5 | 77.8 | 80.3 (74.5 to 85.7) | 0.47 |
+| opus-mt-en-hi (Helsinki-NLP, 75M parameters, beam 4) | 4.0 | 22.1 | 24.0 (19.3 to 28.9) | 0.00 |
 
-A generic MT model has no tailoring vocabulary: it reads "Avoid" as "stay away", "Neckline" as a name, "sweetheart" as "जानेमन" and mangles the numbers. The template system's remaining misses are register choices (for example "ज़री" against "ज़री का काम") and one real defect: the Avoid row prints "नहीं चाहिए: कढ़ाई नहीं", saying "not wanted" twice, because `sheetLines` in `web/lib/engine/describe.ts` appends "नहीं" to each value under a label that already means "not wanted". Still open on main: `describe.ts` still appends the suffix. The fix for the owner of that file is to drop the `${...} नहीं` suffix (or change the label to "बिना"). Exact match by part is in the result; Avoid and Back neck are 0 for that reason and for wording. Not tested: IndicTrans2 or a larger model, which do not fit this machine's budget of time; a human fluency judgement.
+A generic MT model has no tailoring vocabulary: it reads "Avoid" as "stay away", "Neckline" as a name, "sweetheart" as "जानेमन" and mangles the numbers. The template system's remaining misses are register choices (for example "ज़री" against "ज़री का काम") and one real defect that is **fixed on main**: the Avoid row used to print "नहीं चाहिए: कढ़ाई नहीं", saying "not wanted" twice, because `sheetLines` appended "नहीं" to each value under a label that already means "not wanted". It now prints "नहीं चाहिए: कढ़ाई". Template exact match went from 0.42 (69 rows) to 0.47 (66 rows), chrF++ from 76.7 to 77.8 and BLEU from 64.1 to 66.5; the row sets differ, so treat the change as indicative. Exact match by part is in the result (Avoid 0.33, Back neck 0.00; the rest are wording choices). Not tested: IndicTrans2 or a larger model, which do not fit this machine's budget of time; a human fluency judgement.
 
 ## BERT: a look inside the deployed MiniLM
 
@@ -150,11 +155,11 @@ All learned taggers sit at the silver labeller's ceiling (about 0.81 to 0.82) an
 
 | Attacher | Correct of 59 (95% interval) |
 |---|---|
-| Deployed binder | 57, 0.966 (0.915 to 1.0) |
+| Deployed binder | 58, 0.983 (0.949 to 1.0) |
 | spaCy parse, nearest cue in the tree | 54, 0.915 (0.831 to 0.983) |
 | Nearest cue in words | 57, 0.966 (0.915 to 1.0) |
 
-The off-the-shelf parser does not beat the binder or even the one-line nearest-cue rule on this set: lowercase fashion phrases ("sleeves loose and waist fitted") are not what it was trained on. The difference is within noise at n = 59, so the supported claim is only that a general English parser is not an upper bound here. Two caveats: the set is small and mostly adjacent value-cue pairs, which favours the nearest rule; and the binder is scored on gold spans, so the Hindi postposition faults of the syntax section do not appear (those need Hindi parsing, which does not exist here).
+The off-the-shelf parser does not beat the binder or even the one-line nearest-cue rule on this set (the binder gained one attachment with the 0ec0b5d fix, 57 to 58): lowercase fashion phrases ("sleeves loose and waist fitted") are not what it was trained on. The difference is within noise at n = 59, so the supported claim is only that a general English parser is not an upper bound here. Two caveats: the set is small and mostly adjacent value-cue pairs, which favours the nearest rule; and the binder is scored on gold spans, so the Hindi postposition faults of the syntax section do not appear (those need Hindi parsing, which does not exist here).
 
 ## GPT: decoder-only models on requests
 

@@ -35,3 +35,10 @@ def test_gold_phrases_are_unseen_and_values_exist():
     for r in read_jsonl(GOLD / "grounding.jsonl"):
         assert tuple(tokenize(r["phrase"])) not in index, r["phrase"]
         assert r["value"] is None or r["value"] in onto[r["tag"]], r
+
+
+def test_shipped_rule_abstains_when_spelling_is_far_even_if_trigrams_overlap():
+    from bespoke.apps.grounding import shipped
+
+    assert shipped("lavendar", "COLOUR") == ("lavender", shipped("lavendar", "COLOUR")[1]) and shipped("lavendar", "COLOUR")[1] >= 0.5
+    assert shipped("skintight", "FIT")[1] < 0.5  # fails the 0.5 threshold through the edit-similarity gate

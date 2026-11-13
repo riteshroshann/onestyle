@@ -19,7 +19,7 @@ import numpy as np
 
 from ..data import synth_sentence
 from ..lexicon import bio_to_spans, tokenize
-from .common import GOLD, ROOT, SEED, bootstrap_ci, read_jsonl, write_result
+from .common import GOLD, RESULTS, ROOT, SEED, bootstrap_ci, read_jsonl, write_result
 
 MODEL = "t5-small"
 N_TRAIN = 4000
@@ -70,6 +70,44 @@ class Trie:
             if node_ is None:
                 return [], False
         return [k for k in node_ if k != "end"], "end" in node_
+
+
+def gold_keys(row: dict) -> set[str]:
+    keys = set()
+    for t in row["triples"]:
+        op, rest = t.split(" ", 1)
+        keys.add(f"{op} {rest.split(' ~')[0]}")
+    return keys
+
+
+def prf(gold: list[set[str]], pred: list[set[str]], ix: list[int]) -> dict:
+    tp = sum(len(gold[i] & pred[i]) for i in ix)
+    np_, ng = sum(len(pred[i]) for i in ix), sum(len(gold[i]) for i in ix)
+    p, r = tp / np_ if np_ else 0.0, tp / ng
+    return {"precision": round(p, 4), "recall": round(r, 4), "f1": round(2 * p * r / (p + r), 4) if p + r else 0.0}
+
+
+def gold_test_rows() -> list[dict]:
+    return [r for r in read_jsonl(GOLD / "binding.jsonl") if r["split"] in ("test", "requests")]
+
+
+def score_deployed() -> dict:
+    """The deployed pipeline on the gold, without any model: used alone to refresh results/seq2seq.json after an engine change."""
+    rows = gold_test_rows()
+    gold = [gold_keys(r) for r in rows]
+    pred = [set(target_of(o["triples"][0])) for o in node([{"messages": [r["text"]]} for r in rows])]
+    idx = list(range(len(rows)))
+    return {**prf(gold, pred, idx), "f1_ci95": bootstrap_ci(idx, lambda ix: prf(gold, pred, list(ix))["f1"]),
+            "exact_match_requests": round(float(np.mean([gold[i] == pred[i] for i in idx])), 4)}
+
+
+def refresh_deployed() -> dict:
+    """Re-score only the deployed row of an existing result (the t5 rows stay from the run that trained it)."""
+    path = RESULTS / "seq2seq.json"
+    out = json.loads(path.read_text(encoding="utf8"))
+    out["systems"]["deployed_gazetteer_plus_binder"] = score_deployed()
+    write_result("seq2seq", out)
+    return out
 
 
 def run() -> dict:
@@ -147,31 +185,17 @@ def run() -> dict:
                 out.append(sorted(set(parts)))
         return out
 
-    def gold_keys(row: dict) -> set[str]:
-        keys = set()
-        for t in row["triples"]:
-            op, rest = t.split(" ", 1)
-            rest = rest.split(" ~")[0]
-            keys.add(f"{op} {rest}")
-        return keys
-
-    rows = [r for r in read_jsonl(GOLD / "binding.jsonl") if r["split"] in ("test", "requests")]
+    rows = gold_test_rows()
     texts = [" ".join(tokenize(r["text"])) for r in rows]
     gold = [gold_keys(r) for r in rows]
     deployed = [set(target_of(o["triples"][0])) for o in node([{"messages": [r["text"]]} for r in rows])]
     systems = {"deployed_gazetteer_plus_binder": deployed, "t5_small_greedy": [set(p) for p in generate(texts, False)], "t5_small_constrained": [set(p) for p in generate(texts, True)]}
 
-    def prf(ix: list[int], pred: list[set[str]]) -> dict:
-        tp = sum(len(gold[i] & pred[i]) for i in ix)
-        np_, ng = sum(len(pred[i]) for i in ix), sum(len(gold[i]) for i in ix)
-        p, r = tp / np_ if np_ else 0.0, tp / ng
-        return {"precision": round(p, 4), "recall": round(r, 4), "f1": round(2 * p * r / (p + r), 4) if p + r else 0.0}
-
     out: dict = {"task": "request to linearised spec", "model": MODEL, "train_requests": N_TRAIN, "epochs": EPOCHS, "seed": SEED, "teacher": "binder on exact spans of synthetic requests",
                  "n_gold_requests": len(rows), "interval": "bootstrap over requests, 1000 resamples", "valid_triples_in_trie": len(vocab), "systems": {}}
     idx = list(range(len(rows)))
     for name, pred in systems.items():
-        out["systems"][name] = {**prf(idx, pred), "f1_ci95": bootstrap_ci(idx, lambda ix: prf(list(ix), pred)["f1"]),
+        out["systems"][name] = {**prf(gold, pred, idx), "f1_ci95": bootstrap_ci(idx, lambda ix: prf(gold, pred, list(ix))["f1"]),
                                 "exact_match_requests": round(float(np.mean([gold[i] == pred[i] for i in idx])), 4)}
     c = Counter(name for name, pred in systems.items() for i in idx if not pred[i] <= set(vocab) and name != "deployed_gazetteer_plus_binder")
     out["outputs_with_a_triple_outside_the_training_vocabulary"] = dict(c)

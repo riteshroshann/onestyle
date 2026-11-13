@@ -6,12 +6,12 @@
  "interval": "bootstrap over attachments, 1000 resamples",
  "systems": {
   "binder": {
-   "attachment_accuracy": 0.9661,
+   "attachment_accuracy": 0.9831,
    "ci95": [
-    0.9153,
+    0.9492,
     1.0
    ],
-   "correct": 57
+   "correct": 58
   },
   "spacy_tree_nearest": {
    "attachment_accuracy": 0.9153,

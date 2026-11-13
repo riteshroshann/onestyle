@@ -416,7 +416,19 @@
   }
  },
  "deployed": {
-  "system": "trigram_dice at 0.5, as shipped",
+  "system": "trigram Dice at 0.5 plus edit similarity at least 0.66, as shipped",
+  "all_phrases": {
+   "threshold": 0.5,
+   "fire_rate": 0.6734,
+   "precision": 0.9851,
+   "recall": 0.9231,
+   "f1": 0.9531,
+   "false_grounds_on_out_of_ontology": 2,
+   "out_of_ontology": 56
+  }
+ },
+ "before_edit_gate": {
+  "system": "trigram Dice at 0.5 alone, the rule before main 0ec0b5d",
   "all_phrases": {
    "threshold": 0.5,
    "fire_rate": 0.7437,
@@ -429,41 +441,6 @@
  },
  "deployed_errors": [
   {
-   "phrase": "fitnflare",
-   "tag": "SILHOUETTE",
-   "gold": "fit and flare",
-   "answered": "flared",
-   "score": 0.625
-  },
-  {
-   "phrase": "poncho shawl",
-   "tag": "GARMENT",
-   "gold": null,
-   "answered": "cape",
-   "score": 0.7
-  },
-  {
-   "phrase": "overshirt",
-   "tag": "GARMENT",
-   "gold": null,
-   "answered": "shirt",
-   "score": 0.5
-  },
-  {
-   "phrase": "swimsuit",
-   "tag": "GARMENT",
-   "gold": null,
-   "answered": "salwar suit",
-   "score": 0.571
-  },
-  {
-   "phrase": "rhinestones",
-   "tag": "EMBELL",
-   "gold": null,
-   "answered": "beadwork",
-   "score": 0.556
-  },
-  {
    "phrase": "graduation ball",
    "tag": "OCCASION",
    "gold": null,
@@ -471,32 +448,11 @@
    "score": 0.815
   },
   {
-   "phrase": "gothic lolita",
-   "tag": "STYLE",
-   "gold": null,
-   "answered": "edgy",
-   "score": 0.667
-  },
-  {
    "phrase": "maximalist",
    "tag": "STYLE",
    "gold": null,
    "answered": "minimal",
    "score": 0.636
-  },
-  {
-   "phrase": "minimalistic chic",
-   "tag": "STYLE",
-   "gold": null,
-   "answered": "minimal",
-   "score": 0.714
-  },
-  {
-   "phrase": "skintight",
-   "tag": "FIT",
-   "gold": null,
-   "answered": "fitted",
-   "score": 0.5
   }
  ]
 }
