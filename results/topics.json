@@ -1,0 +1,280 @@
+{
+ "topic": "topic modelling",
+ "seed": 13,
+ "text": "Myntra catalogue titles, English; coherence is NPMI over the held-out 20% of titles",
+ "settings": {
+  "all content words": {
+   "documents": 44368,
+   "train": 35494,
+   "held_out_for_coherence": 6000,
+   "table": {
+    "k=5": {
+     "LDA": {
+      "npmi": -0.1215,
+      "diversity": 0.8
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.0071,
+      "diversity": 0.88
+     }
+    },
+    "k=10": {
+     "LDA": {
+      "npmi": -0.0954,
+      "diversity": 0.75
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.1096,
+      "diversity": 0.76
+     }
+    },
+    "k=15": {
+     "LDA": {
+      "npmi": -0.176,
+      "diversity": 0.74
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.1538,
+      "diversity": 0.74
+     }
+    },
+    "k=20": {
+     "LDA": {
+      "npmi": -0.1825,
+      "diversity": 0.77
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.1809,
+      "diversity": 0.7
+     }
+    },
+    "k=30": {
+     "LDA": {
+      "npmi": -0.2018,
+      "diversity": 0.767
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.209,
+      "diversity": 0.64
+     }
+    }
+   },
+   "best_by_npmi": {
+    "method": "NMF (tf-idf)",
+    "k": 5,
+    "topics": [
+     [
+      "black",
+      "shoes",
+      "casual",
+      "sports",
+      "puma",
+      "nike",
+      "adidas",
+      "brown",
+      "white",
+      "shoe"
+     ],
+     [
+      "blue",
+      "shirt",
+      "navy",
+      "check",
+      "polo",
+      "striped",
+      "jeans",
+      "adidas",
+      "taylor",
+      "arrow"
+     ],
+     [
+      "watch",
+      "dial",
+      "fastrack",
+      "white",
+      "black",
+      "maxima",
+      "chronograph",
+      "titan",
+      "fossil",
+      "timex"
+     ],
+     [
+      "united",
+      "colors",
+      "benetton",
+      "solid",
+      "top",
+      "grey",
+      "black",
+      "shirts",
+      "tshirt",
+      "sunglasses"
+     ],
+     [
+      "printed",
+      "kurta",
+      "white",
+      "green",
+      "fabindia",
+      "top",
+      "red",
+      "pink",
+      "vishudh",
+      "jony"
+     ]
+    ]
+   }
+  },
+  "words the gazetteer does not know": {
+   "documents": 35954,
+   "train": 28763,
+   "held_out_for_coherence": 6000,
+   "table": {
+    "k=5": {
+     "LDA": {
+      "npmi": -0.5045,
+      "diversity": 0.92
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.2016,
+      "diversity": 0.94
+     }
+    },
+    "k=10": {
+     "LDA": {
+      "npmi": -0.4306,
+      "diversity": 0.91
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.249,
+      "diversity": 0.85
+     }
+    },
+    "k=15": {
+     "LDA": {
+      "npmi": -0.4252,
+      "diversity": 0.907
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.27,
+      "diversity": 0.767
+     }
+    },
+    "k=20": {
+     "LDA": {
+      "npmi": -0.3877,
+      "diversity": 0.885
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.2573,
+      "diversity": 0.75
+     }
+    },
+    "k=30": {
+     "LDA": {
+      "npmi": -0.3934,
+      "diversity": 0.903
+     },
+     "NMF (tf-idf)": {
+      "npmi": -0.2466,
+      "diversity": 0.723
+     }
+    }
+   },
+   "best_by_npmi": {
+    "method": "NMF (tf-idf)",
+    "k": 5,
+    "topics": [
+     [
+      "united",
+      "colors",
+      "benetton",
+      "check",
+      "sunglasses",
+      "handbags",
+      "manchester",
+      "wallets",
+      "washed",
+      "belt"
+     ],
+     [
+      "watch",
+      "dial",
+      "fastrack",
+      "maxima",
+      "titan",
+      "chronograph",
+      "timex",
+      "fossil",
+      "casio",
+      "digital"
+     ],
+     [
+      "shoes",
+      "adidas",
+      "nike",
+      "puma",
+      "shoe",
+      "fila",
+      "tape",
+      "vans",
+      "lotto",
+      "catwalk"
+     ],
+     [
+      "jony",
+      "gini",
+      "check",
+      "kidswear",
+      "core",
+      "infant",
+      "capris",
+      "rodeo",
+      "woven",
+      "washed"
+     ],
+     [
+      "handbag",
+      "lino",
+      "perros",
+      "murcia",
+      "baggit",
+      "wallet",
+      "kiara",
+      "belt",
+      "leatherette",
+      "bag"
+     ]
+    ]
+   },
+   "ontology_candidates": [
+    "united",
+    "colors",
+    "benetton",
+    "check",
+    "sunglasses",
+    "watch",
+    "dial",
+    "fastrack",
+    "maxima",
+    "titan",
+    "shoes",
+    "adidas",
+    "nike",
+    "puma",
+    "shoe",
+    "jony",
+    "gini",
+    "kidswear",
+    "core",
+    "handbag",
+    "lino",
+    "perros",
+    "murcia",
+    "baggit"
+   ]
+  }
+ },
+ "caveat": "The catalogue is English and mostly menswear, footwear and accessories, so topics describe product families and brands, not tailoring requests. NPMI prefers small k on short titles; coherence does not say a topic is useful, so candidate terms need a human reviewer."
+}

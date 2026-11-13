@@ -1,0 +1,152 @@
+{
+ "topic": "other NLP problems: normalisation, spelling, transliteration robustness",
+ "seed": 13,
+ "split": "gold test, n=52 requests, entity tokens rewritten, labels kept",
+ "table": {
+  "char noise 0%": {
+   "tokens_changed": 0,
+   "L0 gazetteer": {
+    "f1": 0.9356,
+    "ci95": [
+     0.8999,
+     0.9663
+    ]
+   },
+   "L0 + morphology": {
+    "f1": 0.953,
+    "ci95": [
+     0.9195,
+     0.9827
+    ]
+   },
+   "CRF + gazetteer": {
+    "f1": 0.9,
+    "ci95": [
+     0.8532,
+     0.9444
+    ]
+   }
+  },
+  "char noise 10%": {
+   "tokens_changed": 16,
+   "L0 gazetteer": {
+    "f1": 0.9122,
+    "ci95": [
+     0.8793,
+     0.9419
+    ]
+   },
+   "L0 + morphology": {
+    "f1": 0.9439,
+    "ci95": [
+     0.9165,
+     0.9726
+    ]
+   },
+   "CRF + gazetteer": {
+    "f1": 0.8861,
+    "ci95": [
+     0.8398,
+     0.9283
+    ]
+   }
+  },
+  "char noise 20%": {
+   "tokens_changed": 42,
+   "L0 gazetteer": {
+    "f1": 0.8333,
+    "ci95": [
+     0.781,
+     0.8856
+    ]
+   },
+   "L0 + morphology": {
+    "f1": 0.869,
+    "ci95": [
+     0.8248,
+     0.9099
+    ]
+   },
+   "CRF + gazetteer": {
+    "f1": 0.8705,
+    "ci95": [
+     0.8233,
+     0.914
+    ]
+   }
+  },
+  "char noise 30%": {
+   "tokens_changed": 63,
+   "L0 gazetteer": {
+    "f1": 0.7907,
+    "ci95": [
+     0.7465,
+     0.8335
+    ]
+   },
+   "L0 + morphology": {
+    "f1": 0.8311,
+    "ci95": [
+     0.7854,
+     0.8711
+    ]
+   },
+   "CRF + gazetteer": {
+    "f1": 0.819,
+    "ci95": [
+     0.766,
+     0.8768
+    ]
+   }
+  },
+  "romanisation variants": {
+   "tokens_changed": 95,
+   "L0 gazetteer": {
+    "f1": 0.6963,
+    "ci95": [
+     0.6437,
+     0.7501
+    ]
+   },
+   "L0 + morphology": {
+    "f1": 0.7826,
+    "ci95": [
+     0.7345,
+     0.8288
+    ]
+   },
+   "CRF + gazetteer": {
+    "f1": 0.7528,
+    "ci95": [
+     0.6986,
+     0.8005
+    ]
+   }
+  },
+  "vowel elongation": {
+   "tokens_changed": 100,
+   "L0 gazetteer": {
+    "f1": 0.7015,
+    "ci95": [
+     0.6425,
+     0.7554
+    ]
+   },
+   "L0 + morphology": {
+    "f1": 0.8246,
+    "ci95": [
+     0.7861,
+     0.8683
+    ]
+   },
+   "CRF + gazetteer": {
+    "f1": 0.7143,
+    "ci95": [
+     0.6458,
+     0.7845
+    ]
+   }
+  }
+ },
+ "caveat": "Perturbations are programmatic rewrites, not collected user text. Code-mixing is not varied: the 52 requests are as written. The product's normaliser collapses a letter run to two letters, so elongating a single-letter vowel (kurta to kurtaaa) leaves 'kurtaa': a gap the morphological fallback closes. MiniLM is not scored (weights not in the repo)."
+}

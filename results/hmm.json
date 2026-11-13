@@ -1,0 +1,107 @@
+{
+ "topic": "hidden markov model",
+ "seed": 13,
+ "shipped_ladder_hmm": {
+  "split": "test n=52",
+  "f1": 0.7511,
+  "ci95": [
+   0.6931,
+   0.8097
+  ]
+ },
+ "per_tag_emission_hmm": {
+  "k_sweep_on_dev": {
+   "0.01": {
+    "dev_f1": 0.809,
+    "test_f1": 0.7752
+   },
+   "0.03": {
+    "dev_f1": 0.8045,
+    "test_f1": 0.7752
+   },
+   "0.1": {
+    "dev_f1": 0.7925,
+    "test_f1": 0.7613
+   },
+   "0.3": {
+    "dev_f1": 0.7895,
+    "test_f1": 0.7543
+   },
+   "1.0": {
+    "dev_f1": 0.824,
+    "test_f1": 0.7403
+   }
+  },
+  "chosen_k_on_dev": 1.0,
+  "test": {
+   "f1": 0.7403,
+   "ci95": [
+    0.6854,
+    0.7983
+   ]
+  },
+  "vs_shipped_paired_bootstrap": {
+   "delta": -0.0108,
+   "ci95": [
+    -0.0479,
+    0.0276
+   ],
+   "p": 0.648,
+   "resamples": 2000
+  }
+ },
+ "invalid_bio_transition_mass": {
+  "note": "mean probability of a transition that puts I-X after something other than B-X or I-X",
+  "per_tag_emission_hmm": 0.02258
+ },
+ "semi_supervised": {
+  "unlabelled_sentences": 3000,
+  "grid": "EM weight {0.05, 0.2, 1.0} x iterations {1, 2, 3}, chosen on dev per run",
+  "runs": {
+   "100 labelled": {
+    "supervised_test_f1_mean": 0.4221,
+    "semi_supervised_test_f1_mean": 0.4928,
+    "per_seed_supervised": [
+     0.4609,
+     0.4064,
+     0.3991
+    ],
+    "per_seed_semi": [
+     0.5304,
+     0.4703,
+     0.4778
+    ]
+   },
+   "300 labelled": {
+    "supervised_test_f1_mean": 0.5569,
+    "semi_supervised_test_f1_mean": 0.5653,
+    "per_seed_supervised": [
+     0.5924,
+     0.54,
+     0.5381
+    ],
+    "per_seed_semi": [
+     0.6189,
+     0.5545,
+     0.5225
+    ]
+   },
+   "1000 labelled": {
+    "supervised_test_f1_mean": 0.653,
+    "semi_supervised_test_f1_mean": 0.6534,
+    "per_seed_supervised": [
+     0.6433,
+     0.6652,
+     0.6504
+    ],
+    "per_seed_semi": [
+     0.6521,
+     0.6652,
+     0.643
+    ]
+   }
+  },
+  "reading": "Each EM step is re-scored on dev and adopted only if it beats supervised-only on dev; 3 seeds per size."
+ },
+ "caveat": "Dev has 30 requests, so k picked on dev can lose to its neighbours on the 52-request test; see the full sweep. Training text is mostly template-generated."
+}

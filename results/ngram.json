@@ -1,0 +1,112 @@
+{
+ "topic": "n-gram language model",
+ "seed": 13,
+ "implementation": "from scratch (bespoke/nlp/ngram.py); probabilities sum to 1 over the vocabulary (tested)",
+ "catalogue_perplexity_by_order": {
+  "train_titles": 32533,
+  "held_out_titles": 3000,
+  "unk_rule": "words seen once in training become <unk>",
+  "table": {
+   "order 1": {
+    "add-k": {
+     "perplexity": 197.28,
+     "k": 0.001
+    },
+    "Witten-Bell": {
+     "perplexity": 198.12
+    },
+    "Kneser-Ney (modified)": {
+     "perplexity": 197.46
+    }
+   },
+   "order 2": {
+    "add-k": {
+     "perplexity": 22.29,
+     "k": 0.001
+    },
+    "Witten-Bell": {
+     "perplexity": 20.26
+    },
+    "Kneser-Ney (modified)": {
+     "perplexity": 19.6
+    }
+   },
+   "order 3": {
+    "add-k": {
+     "perplexity": 22.34,
+     "k": 0.001
+    },
+    "Witten-Bell": {
+     "perplexity": 13.82
+    },
+    "Kneser-Ney (modified)": {
+     "perplexity": 12.95
+    }
+   },
+   "order 4": {
+    "add-k": {
+     "perplexity": 35.03,
+     "k": 0.001
+    },
+    "Witten-Bell": {
+     "perplexity": 13.07
+    },
+    "Kneser-Ney (modified)": {
+     "perplexity": 11.71
+    }
+   }
+  }
+ },
+ "gold_domain_shift": {
+  "n_dev": 30,
+  "n_test": 52,
+  "models": {
+   "synthetic requests (8,000, template text)": {
+    "chosen_on_dev": "order 2, Witten-Bell",
+    "dev_perplexity": 161.5,
+    "test_perplexity": 279.5,
+    "test_unk_rate": 0.034
+   },
+   "assistant guides (70 chunks)": {
+    "chosen_on_dev": "order 3, Kneser-Ney",
+    "dev_perplexity": 98.5,
+    "test_perplexity": 125.0,
+    "test_unk_rate": 0.369
+   },
+   "catalogue titles (English only)": {
+    "chosen_on_dev": "order 1, Witten-Bell",
+    "dev_perplexity": 841.8,
+    "test_perplexity": 729.7,
+    "test_unk_rate": 0.337
+   },
+   "all three combined": {
+    "chosen_on_dev": "order 2, Kneser-Ney",
+    "dev_perplexity": 203.5,
+    "test_perplexity": 374.3,
+    "test_unk_rate": 0.03
+   }
+  },
+  "caveat": "Synthetic requests are generated from templates, so a model trained on them looks sharp on template-like text; the gold requests were written separately and contain Hinglish the catalogue never does."
+ },
+ "word_choice_in_context": {
+  "pairs": 229,
+  "accuracy": {
+   "trigram KN": {
+    "value": 0.939,
+    "ci95": [
+     0.9083,
+     0.9651
+    ]
+   },
+   "unigram": {
+    "value": 0.917,
+    "ci95": [
+     0.8821,
+     0.952
+    ]
+   }
+  },
+  "task": "gold test request vs the same request with one entity word swapped for a random in-vocabulary word within edit distance 2",
+  "caveat": "Study only. Real recogniser errors are not random edit-distance neighbours, and 'tokens seen once' are <unk>; the product would apply this to speech-to-text alternatives, which the browser does not expose today."
+ }
+}

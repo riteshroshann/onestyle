@@ -1,0 +1,233 @@
+{
+ "topic": "TF-IDF",
+ "seed": 13,
+ "implementation": "from scratch (bespoke/nlp/vectors.py), checked against sklearn TfidfTransformer",
+ "help_retrieval": {
+  "tfidf cosine": {
+   "hit@1": 0.765,
+   "hit@3": 0.941,
+   "mrr": 0.858
+  },
+  "bm25 (numpy, same tokens)": {
+   "hit@1": 0.765,
+   "hit@3": 0.941,
+   "mrr": 0.858
+  },
+  "product BM25 (retrieve.js, hand Hindi folding)": {
+   "hit@1": 1.0
+  },
+  "n_queries": 17,
+  "misses_tfidf": [
+   "what does ease mean",
+   "baazu ki length kaise naap",
+   "can I get the tailor sheet in Hindi",
+   "darzi ko kaise bheju design"
+  ]
+ },
+ "retrieval_caveat": "17 queries, the same ones the product's BM25 was tuned on; a sanity check, not an unbiased test.",
+ "usage_classification": {
+  "multi-hot (binary) unigrams": {
+   "macro_f1": 0.8603,
+   "ci95": [
+    0.8507,
+    0.867
+   ],
+   "accuracy": 0.9134,
+   "features": 4339
+  },
+  "counts unigrams": {
+   "macro_f1": 0.8612,
+   "ci95": [
+    0.8515,
+    0.8682
+   ],
+   "accuracy": 0.9142,
+   "features": 4339
+  },
+  "tf-idf unigrams": {
+   "macro_f1": 0.8619,
+   "ci95": [
+    0.8522,
+    0.8707
+   ],
+   "accuracy": 0.9143,
+   "features": 4339
+  },
+  "tf-idf uni+bigrams, sublinear": {
+   "macro_f1": 0.881,
+   "ci95": [
+    0.8721,
+    0.8879
+   ],
+   "accuracy": 0.929,
+   "features": 15940
+  },
+  "top_terms_per_class": {
+   "Casual": [
+    "casual",
+    "sunglasses",
+    "t-shirt",
+    "deo",
+    "perfume",
+    "sandals",
+    "handbag",
+    "wrangler"
+   ],
+   "Ethnic": [
+    "kurta",
+    "fabindia",
+    "sari",
+    "kurti",
+    "kurtas",
+    "saree",
+    "fnf",
+    "printed"
+   ],
+   "Formal": [
+    "formal",
+    "tie",
+    "shirt",
+    "trousers",
+    "suspenders",
+    "ties",
+    "men",
+    "shirts"
+   ],
+   "Sports": [
+    "nike",
+    "adidas",
+    "sports",
+    "sports shoes",
+    "puma",
+    "fila",
+    "jersey",
+    "reebok"
+   ]
+  },
+  "majority_class_accuracy": 0.7847,
+  "task": "Myntra title to usage (Casual, Sports, Ethnic, Formal); labels come from the catalogue, not from the gazetteer",
+  "split": "35185 train / 8797 test titles, seed 13"
+ },
+ "ontology_candidates_by_df_idf": [
+  {
+   "word": "women",
+   "titles": 14741
+  },
+  {
+   "word": "shoes",
+   "titles": 4087
+  },
+  {
+   "word": "watch",
+   "titles": 2411
+  },
+  {
+   "word": "nike",
+   "titles": 2289
+  },
+  {
+   "word": "puma",
+   "titles": 2094
+  },
+  {
+   "word": "adidas",
+   "titles": 2080
+  },
+  {
+   "word": "unisex",
+   "titles": 2018
+  },
+  {
+   "word": "dial",
+   "titles": 1722
+  },
+  {
+   "word": "united",
+   "titles": 1513
+  },
+  {
+   "word": "benetton",
+   "titles": 1436
+  },
+  {
+   "word": "shoe",
+   "titles": 1427
+  },
+  {
+   "word": "colors",
+   "titles": 1419
+  },
+  {
+   "word": "handbag",
+   "titles": 1217
+  },
+  {
+   "word": "check",
+   "titles": 1150
+  },
+  {
+   "word": "sandals",
+   "titles": 1060
+  },
+  {
+   "word": "sunglasses",
+   "titles": 1046
+  },
+  {
+   "word": "wallet",
+   "titles": 853
+  },
+  {
+   "word": "flip",
+   "titles": 791
+  },
+  {
+   "word": "boys",
+   "titles": 781
+  },
+  {
+   "word": "fabindia",
+   "titles": 751
+  },
+  {
+   "word": "kids",
+   "titles": 744
+  },
+  {
+   "word": "catwalk",
+   "titles": 743
+  },
+  {
+   "word": "belt",
+   "titles": 734
+  },
+  {
+   "word": "gini",
+   "titles": 721
+  },
+  {
+   "word": "jony",
+   "titles": 719
+  },
+  {
+   "word": "arrow",
+   "titles": 703
+  },
+  {
+   "word": "socks",
+   "titles": 690
+  },
+  {
+   "word": "fastrack",
+   "titles": 689
+  },
+  {
+   "word": "wrangler",
+   "titles": 684
+  },
+  {
+   "word": "perros",
+   "titles": 655
+  }
+ ]
+}

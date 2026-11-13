@@ -1,0 +1,182 @@
+{
+ "topic": "morphology",
+ "seed": 13,
+ "vocabulary": {
+  "single_token_forms": 788,
+  "induced_swaps": [
+   [
+    "",
+    "d"
+   ],
+   [
+    "",
+    "ed"
+   ],
+   [
+    "",
+    "s"
+   ],
+   [
+    "",
+    "y"
+   ],
+   [
+    "a",
+    "e"
+   ],
+   [
+    "a",
+    "i"
+   ],
+   [
+    "d",
+    ""
+   ],
+   [
+    "e",
+    "a"
+   ],
+   [
+    "e",
+    "i"
+   ],
+   [
+    "ed",
+    ""
+   ],
+   [
+    "ed",
+    "y"
+   ],
+   [
+    "i",
+    "a"
+   ],
+   [
+    "i",
+    "e"
+   ],
+   [
+    "s",
+    ""
+   ],
+   [
+    "y",
+    ""
+   ],
+   [
+    "y",
+    "ed"
+   ]
+  ]
+ },
+ "leave_one_form_out": {
+  "suffix": {
+   "n": 400,
+   "recovered": 88,
+   "wrong": 3,
+   "recall": 0.22,
+   "precision": 0.967
+  },
+  "suffix+sound": {
+   "n": 400,
+   "recovered": 100,
+   "wrong": 4,
+   "recall": 0.25,
+   "precision": 0.962
+  }
+ },
+ "false_accepts": {
+  "distractors": {
+   "n": 23,
+   "accepted": 1,
+   "rate": 0.043,
+   "examples": {
+    "tailor": "fitted (suffix)"
+   }
+  },
+  "guide_words": {
+   "n": 740,
+   "accepted": 20,
+   "rate": 0.027,
+   "examples": {
+    "anarkalli": "anarkali (sound)",
+    "belly": "bell (suffix)",
+    "bottoms": "lower (suffix)",
+    "check": "checked (suffix)",
+    "chhote": "short (suffix)",
+    "churidars": "churidar (suffix)",
+    "comfortably": "relaxed (sound)",
+    "cuff": "jogger (suffix)",
+    "georget": "georgette (sound)",
+    "lehengas": "lehenga (suffix)",
+    "lengths": "length (suffix)",
+    "line": "striped (suffix)",
+    "necks": "neckline (suffix)",
+    "part": "party (suffix)",
+    "plainly": "solid (suffix)",
+    "sherwanis": "sherwani (suffix)",
+    "softly": "pastel (suffix)",
+    "tailor": "fitted (suffix)",
+    "trouser": "trousers (suffix)",
+    "weddings": "wedding (suffix)"
+   }
+  }
+ },
+ "gold_span_f1": {
+  "split": "dev (n=30, selection) / test (n=52, report)",
+  "dev": {
+   "none": 0.9552,
+   "suffix": 0.9552,
+   "suffix+sound": 0.9552
+  },
+  "test": {
+   "none": {
+    "n": 52,
+    "f1": 0.9356,
+    "ci95": [
+     0.8981,
+     0.9665
+    ]
+   },
+   "suffix": {
+    "n": 52,
+    "f1": 0.94,
+    "ci95": [
+     0.9028,
+     0.9702
+    ]
+   },
+   "suffix+sound": {
+    "n": 52,
+    "f1": 0.953,
+    "ci95": [
+     0.9177,
+     0.9815
+    ]
+   }
+  },
+  "chosen_on_dev": "none"
+ },
+ "inflection_stress": {
+  "note": "test requests with entity tokens replaced by an unseen inflection; labels unchanged",
+  "tokens_changed": 170,
+  "without": {
+   "n": 52,
+   "f1": 0.4037,
+   "ci95": [
+    0.3333,
+    0.468
+   ]
+  },
+  "with_fallback": {
+   "n": 52,
+   "f1": 0.8876,
+   "ci95": [
+    0.8484,
+    0.9231
+   ]
+  }
+ },
+ "caveat": "Gold has 82 requests; most entity tokens are already in the gazetteer, so gold gains are small. Stress rows are synthetic perturbations of gold."
+}

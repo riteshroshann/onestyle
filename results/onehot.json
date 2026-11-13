@@ -1,0 +1,19 @@
+{
+ "topic": "one-hot encoding",
+ "source": "catalogue titles (Myntra styles.csv)",
+ "seed": 13,
+ "vocabulary_size": 8469,
+ "dimension": 8469,
+ "dense_matrix_for_vocab_MB": 573.8,
+ "sibling_pairs": {
+  "n": 505,
+  "note": "forms the ontology maps to one canonical value (kurti/kurta, dheela/dheeli)"
+ },
+ "mean_cosine": {
+  "one_hot_siblings": 0.0,
+  "one_hot_random_pairs": 0.0,
+  "char_trigram_siblings": 0.0903,
+  "char_trigram_random_pairs": 0.0007
+ },
+ "reading": "Every distinct word is orthogonal to every other, so one-hot cannot tell that kurti and kurta mean the same; dimension equals vocabulary size and unseen words encode to zero."
+}

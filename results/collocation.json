@@ -1,0 +1,459 @@
+{
+ "topic": "collocation",
+ "ontology_bigram_forms": 339,
+ "note": "Precision@k is the share of top-k bigrams that are already multiword ontology forms; median rank percentile is where the attested forms sit in each ranking (0 = top). Only a few ontology forms occur in these corpora, and the catalogue is English, mostly menswear and footwear; the guides are 7k tokens. Candidates are a reviewer's shortlist, not accepted forms.",
+ "sources": {
+  "catalogue": {
+   "tokens": 264505,
+   "scored_bigrams": 3931,
+   "ontology_bigrams_attested": 35,
+   "measures": {
+    "frequency": {
+     "precision@50": 0.02,
+     "precision@100": 0.01,
+     "precision@200": 0.02,
+     "recall_of_attested@500": 0.2,
+     "median_rank_percentile_of_attested": 0.375
+    },
+    "pmi": {
+     "precision@50": 0.0,
+     "precision@100": 0.0,
+     "precision@200": 0.01,
+     "recall_of_attested@500": 0.286,
+     "median_rank_percentile_of_attested": 0.254
+    },
+    "npmi": {
+     "precision@50": 0.0,
+     "precision@100": 0.01,
+     "precision@200": 0.02,
+     "recall_of_attested@500": 0.314,
+     "median_rank_percentile_of_attested": 0.229
+    },
+    "t_score": {
+     "precision@50": 0.02,
+     "precision@100": 0.02,
+     "precision@200": 0.02,
+     "recall_of_attested@500": 0.257,
+     "median_rank_percentile_of_attested": 0.297
+    },
+    "llr": {
+     "precision@50": 0.06,
+     "precision@100": 0.03,
+     "precision@200": 0.025,
+     "recall_of_attested@500": 0.286,
+     "median_rank_percentile_of_attested": 0.245
+    }
+   },
+   "candidate_new_forms_by_llr": [
+    {
+     "bigram": "sports shoes",
+     "llr": 9025.4,
+     "tags": [
+      "OCCASION"
+     ]
+    },
+    {
+     "bigram": "casual shoes",
+     "llr": 6370.9,
+     "tags": [
+      "OCCASION"
+     ]
+    },
+    {
+     "bigram": "polo assn",
+     "llr": 3276.8,
+     "tags": [
+      "GARMENT"
+     ]
+    },
+    {
+     "bigram": "red tape",
+     "llr": 2336.9,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "formal shoes",
+     "llr": 2322.3,
+     "tags": [
+      "OCCASION"
+     ]
+    },
+    {
+     "bigram": "white dial",
+     "llr": 1787.3,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "royal diadem",
+     "llr": 1747.4,
+     "tags": [
+      "STYLE"
+     ]
+    },
+    {
+     "bigram": "blue jeans",
+     "llr": 1716.4,
+     "tags": [
+      "COLOUR",
+      "GARMENT"
+     ]
+    },
+    {
+     "bigram": "silver earrings",
+     "llr": 1673.4,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "striped shirt",
+     "llr": 1637.3,
+     "tags": [
+      "GARMENT",
+      "PATTERN"
+     ]
+    },
+    {
+     "bigram": "urban yoga",
+     "llr": 1593.3,
+     "tags": [
+      "OCCASION"
+     ]
+    },
+    {
+     "bigram": "little miss",
+     "llr": 1563.8,
+     "tags": [
+      "INT"
+     ]
+    },
+    {
+     "bigram": "black dial",
+     "llr": 1548.8,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "white sports",
+     "llr": 1407.6,
+     "tags": [
+      "COLOUR",
+      "OCCASION"
+     ]
+    },
+    {
+     "bigram": "red rose",
+     "llr": 1206.4,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "track pant",
+     "llr": 1186.9,
+     "tags": [
+      "GARMENT"
+     ]
+    },
+    {
+     "bigram": "check shirt",
+     "llr": 1134.9,
+     "tags": [
+      "GARMENT"
+     ]
+    },
+    {
+     "bigram": "printed kurta",
+     "llr": 1120.1,
+     "tags": [
+      "GARMENT",
+      "PATTERN"
+     ]
+    },
+    {
+     "bigram": "classic polo",
+     "llr": 1050.5,
+     "tags": [
+      "GARMENT",
+      "STYLE"
+     ]
+    },
+    {
+     "bigram": "pyjama set",
+     "llr": 1003.5,
+     "tags": [
+      "GARMENT"
+     ]
+    },
+    {
+     "bigram": "silver pendant",
+     "llr": 987.6,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "chhota bheem",
+     "llr": 955.1,
+     "tags": [
+      "LENGTH"
+     ]
+    },
+    {
+     "bigram": "ivory tag",
+     "llr": 942.8,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "brown wallet",
+     "llr": 921.1,
+     "tags": [
+      "COLOUR"
+     ]
+    },
+    {
+     "bigram": "grey melange",
+     "llr": 902.2,
+     "tags": [
+      "COLOUR"
+     ]
+    }
+   ],
+   "precision@100_ci95": [
+    0.0,
+    0.07
+   ]
+  },
+  "guides": {
+   "tokens": 7026,
+   "scored_bigrams": 664,
+   "ontology_bigrams_attested": 13,
+   "measures": {
+    "frequency": {
+     "precision@50": 0.02,
+     "precision@100": 0.01,
+     "precision@200": 0.025,
+     "recall_of_attested@500": 0.846,
+     "median_rank_percentile_of_attested": 0.553
+    },
+    "pmi": {
+     "precision@50": 0.16,
+     "precision@100": 0.1,
+     "precision@200": 0.065,
+     "recall_of_attested@500": 1.0,
+     "median_rank_percentile_of_attested": 0.063
+    },
+    "npmi": {
+     "precision@50": 0.16,
+     "precision@100": 0.1,
+     "precision@200": 0.065,
+     "recall_of_attested@500": 1.0,
+     "median_rank_percentile_of_attested": 0.065
+    },
+    "t_score": {
+     "precision@50": 0.02,
+     "precision@100": 0.02,
+     "precision@200": 0.03,
+     "recall_of_attested@500": 1.0,
+     "median_rank_percentile_of_attested": 0.407
+    },
+    "llr": {
+     "precision@50": 0.1,
+     "precision@100": 0.09,
+     "precision@200": 0.055,
+     "recall_of_attested@500": 1.0,
+     "median_rank_percentile_of_attested": 0.095
+    }
+   },
+   "candidate_new_forms_by_llr": [
+    {
+     "bigram": "does not",
+     "llr": 170.5,
+     "tags": [
+      "NEG"
+     ]
+    },
+    {
+     "bigram": "sleeve length",
+     "llr": 66.7,
+     "tags": [
+      "PART"
+     ]
+    },
+    {
+     "bigram": "neckline depth",
+     "llr": 55.6,
+     "tags": [
+      "PART"
+     ]
+    },
+    {
+     "bigram": "stand straight",
+     "llr": 51.5,
+     "tags": [
+      "SILHOUETTE"
+     ]
+    },
+    {
+     "bigram": "thoda deep",
+     "llr": 40.0,
+     "tags": [
+      "DIM",
+      "INT"
+     ]
+    },
+    {
+     "bigram": "no embroidery",
+     "llr": 39.6,
+     "tags": [
+      "EMBELL",
+      "NEG"
+     ]
+    },
+    {
+     "bigram": "waist pe",
+     "llr": 37.4,
+     "tags": [
+      "PART"
+     ]
+    },
+    {
+     "bigram": "pe fitted",
+     "llr": 37.0,
+     "tags": [
+      "FIT"
+     ]
+    },
+    {
+     "bigram": "kurti chahiye",
+     "llr": 36.5,
+     "tags": [
+      "GARMENT"
+     ]
+    },
+    {
+     "bigram": "cut too",
+     "llr": 34.6,
+     "tags": [
+      "INT"
+     ]
+    },
+    {
+     "bigram": "extra room",
+     "llr": 31.0,
+     "tags": [
+      "INT"
+     ]
+    },
+    {
+     "bigram": "neck thoda",
+     "llr": 30.4,
+     "tags": [
+      "INT",
+      "PART"
+     ]
+    },
+    {
+     "bigram": "baazu chhote",
+     "llr": 29.9,
+     "tags": [
+      "PART"
+     ]
+    },
+    {
+     "bigram": "shoulder seam",
+     "llr": 29.1,
+     "tags": [
+      "PART"
+     ]
+    },
+    {
+     "bigram": "a long",
+     "llr": 29.0,
+     "tags": [
+      "LENGTH"
+     ]
+    },
+    {
+     "bigram": "not contain",
+     "llr": 28.8,
+     "tags": [
+      "NEG"
+     ]
+    },
+    {
+     "bigram": "rather than",
+     "llr": 26.6,
+     "tags": [
+      "CMP"
+     ]
+    },
+    {
+     "bigram": "will not",
+     "llr": 26.2,
+     "tags": [
+      "NEG"
+     ]
+    },
+    {
+     "bigram": "short cannot",
+     "llr": 25.7,
+     "tags": [
+      "LENGTH"
+     ]
+    },
+    {
+     "bigram": "natural waist",
+     "llr": 24.8,
+     "tags": [
+      "PART"
+     ]
+    },
+    {
+     "bigram": "not this",
+     "llr": 24.4,
+     "tags": [
+      "NEG"
+     ]
+    },
+    {
+     "bigram": "very soft",
+     "llr": 24.3,
+     "tags": [
+      "INT",
+      "SHADE"
+     ]
+    },
+    {
+     "bigram": "quarter sleeves",
+     "llr": 23.4,
+     "tags": [
+      "LENGTH",
+      "PART"
+     ]
+    },
+    {
+     "bigram": "can print",
+     "llr": 23.3,
+     "tags": [
+      "PATTERN"
+     ]
+    },
+    {
+     "bigram": "se thoda",
+     "llr": 23.2,
+     "tags": [
+      "INT"
+     ]
+    }
+   ]
+  }
+ }
+}
