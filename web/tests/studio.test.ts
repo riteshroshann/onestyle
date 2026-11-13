@@ -262,7 +262,7 @@ await t("next: refusals never reach the model; failures are 502; no key is 501",
 const wav = toBase64(encodeWav(new Float32Array(16000).map((_, i) => Math.sin(i / 8) * 0.3)));
 await t("transcribe: WAV in, Latin transcript out, audio sent as input_audio", async () => {
   assert.ok(wav.startsWith("UklGR"));
-  provider("Transcript: ek maroon lehenga chahiye, shaadi ke liye");
+  provider(JSON.stringify({ speech: true, text: "ek maroon lehenga chahiye, shaadi ke liye" }));
   const res = mockRes();
   await T.default(req({ audio: wav, format: "wav", lang: "hi" }), res);
   assert.equal(res.code, 200);
@@ -271,7 +271,18 @@ await t("transcribe: WAV in, Latin transcript out, audio sent as input_audio", a
   assert.deepEqual(Object.keys(part.input_audio).sort(), ["data", "format"]);
   assert.equal(part.input_audio.format, "wav");
   assert.equal(part.input_audio.data, wav);
+  assert.equal(sent.body.response_format.type, "json_object");
   assert.match(sent.body.messages[0].content[0].text, /Latin script/);
+});
+await t("transcribe: a clip with no voice never becomes a request, even if the model makes one up", async () => {
+  const run = async () => { const res = mockRes(); await T.default(req({ audio: wav }), res); return res.body.text; };
+  provider(JSON.stringify({ speech: false, text: "mujhe ek kurti banvani hai, daily wear ke liye" }));
+  assert.equal(await run(), "");
+  provider(JSON.stringify({ text: "a red kurti" }));
+  assert.equal(await run(), "", "no verdict means no transcript");
+  provider(JSON.stringify({ speech: true, text: "Transcript: a red kurti" }));
+  assert.equal(await run(), "a red kurti");
+  assert.match(T.PROMPT, /never guess/);
 });
 await t("transcribe: limits and failures", async () => {
   provider("hello");
