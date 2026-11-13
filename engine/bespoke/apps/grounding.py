@@ -61,6 +61,20 @@ def best(phrase: str, tag: str, sim) -> tuple[str, float]:
     return top
 
 
+EDIT_GATE = 0.66  # the shipped rule since main 0ec0b5d: the best trigram form must also be this close in spelling
+
+
+def shipped(phrase: str, tag: str) -> tuple[str, float]:
+    """groundFuzzy as shipped: best trigram form, answered only if its Dice is at least 0.5 and its edit similarity at least 0.66.
+    A phrase that fails the gate gets score -1, so the 0.5 threshold abstains on it."""
+    top, top_form = ("", -1.0), ""
+    for form, value in forms_of(tag):
+        s = dice(phrase, form)
+        if s > top[1]:
+            top, top_form = (value, s), form
+    return top if edit_similarity(phrase.lower(), top_form.lower()) >= EDIT_GATE else (top[0], -1.0)
+
+
 class Embedder:
     """Cosine similarity of CLS embeddings of a phrase and each form. English-only model: Hinglish forms are its blind spot."""
 
@@ -116,7 +130,8 @@ def run() -> dict:
 
     # the Python trigram score must reproduce the deployed answers, or nothing below is about the product
     ref = node_reference(GOLD / "grounding.jsonl")
-    parity = sum(1 for r, p in zip(ref, preds["trigram_dice"]) if (r["value"] if p[1] >= 0.5 else None) == (p[0] if p[1] >= 0.5 else None))
+    preds["shipped_rule"] = [shipped(r["phrase"], r["tag"]) for r in rows]
+    parity = sum(1 for r, p in zip(ref, preds["shipped_rule"]) if (r["value"] if p[1] >= 0.5 else None) == (p[0] if p[1] >= 0.5 else None))
     assert parity == len(rows), f"python and TypeScript groundings differ on {len(rows) - parity} phrases"
 
     tune = [i for i in range(len(rows)) if i % 2 == 0]
@@ -136,9 +151,10 @@ def run() -> dict:
         out["systems"][name] = {"chosen_threshold": chosen, "held_out": held,
                                 "all_phrases_at_chosen": judge(rows, preds[name], chosen),
                                 "sweep_all_phrases": [judge(rows, preds[name], t) for t in THRESHOLDS[::3]]}
-    out["deployed"] = {"system": "trigram_dice at 0.5, as shipped", "all_phrases": judge(rows, preds["trigram_dice"], 0.5)}
+    out["deployed"] = {"system": "trigram Dice at 0.5 plus edit similarity at least 0.66, as shipped", "all_phrases": judge(rows, preds["shipped_rule"], 0.5)}
+    out["before_edit_gate"] = {"system": "trigram Dice at 0.5 alone, the rule before main 0ec0b5d", "all_phrases": judge(rows, preds["trigram_dice"], 0.5)}
     wrong = [{"phrase": r["phrase"], "tag": r["tag"], "gold": r["value"], "answered": p[0], "score": round(p[1], 3)}
-             for r, p in zip(rows, preds["trigram_dice"]) if p[1] >= 0.5 and r["value"] != p[0]]
+             for r, p in zip(rows, preds["shipped_rule"]) if p[1] >= 0.5 and r["value"] != p[0]]
     out["deployed_errors"] = wrong
     write_result("grounding", out)
     return out
