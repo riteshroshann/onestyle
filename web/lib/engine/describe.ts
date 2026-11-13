@@ -169,10 +169,17 @@ export function query(spec: Spec, opts: { withParts?: boolean } = {}): string {
   return [...new Set(words.filter(Boolean).join(" ").replace(/\s+/g, " ").trim().split(" "))].join(" ");
 }
 
-const BUDGET_PAISE: Record<string, string> = { "under 1000": "0-100000", "1000-3000": "100000-300000", "3000-8000": "300000-800000", "8000+": "800000-" };
+/** What a shop's search box can actually match: who it is for, one colour and the garment. Shops return nothing for
+ *  long phrases ("men blue silk wedding classic embroidery kurta"), so the detail stays on the sheet and in Pinterest. */
+export function shopQuery(spec: Spec): string {
+  const s = spec.slots, l = spec.lists, a = audience(spec);
+  const words = [a.kid || impliedWearer(s.garment?.value) !== a.who ? a.word : "", l.colour?.[0]?.value ?? "", s.garment ? nice(garmentName(spec)) : "outfit"];
+  return words.filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+}
+
 
 /** Each shop's search, narrowed with its own gender filter where it has one. */
-export function shopLinks(spec: Spec, q = query(spec)) {
+export function shopLinks(spec: Spec, q = shopQuery(spec)) {
   const e = encodeURIComponent;
   const a = audience(spec);
   const g = a.kid ? (a.who === "men" ? "boys" : a.who === "women" ? "girls" : "") : a.who === "anyone" ? "" : a.who;
@@ -180,8 +187,9 @@ export function shopLinks(spec: Spec, q = query(spec)) {
   const myntra = g ? `&f=${e(`Gender:${g}`)}` : "";
   const ajio = g ? `query=${e(`:relevance:genderfilter:${cap}`)}&` : "";
   const flipkart = g ? `&p%5B%5D=${e(`facets.ideal_for%5B%5D=${cap}`)}` : "";
-  const price = spec.slots.budget ? BUDGET_PAISE[spec.slots.budget.value] : "";
-  const amazon = `&i=apparel${price ? `&rh=${e(`p_36:${price}`)}` : ""}`;
+
+  // a price filter on top of a search empties it too often; budget is shown on the sheet instead
+  const amazon = "&i=apparel";
   return [
     { label: "Myntra", domain: "myntra.com", url: `https://www.myntra.com/${e(q.replace(/\s+/g, "-"))}?rawQuery=${e(q)}${myntra}`, filtered: !!g },
     { label: "Ajio", domain: "ajio.com", url: `https://www.ajio.com/search/?${ajio}text=${e(q)}`, filtered: !!g },
@@ -201,7 +209,8 @@ export function links(spec: Spec) {
   return {
     query: q,
     pinterest: [...new Set(ideas)].slice(0, 6).map((t) => ({ label: t, url: `https://www.pinterest.com/search/pins/?q=${e(t)}` })),
-    shops: shopLinks(spec, q),
+    shopQuery: shopQuery(spec),
+    shops: shopLinks(spec),
     fabric: spec.slots.fabric ? [
       { label: `${spec.lists.colour?.[0]?.value ?? ""} ${spec.slots.fabric.value} fabric`.trim(), url: `https://www.amazon.in/s?k=${e(`${spec.lists.colour?.[0]?.value ?? ""} ${spec.slots.fabric.value} fabric by the metre`)}` },
     ] : [],

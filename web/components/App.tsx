@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { ONTO, Span, correctTranscript, hindi, tagRules, tokenize } from "../lib/engine/lexicon";
-import { Measurements, PART_HI, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines, wearerText } from "../lib/engine/describe";
+import { Measurements, PART_HI, SWATCH, advice, finished, links, nearestColour, phrase, sheetLines, shopLinks, wearerText } from "../lib/engine/describe";
 import {
   AGES, BUDGETS, Question, Spec, Update, answer, answerFromText, apply, ask, asked, bind, contextOf, depthInches, emptySpec, garmentName,
   profileUpdates, wearerOf,
@@ -731,10 +731,14 @@ function Out({ href, domain, title, note, delay }: { href: string; domain: strin
 function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string) => void; onTalk: () => void }) {
   const L = links(spec);
   const who = wearerOf(spec);
+  // the search is the person's to change: start from the short query and follow whatever they type
+  const [q, setQ] = useState(L.shopQuery);
+  useEffect(() => { setQ(L.shopQuery); }, [L.shopQuery]);
+  const shops = shopLinks(spec, q.trim() || L.shopQuery);
   const section = who === "men" ? "men's" : "women's";
   const note = (filtered: boolean) => who === "anyone" ? "Opens a search on their site" : filtered ? `Opens the ${section} section` : `Searches ${section} styles`;
   const groups: { title: string; items: { href: string; domain: string; title: string; note: string }[] }[] = [
-    { title: "Buy something close, ready-made", items: L.shops.map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: note(p.filtered) })) },
+    { title: "Buy something close, ready-made", items: shops.map((p) => ({ href: p.url, domain: p.domain, title: p.label, note: note(p.filtered) })) },
     { title: "Ideas", items: L.pinterest.map((p) => ({ href: p.url, domain: "pinterest.com", title: p.label, note: "Pinterest" })) },
     { title: "The fabric", items: L.fabric.map((p) => ({ href: p.url, domain: "amazon.in", title: p.label, note: "By the metre" })) },
     { title: "Have it made", items: [{ href: L.tailors.url, domain: "maps.google.com", title: "Tailors near you", note: "Take your tailor sheet along" }] },
@@ -742,18 +746,21 @@ function ShopView({ spec, onWearer, onTalk }: { spec: Spec; onWearer: (w: string
 
   return (
     <main className="mx-auto max-w-[1440px] px-5 pb-32 pt-[clamp(56px,7vw,104px)] md:px-10">
-      <PageHead title="Find it." lede="Searches written from your design and who it is for. Look for ideas, buy something close, or find the fabric and a tailor. Every link opens on the shop's own site." />
+      <PageHead title="Find it." lede="Searches written from your design and who it is for. Change the words if a shop finds too little. Every link opens on the shop's own site." />
       {!spec.slots.garment ? <NeedsDesign text="Describe the garment first, and the searches here write themselves." onTalk={onTalk} /> : (
         <>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SOFT, delay: 0.22 }}
-            className="mt-12 flex flex-wrap items-end gap-x-8 gap-y-5">
-            <div className="min-w-[220px] flex-1">
-              <p className="text-[14px] font-medium text-brand-ink/45">Searching for</p>
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.p key={L.query} initial={{ opacity: 0, y: 6, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}
-                  className="mt-1 text-[clamp(26px,3vw,40px)] font-medium leading-tight tracking-[-0.03em]">{L.query}</motion.p>
-              </AnimatePresence>
-            </div>
+            className="mt-12 flex flex-wrap items-end gap-x-6 gap-y-5">
+            <label className="min-w-[260px] flex-1">
+              <span className="text-[14px] font-medium text-brand-ink/45">Search shops for</span>
+              <span className="mt-2 flex items-center rounded-full bg-white pl-6 pr-2 ring-1 ring-brand-ink/12 transition-[box-shadow] focus-within:shadow-[0_12px_32px_-18px_rgba(13,17,23,.35)] focus-within:ring-brand-ink/30 hover:ring-brand-ink/25">
+                <input value={q} onChange={(e) => setQ(e.target.value)} maxLength={80} aria-label="Search shops for"
+                  className="h-14 min-w-0 flex-1 bg-transparent text-[clamp(18px,1.6vw,22px)] font-medium tracking-[-0.01em] text-brand-ink outline-none" />
+                {q !== L.shopQuery && (
+                  <button type="button" onClick={() => setQ(L.shopQuery)} className="press h-10 shrink-0 rounded-full px-4 text-[14px] font-medium text-brand-ink/60 transition-colors hover:bg-brand-ink/[.05] hover:text-brand-ink">Reset</button>
+                )}
+              </span>
+            </label>
             <Switch label="Shopping for" value={who} onChange={onWearer} options={[["women", "Women"], ["men", "Men"], ["anyone", "Anyone"]]} />
           </motion.div>
           {groups.map((g, gi) => (

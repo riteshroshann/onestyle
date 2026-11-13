@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { tagRules, tokenize } from "../lib/engine/lexicon.ts";
 import { ageUpdates, answer, answerFromText, apply, ask, asked, bind, emptySpec, nextQuestion, profileUpdates, wearerOf, wearerUpdates } from "../lib/engine/spec.ts";
 import type { Spec, Update } from "../lib/engine/spec.ts";
-import { links, query, sheetLines, wearerText } from "../lib/engine/describe.ts";
+import { links, query, sheetLines, shopQuery, wearerText } from "../lib/engine/describe.ts";
 import { meaning, verdict } from "../lib/engine/sense.ts";
 import { screen } from "../lib/assistant/guard.js";
 import { chooseQuestion, resetAvailability, understand as understandClient } from "../lib/understand.ts";
@@ -143,6 +143,14 @@ await t("'par' after a part is 'on', like 'pe'", () => {
 // ---------------------------------------------------------------- 4. shop links respect the wearer
 const DOMAINS = /myntra|ajio|amazon|flipkart|nykaa/;
 const decoded = (u: string) => decodeURIComponent(decodeURIComponent(u)).toLowerCase();
+await t("shop searches stay short enough for shops to find things", () => {
+  const s = apply(emptySpec(), [set("garment", "kurti"), add("colour", "blue"), set("wearer", "men"), set("fabric", "silk"), add("occasion", "wedding"),
+    add("embellishment", "embroidery"), add("style", "classic"), set("budget", "1000-3000")]);
+  assert.equal(shopQuery(s), "men blue kurta");
+  const L = links(s);
+  for (const shop of L.shops) assert.ok(!decoded(shop.url).includes("silk") && !decoded(shop.url).includes("p_36"), `${shop.label} search too narrow: ${shop.url}`);
+  assert.match(query(s), /silk/);   // the detail stays in the idea searches
+});
 await t("male, 20, blue kurta: only men's searches", () => {
   const s = apply(emptySpec(), [set("garment", "kurti"), add("colour", "blue"), set("wearer", "men"), set("age", "20s")]);
   assert.match(query(s), /^men blue kurta$/);
@@ -163,11 +171,11 @@ await t("a boy's kurta searches boys, never men or women", () => {
   assert.equal(wearerOf(s), "men");
   for (const shop of links(s).shops) assert.ok(/\bboys\b/.test(decoded(shop.url)) && !/\bmen\b|women|girls/.test(decoded(shop.url)), decoded(shop.url));
 });
-await t("women's garments do not repeat the obvious; budget narrows Amazon", () => {
+await t("women's garments do not repeat the obvious; budget never empties a shop search", () => {
   const s = apply(run("a maroon lehenga for my wedding"), [set("budget", "3000-8000")]);
   assert.doesNotMatch(query(s), /women/);
   assert.match(query(s), /wedding/);
-  assert.ok(decodeURIComponent(links(s).shops.find((x) => x.label === "Amazon")!.url).includes("p_36:300000-800000"));
+  assert.ok(!decodeURIComponent(links(s).shops.find((x) => x.label === "Amazon")!.url).includes("p_36"));
 });
 await t("occasion and style reach the query", () => {
   assert.equal(query(apply(emptySpec(), [set("garment", "shirt"), set("wearer", "men"), add("colour", "white"), set("fabric", "linen"), add("occasion", "office"), add("style", "minimal")])),

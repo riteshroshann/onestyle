@@ -95,7 +95,7 @@ for (const w of [1440, 390]) {
   // every shop search is for men, never women or kids
   await page.getByRole("link", { name: "Shop" }).click();
   await page.waitForURL(/\/studio\/shop\/$/);
-  await page.getByText("Searching for").waitFor();
+  await page.getByLabel("Search shops for").waitFor();
   const hrefs: string[] = await page.locator("main a[target=_blank]").evaluateAll((as: HTMLAnchorElement[]) => as.map((a) => a.href));
   const shops = hrefs.filter((h) => /myntra|ajio|amazon|flipkart|nykaa/.test(h) && !/fabric/.test(decodeURIComponent(h)));
   assert.ok(shops.length >= 5);
