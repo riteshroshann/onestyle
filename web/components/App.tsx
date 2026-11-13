@@ -24,7 +24,8 @@ import { Mark } from "./site/Mark";
 import { Arrow, Dots, Reveal, SOFT, SPRING } from "./site/Motion";
 import { cn } from "@/lib/utils";
 import { newBoardId } from "../lib/boards";
-import { currentDesignId, forgetDeviceCopy, latestDesign, newDesignId, readSession, saveDesign, setCurrentDesignId, writeSession } from "../lib/designs";
+import { accountId, claimDraft, clearSession, currentDesignId, draftOwner, flushDesign, forgetDeviceCopy, latestDesign, newDesignId, parkDraft, readSession, saveDesign, setCurrentDesignId, storeDesign, takeParked, writeSession } from "../lib/designs";
+import type { SavedDesign } from "../lib/designs";
 import { supabase } from "../lib/supabase";
 
 type Msg =
@@ -851,8 +852,10 @@ export default function App() {
   const [spec, setSpec] = useState<Spec>(() => load("bespoke.spec", emptySpec()));
   const [msgs, setMsgs] = useState<Msg[]>(() => load("bespoke.msgs", []));
   const [designId, setDesignId] = useState(currentDesignId);
-  // a signed-in person opening a fresh tab gets their latest design back; until we know, the page waits
-  const [resuming, setResuming] = useState(() => !!supabase() && !readSession<Msg[]>("bespoke.msgs", []).length && !new URLSearchParams(location.search).has("new"));
+  const fresh = useRef(new URLSearchParams(location.search).has("new")).current;
+  // the page waits until we know who is here: a signed-in person opening a blank tab gets their latest design back,
+  // and a draft saved under an account is not shown before that account is confirmed
+  const [resuming, setResuming] = useState(() => !!supabase() && (!!draftOwner() || (!readSession<Msg[]>("bespoke.msgs", []).length && !fresh)));
   const [boardId, setBoardId] = useState(newBoardId);
   const go = useCallback((v: View) => { if (v !== view) router.push(studioHref(v)); }, [router, view]);
   // the board opens blank from anywhere in the studio; earlier boards are one click away in its history
@@ -878,14 +881,39 @@ export default function App() {
   useEffect(() => { loadTagger(() => {}); }, []);
   useEffect(() => {
     save("bespoke.spec", spec); save("bespoke.msgs", msgs); save("bespoke.meas", m);
-    if (!resuming) saveDesign(designId, { spec, msgs, meas: m }, phrase(spec));
+    if (resuming) return;
+    saveDesign(designId, { spec, msgs, meas: m }, phrase(spec));
+    parkDraft(designId, { spec, msgs, meas: m });
   }, [spec, msgs, m, designId, resuming]);
   useEffect(() => {
     forgetDeviceCopy();
-    if (!resuming) return;
-    latestDesign().then((d) => {
-      if (d) { setSpec(d.spec as Spec); setMsgs(d.msgs as Msg[]); setM(d.meas as Measurements); setDesignId(d.id); setCurrentDesignId(d.id); }
-    }).catch(() => {}).finally(() => setResuming(false));
+    if (!viewOf(location.pathname)) return;   // on the way to /studio/talk/, where this runs again
+    let live = true;
+    const show = (d: SavedDesign) => {
+      setSpec(d.spec as Spec); setMsgs(d.msgs as Msg[]); setM(d.meas as Measurements); setPast([]);
+      setDesignId(d.id); setCurrentDesignId(d.id);
+    };
+    (async () => {
+      const uid = await accountId();
+      if (!live) return;
+      // a draft left by an account that has since signed out is not this person's to see
+      const theirs = !draftOwner() || draftOwner() === uid;
+      if (!theirs) { clearSession(); show({ id: newDesignId(), spec: emptySpec(), msgs: [], meas: {} }); }
+      claimDraft(uid);
+      const blank = !theirs || !now.current.msgs.length;
+      // a design begun before signing in joins the account; it opens here unless this tab already holds another
+      const parked = takeParked(uid);
+      if (parked && blank && !fresh) show(parked);
+      else {
+        if (parked && parked.id !== currentDesignId()) await storeDesign(parked.id, parked, phrase(parked.spec as Spec)).catch(() => {});
+        const last = uid && blank && !fresh ? await latestDesign().catch(() => null) : null;
+        if (last && live) show(last);
+      }
+      if (live) setResuming(false);
+    })();
+    const hidden = () => { if (document.visibilityState === "hidden") flushDesign(); };
+    document.addEventListener("visibilitychange", hidden);
+    return () => { live = false; document.removeEventListener("visibilitychange", hidden); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, thinking]);
   useEffect(() => { window.scrollTo({ top: 0 }); }, [view]);
