@@ -56,7 +56,8 @@ export async function tag(text: string): Promise<{ tokens: string[]; spans: Span
   const done = <T extends { by: TaggerState }>(r: T): T => { timings.tagMs.push(Math.round((performance.now() - t0) * 10) / 10); timings.tagBy.push(r.by); return r; };
   const tokens = tokenize(text);
   const rules = tagRules(tokens);
-  const m = tagger ? await tagger : null;
+  // while the tagger is still downloading, the gazetteer answers now rather than holding the message back
+  const m = loadedTagger;
   if (!m || !tokens.length) return done({ tokens, spans: rules, by: "rules" as TaggerState });
   const t = await hf();
   const ids: number[] = [m.cls];
