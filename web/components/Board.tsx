@@ -136,9 +136,11 @@ const sentences = (t: string) => (t.match(/[^.!?]+[.!?]+/g) ?? [t]).map((x) => x
 const idle = (pictures: { n: number; dataURL: string }[], steps: ReadingState["steps"]): ReadingState =>
   ({ phase: "reading", pictures, active: pictures[0]?.n ?? null, steps, loaded: 0, status: "Reading your board", result: null, message: "" });
 
-export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons, design = "" }: {
+export default function Board({ boardId, onOpen, onNew, onEvidence, onSheet, comparisons, design = "" }: {
   boardId: string; onOpen: (id: string) => void; onNew: () => void;
   onEvidence: (u: Update[], note: string) => void;
+  /** Opens the tailor sheet, once a direction from this board is in the design. */
+  onSheet: () => void;
   comparisons: { slot: string; cmp: string; ref: string }[];
   /** The current design in a sentence, such as "a pink anarkali for a wedding", so ideas fit it. */
   design?: string;
@@ -148,6 +150,7 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
   const [coach, setCoach] = useState(false);
   const [reading, setReading] = useState<ReadingState | null>(null);
   const [picked, setPicked] = useState(0);
+  const [used, setUsed] = useState(false);
   const [said, setSaid] = useState<Said[]>([]);
   const [mood, setMood] = useState<Mood>("idle");
   const say = useCallback((...texts: string[]) => {
@@ -431,12 +434,17 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
     api.current?.setActiveTool({ type: "ellipse" });
     setCoach(true);
   };
-  // the direction goes into the design right here; the board never sends you elsewhere
+  // the direction goes into the design right here; the sheet is one tap away once it has
   const use = () => {
     const pick = picked;
     const o = finish(true);
     flush();
-    if (o) { const plan = o.plans[pick] ?? o.plans[0]; onEvidence(plan.ups, plan.note); say(`"${o.written.ideas[pick]?.title ?? "This direction"}" is in your design now. Keep pinning.`); }
+    if (o) {
+      const plan = o.plans[pick] ?? o.plans[0];
+      onEvidence(plan.ups, plan.note);
+      setUsed(true);
+      say(`"${o.written.ideas[pick]?.title ?? "This direction"}" is in your design now. Keep pinning, or see it on the sheet.`);
+    }
   };
 
   // pasted pictures land on the board the same way as dropped ones
@@ -562,9 +570,17 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, comparisons,
             </motion.button>
           )}
           <motion.button type="button" onClick={analyse} disabled={empty} whileTap={{ scale: 0.95 }} transition={SPRING}
-            className="h-11 shrink-0 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white transition-[background-color,opacity] hover:bg-[#232c3b] disabled:opacity-35">
-            Read the board
+            className={used
+              ? "h-11 shrink-0 rounded-full px-4 text-[15px] font-medium text-brand-ink transition-colors hover:bg-black/[.05]"
+              : "h-11 shrink-0 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white transition-[background-color,opacity] hover:bg-[#232c3b] disabled:opacity-35"}>
+            {used ? "Read again" : "Read the board"}
           </motion.button>
+          {used && (
+            <motion.button type="button" onClick={onSheet} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} whileTap={{ scale: 0.95 }} transition={SPRING}
+              className="h-11 shrink-0 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white transition-colors hover:bg-[#232c3b]">
+              Go to the sheet
+            </motion.button>
+          )}
         </motion.div>
       </div>
       {!reading && <Pet said={said} mood={mood} />}

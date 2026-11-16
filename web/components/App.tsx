@@ -588,7 +588,7 @@ const MEAS: [keyof Measurements, string, string][] = [
   ["shoulder", "Shoulder", "कंधा"], ["length", "Length", "लंबाई"], ["sleeve", "Sleeve", "आस्तीन"],
 ];
 
-function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; setM: (m: Measurements) => void; onTalk: () => void }) {
+function SheetView({ spec, m, setM, onTalk, onShop }: { spec: Spec; m: Measurements; setM: (m: Measurements) => void; onTalk: () => void; onShop: () => void }) {
   const lines = sheetLines(spec, m);
   const f = finished(spec, m);
   const drawings = DRAWN.flatMap(([slot, part]) => {
@@ -625,6 +625,8 @@ function SheetView({ spec, m, setM, onTalk }: { spec: Spec; m: Measurements; set
             <span className="flex-1" />
             <button type="button" onClick={() => window.print()}
               className="press h-11 rounded-full px-5 text-[15px] font-medium ring-1 ring-brand-ink/15 transition-colors hover:bg-brand-ink/[.04] active:scale-[0.97]">Print or save as PDF</button>
+            <button type="button" onClick={onShop}
+              className="press h-11 rounded-full px-5 text-[15px] font-medium ring-1 ring-brand-ink/15 transition-colors hover:bg-brand-ink/[.04] active:scale-[0.97]">Find it in shops</button>
             <button type="button" onClick={send}
               className="press h-11 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white transition-colors hover:bg-[#232c3b] active:scale-[0.97]">Send to a maker</button>
           </motion.div>
@@ -1092,8 +1094,8 @@ export default function App() {
   if (resuming) return (
     <>{header}<main className="hero"><motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[17px] text-brand-ink/50">Opening your last design</motion.p></main></>
   );
-  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} design={spec.slots.garment ? phrase(spec) : ""} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} comparisons={spec.comparisons} /></>);
-  if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => go("talk")} /></>);
+  if (view === "board") return (<>{header}<Board key={boardId} boardId={boardId} design={spec.slots.garment ? phrase(spec) : ""} onOpen={setBoardId} onNew={() => setBoardId(newBoardId())} onEvidence={fromBoard} onSheet={() => go("sheet")} comparisons={spec.comparisons} /></>);
+  if (view === "sheet") return (<>{header}<SheetView spec={spec} m={m} setM={setM} onTalk={() => go("talk")} onShop={() => go("shop")} /></>);
   if (view === "shop") return (<>{header}<ShopView spec={spec} onWearer={setWearer} onTalk={() => go("talk")} /></>);
 
   const composer = (big?: boolean, placeholder?: string) => (

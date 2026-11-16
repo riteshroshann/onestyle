@@ -1,9 +1,9 @@
 // POST /api/avatar  { prompt }  ->  { image: "data:image/...;base64,..." }
-// Draws the design on a generic fashion model. Cloudflare Workers AI (FLUX schnell, free daily quota) goes first,
-// then Gemini's image models, which free keys cannot use but a billed key can.
+// Draws the design on a generic fashion model. Our Cloudflare Worker (workers/avatar, FLUX schnell on the free
+// Workers AI quota) goes first, then Gemini's image models, which free keys cannot use but a billed key can.
 // The prompt is written on the device from the design alone: no photo, face or measurements of the customer.
 // Any failure answers with a status the client reads as "use the open image model instead".
-// Environment: CF_ACCOUNT_ID + CF_API_TOKEN (Workers AI), LLM_API_KEY (Gemini), AVATAR_MODEL (optional,
+// Environment: AVATAR_WORKER_URL + AVATAR_WORKER_KEY (the Worker), LLM_API_KEY (Gemini), AVATAR_MODEL (optional,
 // comma-separated Gemini models, tried in order). At least one provider must be set.
 // Author: Ritesh Roshan
 import { callerIp, limiter, parseBody } from "../lib/studio/server.js";
@@ -19,13 +19,13 @@ async function drawCloudflare(prompt, ms) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CF_ACCOUNT_ID}/ai/run/${CF_MODEL}`, {
+    const r = await fetch(process.env.AVATAR_WORKER_URL, {
       method: "POST", signal: ctl.signal,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CF_API_TOKEN}` },
-      body: JSON.stringify({ prompt, steps: 6 }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.AVATAR_WORKER_KEY}` },
+      body: JSON.stringify({ prompt }),
     });
     if (!r.ok) { console.warn(`avatar: cloudflare answered ${r.status}`); return null; }
-    const image = (await r.json())?.result?.image;
+    const image = (await r.json())?.image;
     return image ? `data:image/jpeg;base64,${image}` : null;
   } catch {
     return null;
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
   if (limits.limited(callerIp(req))) { res.status(429).json({ error: "too many requests" }); return; }
   const prompt = typeof parseBody(req.body).prompt === "string" ? parseBody(req.body).prompt.trim() : "";
   if (prompt.length < 20 || prompt.length > MAX_PROMPT) { res.status(400).json({ error: "expected a prompt" }); return; }
-  const cloudflare = Boolean(process.env.CF_ACCOUNT_ID && process.env.CF_API_TOKEN);
+  const cloudflare = Boolean(process.env.AVATAR_WORKER_URL && process.env.AVATAR_WORKER_KEY);
   if (!cloudflare && !process.env.LLM_API_KEY) { res.status(501).json({ error: "not configured" }); return; }
   const started = Date.now();
   if (cloudflare) {
