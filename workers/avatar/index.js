@@ -1,12 +1,15 @@
 // The site's free backup on Workers AI, called by the Vercel functions with a shared key.
 //   POST /       { prompt }    ->  { image: base64 jpeg }       outfit looks for api/avatar.js (FLUX schnell)
-//   POST /chat   OpenAI body   ->  OpenAI chat completion       text and pictures when Gemini is busy (Llama 4 Scout)
+//   POST /chat   OpenAI body   ->  OpenAI chat completion       text and pictures when Gemini is busy
+// Pictures go to Mistral Small 3.1 (about 12 s for a board); text goes to Llama 4 Scout (about 2 s).
 // Secret: AVATAR_KEY, shared with Vercel as AVATAR_WORKER_KEY.
 // Author: Ritesh Roshan
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
-const CHAT_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
+const TEXT_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
+const VISION_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
 
 const fail = (error, status) => Response.json({ error }, { status });
+const hasPicture = (messages) => messages.some((m) => Array.isArray(m.content) && m.content.some((p) => p?.type === "image_url"));
 
 async function draw(body, env) {
   const { prompt } = body;
@@ -18,9 +21,10 @@ async function draw(body, env) {
 async function chat(body, env) {
   const { messages, max_tokens = 800, temperature = 0.3 } = body;
   if (!Array.isArray(messages) || !messages.length) return fail("expected messages", 400);
-  const out = await env.AI.run(CHAT_MODEL, { messages, max_tokens: Math.min(Number(max_tokens) || 800, 2048), temperature });
+  const model = hasPicture(messages) ? VISION_MODEL : TEXT_MODEL;
+  const out = await env.AI.run(model, { messages, max_tokens: Math.min(Number(max_tokens) || 800, 2048), temperature });
   const content = typeof out?.response === "string" ? out.response : JSON.stringify(out?.response ?? "");
-  return Response.json({ model: CHAT_MODEL, choices: [{ index: 0, finish_reason: "stop", message: { role: "assistant", content } }] });
+  return Response.json({ model, choices: [{ index: 0, finish_reason: "stop", message: { role: "assistant", content } }] });
 }
 
 export default {

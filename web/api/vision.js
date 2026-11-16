@@ -15,7 +15,7 @@ const ONTO = require("../lib/ontology.json");
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
 const MODELS = withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean));
 const BUDGET_MS = 20000; // inside the function's 25 s limit (vercel.json)
-const PER_MODEL_MS = 9000;
+const PER_MODEL_MS = 6000; // short, so the Cloudflare backup still has about 12 s when Gemini hangs
 
 const WINDOW_MS = 5 * 60 * 1000;
 const MAX_PER_WINDOW = 12; // pictures cost more than chat, so fewer reads per window
