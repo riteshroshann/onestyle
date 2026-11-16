@@ -216,9 +216,12 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, onSheet, com
 
   // pictures from the dropzone go onto the canvas in a row, to the right of whatever is there
   const addPictures = async (files: File[]) => {
-    const a = api.current;
     const pictures = files.filter((f) => f.type.startsWith("image/"));
-    if (!a || !pictures.length) { setHint("Pictures only: JPG, PNG or WebP."); return; }
+    if (!pictures.length) { setHint("Pictures only: JPG, PNG or WebP."); return; }
+    // a picture dropped while the canvas is still starting waits for it rather than being lost
+    for (let i = 0; !api.current && i < 50; i++) await new Promise((r) => setTimeout(r, 100));
+    const a = api.current;
+    if (!a) { setHint("The board is still starting. Drop the picture again in a moment."); return; }
     try {
       const shrunk = await Promise.all(pictures.map(shrink));
       const existing = a.getSceneElements();
