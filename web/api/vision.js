@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 const ONTO = require("../lib/ontology.json");
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
-const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean);
+const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean);
 const BUDGET_MS = 20000; // inside the function's 25 s limit (vercel.json)
 const PER_MODEL_MS = 9000;
 

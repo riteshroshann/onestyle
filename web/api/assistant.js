@@ -9,7 +9,7 @@ import { grounded, retrieve } from "../lib/assistant/retrieve.js";
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
 // Tried in order: the light model answers in a couple of seconds; a busy or failing one hands over to the next.
-const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean);
+const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean);
 // one budget for every model in the list, inside the function's 25 s limit (vercel.json)
 const BUDGET_MS = 20000;
 
