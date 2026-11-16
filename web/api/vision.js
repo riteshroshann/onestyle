@@ -7,13 +7,13 @@
 // Author: Ritesh Roshan
 import { createRequire } from "node:module";
 import { redact, screen } from "../lib/assistant/guard.js";
-import { endpoint, withBackup } from "../lib/studio/server.js";
+import { BACKUP, endpoint, withBackup } from "../lib/studio/server.js";
 
 const require = createRequire(import.meta.url);
 const ONTO = require("../lib/ontology.json");
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
-const MODELS = withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean));
+const MODELS = withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean));
 const BUDGET_MS = 20000; // inside the function's 25 s limit (vercel.json)
 const PER_MODEL_MS = 9000;
 
@@ -198,8 +198,10 @@ async function askOne(fetchImpl, key, model, messages, ms) {
     const choice = data?.choices?.[0];
     if (/safety|content_filter|prohibited/i.test(String(choice?.finish_reason ?? ""))) return { blocked: true };
     const text = String(choice?.message?.content ?? "").trim();
+    if (!text) console.warn(`vision: ${model} answered empty`);
     return text ? { text } : null;
-  } catch {
+  } catch (e) {
+    console.warn(`vision: ${model} failed (${e?.name ?? "error"})`);
     return null;
   } finally {
     clearTimeout(timer);
@@ -212,11 +214,13 @@ export async function askModel(messages, { fetch: fetchImpl = globalThis.fetch, 
   for (const model of models) {
     const left = end - Date.now();
     if (left < 1500) break;
-    const reply = await askOne(fetchImpl, key, model, messages, Math.min(left, PER_MODEL_MS));
+    // the backup is the last real chance, so it may use the rest of the budget
+    const reply = await askOne(fetchImpl, key, model, messages, model === BACKUP ? left : Math.min(left, PER_MODEL_MS));
     if (!reply) continue;
     if (reply.blocked) return reply;
     const json = parseJson(reply.text);
     if (json) return { json };
+    console.warn(`vision: ${model} answered without JSON`);
   }
   return null;
 }

@@ -5,7 +5,7 @@
 
 export const BASE = () => (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
 /** Tried in order: the light model answers fastest; a busy or failing one hands over to the next. */
-export const MODELS = () => withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean));
+export const MODELS = () => withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean));
 
 /** A model served by our Cloudflare Worker (workers/avatar), on a different provider from Gemini. */
 export const BACKUP = "cloudflare";
