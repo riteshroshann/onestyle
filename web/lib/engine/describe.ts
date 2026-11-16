@@ -232,13 +232,21 @@ export function moreShops(spec: Spec, q = shopQuery(spec)) {
 export function links(spec: Spec) {
   const q = query(spec), qp = query(spec, { withParts: true });
   const e = encodeURIComponent;
-  const ideas = [qp, `${q} design`, ...(spec.lists.occasion ?? []).map((o) => `${q} for ${o.value}`),
-    spec.slots["neckline.shape"] ? `${nice(spec.slots["neckline.shape"].value)} neck ${spec.slots.garment?.value ?? ""} designs` : "",
-    spec.slots["sleeve.style"] ? `${spec.slots["sleeve.style"].value} sleeves ${spec.slots.garment?.value ?? ""}` : "",
-    spec.lists.embellishment?.[0] ? `${spec.lists.embellishment[0].value} work ideas` : ""].filter(Boolean);
+  // the search is long and shared, so each idea is labelled by what sets it apart
+  const garment = spec.slots.garment?.value ?? "";
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const ideas: [string, string][] = [
+    ["The whole look", qp], ["Similar designs", `${q} design`],
+    ...(spec.lists.occasion ?? []).map((o): [string, string] => [`For ${o.value}`, `${q} for ${o.value}`]),
+    ...(spec.slots["neckline.shape"] ? [[`${cap(nice(spec.slots["neckline.shape"].value))} neck designs`, `${nice(spec.slots["neckline.shape"].value)} neck ${garment} designs`] as [string, string]] : []),
+    ...(spec.slots["sleeve.style"] ? [[`${cap(spec.slots["sleeve.style"].value)} sleeves`, `${spec.slots["sleeve.style"].value} sleeves ${garment}`] as [string, string]] : []),
+    ...(spec.lists.embellishment?.[0] ? [[`${cap(spec.lists.embellishment[0].value)} work`, `${spec.lists.embellishment[0].value} work ideas`] as [string, string]] : []),
+  ];
+  const seen = new Set<string>();
+  const unique = ideas.filter(([, t]) => t.trim() && !seen.has(t) && seen.add(t));
   return {
     query: q,
-    pinterest: [...new Set(ideas)].slice(0, 6).map((t) => ({ label: t, url: `https://www.pinterest.com/search/pins/?q=${e(t)}` })),
+    pinterest: unique.slice(0, 6).map(([label, t]) => ({ label, url: `https://www.pinterest.com/search/pins/?q=${e(t)}` })),
     shopQuery: shopQuery(spec),
     shops: shopLinks(spec),
     fabric: spec.slots.fabric ? [
