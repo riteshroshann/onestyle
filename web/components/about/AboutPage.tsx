@@ -83,7 +83,10 @@ export function AboutPage() {
             <motion.div {...rise} transition={{ ...SOFT, delay: 0.08 }} className="md:col-span-5 md:col-start-8">
               <h2 className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em]">The lead developer</h2>
               <p className="mt-6 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
-                Ritesh Roshan Sahoo built Bespoke end to end: the text analytics pipeline that reads English and Hinglish, the tagger it trained and ships in the browser, the studio, the marketplace and this site.
+                Ritesh Roshan Sahoo is the engineer behind every layer of Bespoke. A language pipeline that reads English and Hinglish the way people actually type them. A tagger trained from scratch and made small enough to run right in your browser. The studio, the marketplace and this site on top.
+              </p>
+              <p className="mt-5 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
+                One engineer, from the first commit to the page you are reading.
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 {SOCIAL.map((s, i) => (
