@@ -7,15 +7,17 @@
 // Author: Ritesh Roshan
 import { createRequire } from "node:module";
 import { redact, screen } from "../lib/assistant/guard.js";
-import { BACKUP, endpoint, withBackup } from "../lib/studio/server.js";
+import { endpoint } from "../lib/studio/server.js";
 
 const require = createRequire(import.meta.url);
 const ONTO = require("../lib/ontology.json");
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
-const MODELS = withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean));
+// no Cloudflare backup here: reading pictures costs most of its free daily quota, which is kept for outfit looks;
+// when Gemini is busy the board falls back to its own reading on the device
+const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest").split(",").map((m) => m.trim()).filter(Boolean);
 const BUDGET_MS = 20000; // inside the function's 25 s limit (vercel.json)
-const PER_MODEL_MS = 6000; // short, so the Cloudflare backup still has about 12 s when Gemini hangs
+const PER_MODEL_MS = 9000;
 
 const WINDOW_MS = 5 * 60 * 1000;
 const MAX_PER_WINDOW = 12; // pictures cost more than chat, so fewer reads per window
@@ -214,8 +216,7 @@ export async function askModel(messages, { fetch: fetchImpl = globalThis.fetch, 
   for (const model of models) {
     const left = end - Date.now();
     if (left < 1500) break;
-    // the backup is the last real chance, so it may use the rest of the budget
-    const reply = await askOne(fetchImpl, key, model, messages, model === BACKUP ? left : Math.min(left, PER_MODEL_MS));
+    const reply = await askOne(fetchImpl, key, model, messages, Math.min(left, PER_MODEL_MS));
     if (!reply) continue;
     if (reply.blocked) return reply;
     const json = parseJson(reply.text);

@@ -1,7 +1,8 @@
 // The site's free backup on Workers AI, called by the Vercel functions with a shared key.
 //   POST /       { prompt }    ->  { image: base64 jpeg }       outfit looks for api/avatar.js (FLUX schnell)
 //   POST /chat   OpenAI body   ->  OpenAI chat completion       text and pictures when Gemini is busy
-// Pictures go to Mistral Small 3.1 (about 12 s for a board); text goes to Llama 4 Scout (about 2 s).
+// Pictures go to Mistral Small 3.1, text to Llama 4 Scout (about 2 s). The site sends only text here, since
+// reading pictures would spend most of the free daily quota that outfit looks need.
 // Secret: AVATAR_KEY, shared with Vercel as AVATAR_WORKER_KEY.
 // Author: Ritesh Roshan
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
@@ -14,7 +15,7 @@ const hasPicture = (messages) => messages.some((m) => Array.isArray(m.content) &
 async function draw(body, env) {
   const { prompt } = body;
   if (typeof prompt !== "string" || prompt.length < 20 || prompt.length > 2000) return fail("expected a prompt", 400);
-  const { image } = await env.AI.run(IMAGE_MODEL, { prompt, steps: 6 });
+  const { image } = await env.AI.run(IMAGE_MODEL, { prompt, steps: 4 });
   return Response.json({ image });
 }
 
