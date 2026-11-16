@@ -81,9 +81,9 @@ export function AboutPage() {
               <p className="pointer-events-none absolute inset-x-0 bottom-5 text-center text-[13px] text-brand-ink/40">Drag the card. Flip it over.</p>
             </motion.div>
             <motion.div {...rise} transition={{ ...SOFT, delay: 0.08 }} className="md:col-span-5 md:col-start-8">
-              <h2 className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em]">The developer</h2>
+              <h2 className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em]">The lead developer</h2>
               <p className="mt-6 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
-                Ritesh Roshan designed and built Bespoke end to end: the text analytics pipeline that reads English and Hinglish, the tagger it trained and ships in the browser, the studio, the marketplace and this site.
+                Ritesh Roshan Sahoo built Bespoke end to end: the text analytics pipeline that reads English and Hinglish, the tagger it trained and ships in the browser, the studio, the marketplace and this site.
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 {SOCIAL.map((s, i) => (
@@ -100,6 +100,25 @@ export function AboutPage() {
           </div>
         </section>
 
+        <section className="border-t border-brand-ink/10">
+          <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-20 md:grid-cols-12 md:px-10 md:py-28">
+            <motion.div {...rise} className="relative h-[560px] overflow-hidden rounded-[36px] bg-[#f4f5f7] md:order-2 md:col-span-6 md:col-start-7 md:h-[640px]">
+              <Lanyard frontImage="/lanyard/arushi-front.jpg" backImage="/lanyard/arushi-back.jpg" strapImage="/lanyard/band.png"
+                strapColor="#0d1117" finish="glossy" size={0.62} strapLength={0.55} breeze={0.4} />
+              <p className="pointer-events-none absolute inset-x-0 bottom-5 text-center text-[13px] text-brand-ink/40">Drag the card. Flip it over.</p>
+            </motion.div>
+            <motion.div {...rise} transition={{ ...SOFT, delay: 0.08 }} className="md:order-1 md:col-span-5">
+              <h2 className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em]">The creative director</h2>
+              <p className="mt-6 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
+                Bespoke was Arushi Uppal's idea. She saw how often the outfit in someone's head got lost on the way to their tailor, and she has set the direction ever since: how the studio should feel, what it should ask, and what a finished sheet should look like.
+              </p>
+              <p className="mt-5 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
+                As co-founder and partner in the build, she shaped the vision and the product as much as anyone who wrote the code.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
         <section className="bg-brand-ink text-white">
           <div className="mx-auto grid max-w-[1440px] gap-12 px-5 py-28 md:grid-cols-12 md:px-10 md:py-40">
             <motion.h2 {...rise} className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em] md:col-span-4">The vision</motion.h2>
@@ -108,7 +127,7 @@ export function AboutPage() {
                 <p>Made-to-measure clothing should not belong only to people who already speak the trade. Every city in India has brilliant tailors, and every person has a picture in their head of what they want to wear.</p>
                 <p>Bespoke is the bridge between the two. Say it however it comes to you, and get back something a maker can cut from, without a single word lost on the way.</p>
               </blockquote>
-              <p className="mt-10 text-[15px] text-white/60">Ritesh Roshan, founder</p>
+              <p className="mt-10 text-[15px] text-white/60">Arushi Uppal and Ritesh Roshan Sahoo, founders</p>
               <div className="mt-14"><Cta href="/studio/talk/?new" size="lg" tone="light">Start a design</Cta></div>
             </motion.div>
           </div>
