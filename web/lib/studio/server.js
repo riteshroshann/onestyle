@@ -9,10 +9,10 @@ export const MODELS = () => withBackup((process.env.LLM_MODEL || "gemini-flash-l
 
 /** A model served by our Cloudflare Worker (workers/avatar), on a different provider from Gemini. */
 export const BACKUP = "cloudflare";
-/** The list with the backup third when the Worker is set up: when Gemini is overloaded, every alias of it usually is. */
+/** The list with the backup second when the Worker is set up: an overloaded Gemini model can hang until its timeout. */
 export function withBackup(models) {
   const on = process.env.AVATAR_WORKER_URL && process.env.AVATAR_WORKER_KEY;
-  return on && !models.includes(BACKUP) ? [...models.slice(0, 2), BACKUP, ...models.slice(2)] : models;
+  return on && !models.includes(BACKUP) ? [...models.slice(0, 1), BACKUP, ...models.slice(1)] : models;
 }
 /** Where a model answers: Gemini through its OpenAI-compatible API, the backup through the Worker's /chat. */
 export function endpoint(model, key = process.env.LLM_API_KEY, base = BASE()) {
