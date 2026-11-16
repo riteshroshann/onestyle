@@ -122,6 +122,28 @@ export function AboutPage() {
           </div>
         </section>
 
+        <section className="border-t border-brand-ink/10">
+          <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-20 md:grid-cols-12 md:px-10 md:py-28">
+            <motion.div {...rise} className="relative h-[560px] overflow-hidden rounded-[36px] bg-[#f4f5f7] md:col-span-6 md:h-[640px]">
+              <Lanyard frontImage="/lanyard/arnav-front.jpg" backImage="/lanyard/arnav-back.jpg" strapImage="/lanyard/band.png"
+                strapColor="#0d1117" finish="glossy" size={0.62} strapLength={0.55} breeze={0.4} />
+              <p className="pointer-events-none absolute inset-x-0 bottom-5 text-center text-[13px] text-brand-ink/40">Drag the card. He will keep talking.</p>
+            </motion.div>
+            <motion.div {...rise} transition={{ ...SOFT, delay: 0.08 }} className="md:col-span-5 md:col-start-8">
+              <h2 className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em]">The snack department</h2>
+              <p className="mt-6 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
+                Arnav Sharma designs and builds on the Bespoke design team. Arnav also runs the snack department, a role nobody assigned and nobody could take away.
+              </p>
+              <p className="mt-5 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
+                Half of the studio's best ideas were first said out loud by Arnav, at length, mid-chip, during a meeting about something else. The other half came right after the chips ran out.
+              </p>
+              <p className="mt-5 text-[clamp(18px,1.5vw,21px)] leading-[1.6] text-brand-ink/70">
+                Developer, yap buddy, and the reason the drawer is always empty.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
         <section className="bg-brand-ink text-white">
           <div className="mx-auto grid max-w-[1440px] gap-12 px-5 py-28 md:grid-cols-12 md:px-10 md:py-40">
             <motion.h2 {...rise} className="text-[clamp(30px,3vw,44px)] font-medium leading-[1.1] tracking-[-0.03em] md:col-span-4">The vision</motion.h2>
