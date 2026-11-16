@@ -102,6 +102,8 @@ function devicePictures(board: BoardGraph, dev: BoardResult | null, palettes: Re
 }
 
 /** The on-device reading as one idea, when it found anything to suggest. */
+const NEUTRAL = new Set(["white", "ivory", "cream", "off-white", "grey", "silver", "black", "beige"]);
+
 function deviceIdea(ups: Update[]): Idea | null {
   const seen = ups.filter((u) => u.value.src === "image" && (u.op === "set" || u.op === "add"));
   if (!seen.length) return null;
@@ -389,9 +391,13 @@ export default function Board({ boardId, onOpen, onNew, onEvidence, onSheet, com
     } else {
       const palettes: Record<number, { name: string; hex: string; base: string }[]> = {};
       await Promise.all(board.images.slice(0, 6).map(async (im) => { palettes[im.n] = await paletteOf(im.dataURL).catch(() => []); }));
-      const idea = deviceIdea(kept);
+      // with no confident colour, the leading colour of the pictures is still a direction worth offering
+      const lead = Object.values(palettes).flat().find((c) => !NEUTRAL.has(c.base)) ?? Object.values(palettes).flat()[0];
+      const ups: Update[] = kept.some((u) => u.slot === "colour") || !lead ? kept
+        : [...kept, { op: "add", slot: "colour", value: { value: lead.base, p: 0.5, src: "image", evidence: "board palette" } } as Update];
+      const idea = deviceIdea(ups);
       ideas = idea ? [idea] : [];
-      plansUps = [[...kept, ...extra]];
+      plansUps = [[...ups, ...extra]];
       const summary = idea ? "Colour and print, read from your pictures on this device." : "Your pictures give the palette. Circle a sleeve or a neckline for a closer look.";
       written = { pictures: devicePictures(board, dev, palettes), summary, ideas };
     }
