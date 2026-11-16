@@ -5,7 +5,21 @@
 
 export const BASE = () => (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
 /** Tried in order: the light model answers fastest; a busy or failing one hands over to the next. */
-export const MODELS = () => (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean);
+export const MODELS = () => withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean));
+
+/** A model served by our Cloudflare Worker (workers/avatar), on a different provider from Gemini. */
+export const BACKUP = "cloudflare";
+/** The list with the backup third when the Worker is set up: when Gemini is overloaded, every alias of it usually is. */
+export function withBackup(models) {
+  const on = process.env.AVATAR_WORKER_URL && process.env.AVATAR_WORKER_KEY;
+  return on && !models.includes(BACKUP) ? [...models.slice(0, 2), BACKUP, ...models.slice(2)] : models;
+}
+/** Where a model answers: Gemini through its OpenAI-compatible API, the backup through the Worker's /chat. */
+export function endpoint(model, key = process.env.LLM_API_KEY, base = BASE()) {
+  return model === BACKUP
+    ? { url: `${String(process.env.AVATAR_WORKER_URL).replace(/\/$/, "")}/chat`, key: process.env.AVATAR_WORKER_KEY }
+    : { url: `${base}chat/completions`, key };
+}
 
 /** A sliding-window limiter per caller. */
 export function limiter(max, windowMs) {
@@ -45,10 +59,11 @@ async function callOne(model, body, ms) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetch(`${BASE()}chat/completions`, {
+    const { url, key } = endpoint(model);
+    const r = await fetch(url, {
       method: "POST",
       signal: ctl.signal,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.LLM_API_KEY}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({ ...body, model }),
     });
     if (!r.ok) { console.warn(`studio: ${model} answered ${r.status}`); return { status: r.status }; }

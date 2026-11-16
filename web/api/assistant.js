@@ -6,10 +6,11 @@
 // Author: Ritesh Roshan
 import { FALLBACK, SYSTEM_MARKER, checkAnswer, redact, screen, trimHistory } from "../lib/assistant/guard.js";
 import { grounded, retrieve } from "../lib/assistant/retrieve.js";
+import { endpoint, withBackup } from "../lib/studio/server.js";
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
 // Tried in order: the light model answers in a couple of seconds; a busy or failing one hands over to the next.
-const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean);
+const MODELS = withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean));
 // one budget for every model in the list, inside the function's 25 s limit (vercel.json)
 const BUDGET_MS = 20000;
 
@@ -121,10 +122,11 @@ async function askOne(model, messages, ms) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetch(`${BASE}chat/completions`, {
+    const at = endpoint(model, process.env.LLM_API_KEY, BASE);
+    const r = await fetch(at.url, {
       method: "POST",
       signal: ctl.signal,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.LLM_API_KEY}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${at.key}` },
       body: JSON.stringify({ model, temperature: 0.2, max_tokens: 320, messages }),
     });
     // the status only, never the text, so a failing provider can be told apart from a slow one

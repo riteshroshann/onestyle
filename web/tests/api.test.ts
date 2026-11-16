@@ -61,3 +61,18 @@ await mod.default(req("a red dress"), res);
 assert.equal(res.code, 502);
 
 console.log("ok: api validation, handler, failure paths");
+
+// the Cloudflare backup goes third, and only when the Worker is configured
+{
+  const { BACKUP, endpoint, withBackup } = await import("../lib/studio/server.js");
+  const list = ["a", "b", "c"];
+  delete process.env.AVATAR_WORKER_URL; delete process.env.AVATAR_WORKER_KEY;
+  assert.deepEqual(withBackup(list), list);
+  process.env.AVATAR_WORKER_URL = "https://w.example/"; process.env.AVATAR_WORKER_KEY = "k";
+  assert.deepEqual(withBackup(list), ["a", "b", BACKUP, "c"]);
+  assert.deepEqual(withBackup(withBackup(list)), ["a", "b", BACKUP, "c"]);
+  assert.deepEqual(endpoint(BACKUP), { url: "https://w.example/chat", key: "k" });
+  assert.deepEqual(endpoint("a", "g", "https://g.example/"), { url: "https://g.example/chat/completions", key: "g" });
+  delete process.env.AVATAR_WORKER_URL; delete process.env.AVATAR_WORKER_KEY;
+  console.log("ok: cloudflare backup routing");
+}

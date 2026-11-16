@@ -7,12 +7,13 @@
 // Author: Ritesh Roshan
 import { createRequire } from "node:module";
 import { redact, screen } from "../lib/assistant/guard.js";
+import { endpoint, withBackup } from "../lib/studio/server.js";
 
 const require = createRequire(import.meta.url);
 const ONTO = require("../lib/ontology.json");
 
 const BASE = (process.env.LLM_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/").replace(/\/?$/, "/");
-const MODELS = (process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean);
+const MODELS = withBackup((process.env.LLM_MODEL || "gemini-flash-lite-latest,gemini-flash-latest,gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash").split(",").map((m) => m.trim()).filter(Boolean));
 const BUDGET_MS = 20000; // inside the function's 25 s limit (vercel.json)
 const PER_MODEL_MS = 9000;
 
@@ -184,10 +185,11 @@ async function askOne(fetchImpl, key, model, messages, ms) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetchImpl(`${BASE}chat/completions`, {
+    const at = endpoint(model, key, BASE);
+    const r = await fetchImpl(at.url, {
       method: "POST",
       signal: ctl.signal,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${at.key}` },
       body: JSON.stringify({ model, temperature: 0.4, max_tokens: 1800, response_format: { type: "json_object" }, messages }),
     });
     // the status only, never the content
