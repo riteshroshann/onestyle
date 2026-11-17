@@ -2,7 +2,7 @@
 // Draws the design on a generic fashion model. Our Cloudflare Worker (workers/avatar, FLUX schnell on the free
 // Workers AI quota) goes first, then Gemini's image models, which free keys cannot use but a billed key can.
 // The prompt is written on the device from the design alone: no photo, face or measurements of the customer.
-// Any failure answers with a status the client reads as "use the open image model instead".
+// Any failure answers 502, and the look offers to try again.
 // Environment: AVATAR_WORKER_URL + AVATAR_WORKER_KEY (the Worker), LLM_API_KEY (Gemini), AVATAR_MODEL (optional,
 // comma-separated Gemini models, tried in order). At least one provider must be set.
 // Author: Ritesh Roshan
