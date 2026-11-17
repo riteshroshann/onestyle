@@ -45,15 +45,3 @@ export function avatarPrompt(spec: Spec): string {
     "A generic model, not a real or famous person. No text, no logos other than the described print, no watermark.",
   ].filter(Boolean).join(" ");
 }
-
-/** The open image model, used when the main one is not available: a plain image URL, steady per design. */
-export function openImageUrl(prompt: string, seed: number): string {
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=832&height=1248&nologo=true&model=flux&seed=${seed}`;
-}
-
-/** A small steady number from text, so the same design keeps the same model between redraws. */
-export function seedOf(text: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return (h >>> 0) % 1_000_000;
-}

@@ -1,16 +1,16 @@
 "use client";
-// The design, visualised: a generic model wearing it, redrawn after every change. The main image model answers
-// through api/avatar.js; when it cannot, the open image model draws it instead. The last look stays on screen,
-// softly blurred, while the next one is drawn.
+// The design, visualised: a generic model wearing it, redrawn after every change, drawn by api/avatar.js.
+// The last look stays on screen, softly blurred, while the next one is drawn. No public fallback: free image
+// services answer a busy limit with a picture of the error, which would land on screen as the look.
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { avatarPrompt, openImageUrl, outfitWords, seedOf } from "../lib/avatar";
+import { avatarPrompt, outfitWords } from "../lib/avatar";
 import type { Spec } from "../lib/engine/spec";
 import { cn } from "@/lib/utils";
 import { SOFT, SPRING } from "./site/Motion";
 
-type State = { kind: "idle" } | { kind: "drawing" } | { kind: "ready"; src: string; open: boolean } | { kind: "failed" };
-const drawn = new Map<string, { src: string; open: boolean }>(); // one drawing per prompt, for this visit
+type State = { kind: "idle" } | { kind: "drawing" } | { kind: "ready"; src: string } | { kind: "failed" };
+const drawn = new Map<string, string>(); // one drawing per prompt, for this visit
 const WAIT_MS = 900; // a pause after the last change, so a burst of edits draws once
 const MAIN_MS = 28000;
 
@@ -24,35 +24,31 @@ async function fromMain(prompt: string): Promise<string | null> {
     return typeof b.image === "string" && b.image.startsWith("data:image/") ? b.image : null;
   } catch { return null; } finally { clearTimeout(t); }
 }
-const load = (src: string) => new Promise<string>((ok, no) => { const i = new Image(); i.onload = () => ok(src); i.onerror = no; i.src = src; });
 
 export function OutfitLook({ spec, size = "hero", className }: { spec: Spec; size?: "hero" | "compact"; className?: string }) {
   const still = !!useReducedMotion();
   const prompt = spec.slots.garment ? avatarPrompt(spec) : "";
-  // the same garment for the same wearer keeps the same model as details change
-  const seed = seedOf(`${spec.slots.garment?.value ?? ""}|${spec.slots.wearer?.value ?? ""}`);
   const [state, setState] = useState<State>({ kind: "idle" });
-  const [shown, setShown] = useState<{ src: string; open: boolean } | null>(null);
+  const [shown, setShown] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const latest = useRef("");
 
   useEffect(() => {
     if (!prompt) { setState({ kind: "idle" }); return; }
     const done = drawn.get(prompt);
-    if (done) { setShown(done); setState({ kind: "ready", ...done }); return; }
+    if (done) { setShown(done); setState({ kind: "ready", src: done }); return; }
     latest.current = prompt;
     setState({ kind: "drawing" });
     const t = setTimeout(async () => {
-      const main = await fromMain(prompt);
-      const result = main ? { src: main, open: false } : await load(openImageUrl(prompt, seed)).then((src) => ({ src, open: true })).catch(() => null);
+      const src = await fromMain(prompt);
       if (latest.current !== prompt) return;
-      if (!result) { setState({ kind: "failed" }); return; }
-      drawn.set(prompt, result);
-      setShown(result);
-      setState({ kind: "ready", ...result });
+      if (!src) { setState({ kind: "failed" }); return; }
+      drawn.set(prompt, src);
+      setShown(src);
+      setState({ kind: "ready", src });
     }, WAIT_MS);
     return () => clearTimeout(t);
-  }, [prompt, seed, attempt]);
+  }, [prompt, attempt]);
 
   if (!prompt) return null;
   const hero = size === "hero";
@@ -63,10 +59,9 @@ export function OutfitLook({ spec, size = "hero", className }: { spec: Spec; siz
         {busy && !shown && <div className="aura opacity-40" aria-hidden="true" />}
         <AnimatePresence initial={false}>
           {shown && (
-            <motion.img key={shown.src.slice(-48)} src={shown.src} alt={`A generic model wearing ${outfitWords(spec)}`}
-              initial={{ opacity: 0, scale: still ? 1 : 1.03 }} animate={{ opacity: 1, scale: shown.open ? 1.07 : 1, filter: busy ? "blur(14px) saturate(.8)" : "blur(0px)" }} exit={{ opacity: 0 }}
+            <motion.img key={shown.slice(-48)} src={shown} alt={`A generic model wearing ${outfitWords(spec)}`}
+              initial={{ opacity: 0, scale: still ? 1 : 1.03 }} animate={{ opacity: 1, scale: 1, filter: busy ? "blur(14px) saturate(.8)" : "blur(0px)" }} exit={{ opacity: 0 }}
               transition={{ ...SOFT, opacity: { duration: 0.5 } }}
-              // the open model signs the bottom corner; a slight zoom from the top keeps it out of frame
               className="absolute inset-0 size-full object-cover" style={{ transformOrigin: "50% 0%" }} />
           )}
         </AnimatePresence>
@@ -83,10 +78,11 @@ export function OutfitLook({ spec, size = "hero", className }: { spec: Spec; siz
             </motion.div>
           )}
         </AnimatePresence>
-        {state.kind === "failed" && (
+        {state.kind === "failed" && !busy && (
           <div className="absolute inset-0 grid place-items-center p-8 text-center">
             <div>
               <p className="text-[17px] font-medium">We could not draw this look just now.</p>
+              <p className="mt-1 text-[14px] text-brand-ink/55">The image service is busy. Your design is saved; try again in a minute.</p>
               <button type="button" onClick={() => setAttempt((a) => a + 1)}
                 className="press mt-4 h-11 rounded-full bg-brand-ink px-5 text-[15px] font-medium text-white hover:bg-[#232c3b]">Try again</button>
             </div>
